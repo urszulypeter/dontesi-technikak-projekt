@@ -1,0 +1,3304 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vezetői Bizalom — döntési szimuláció</title>
+<meta name="description" content="Interaktív vezetői döntésjáték három szerepkörben, 3D jelenetekkel.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   VEZETŐI BIZALOM — döntési szimuláció
+   Egyfájlos alkalmazás. Külső függőség: Three.js (3D jelenetek),
+   Google Fonts (tipográfia), EmailJS (eredményküldés).
+   ============================================================ */
+
+:root{
+  --zold-900:#0C1A14;
+  --zold-800:#13291F;
+  --zold-700:#1B3A2C;
+  --zold-600:#24503C;
+  --arany:#C9A063;
+  --arany-vil:#DCBB84;
+  --krem:#F7F4EE;
+  --krem-2:#FBFAF7;
+  --papir:#FFFFFF;
+  --tinta:#14231C;
+  --tinta-hal:#4A5C53;
+  --tinta-vil:#7E8D85;
+  --vonal:#DDD8CD;
+  --jo:#3E8F63;
+  --kozep:#C4922F;
+  --rossz:#B4503C;
+  --display:"Playfair Display",Georgia,"Times New Roman",serif;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--krem-2); color:var(--tinta);
+  font-family:var(--sans); font-size:16px; line-height:1.6;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+h1,h2,h3{margin:0 0 .5em;font-family:var(--display);font-weight:500;line-height:1.12;letter-spacing:-.015em}
+p{margin:0 0 1em}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--arany);outline-offset:3px}
+.rejt{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- közös elemek ---------- */
+.szem{
+  display:inline-flex;align-items:center;gap:14px;
+  font-size:.73rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600;
+}
+.szem::before{content:"";width:38px;height:1px;background:currentColor;opacity:.7}
+.szem.nincs-vonal::before{display:none}
+.sorszam{font-family:var(--display);font-size:2.6rem;line-height:1;color:var(--tinta-vil);font-weight:400}
+
+.gomb{
+  display:inline-flex;align-items:center;gap:14px;border:0;cursor:pointer;
+  padding:17px 30px;font-size:.94rem;font-weight:600;letter-spacing:.01em;
+  background:var(--arany);color:var(--zold-900);
+  transition:background .2s ease,transform .12s ease;
+}
+.gomb:hover{background:var(--arany-vil)}
+.gomb:active{transform:translateY(1px)}
+.gomb .nyil{transition:transform .2s ease}
+.gomb:hover .nyil{transform:translateX(4px)}
+.gomb.sotet{background:var(--zold-800);color:var(--krem)}
+.gomb.sotet:hover{background:var(--zold-700)}
+.gomb.vonalas{background:transparent;color:var(--tinta);border:1px solid var(--vonal);padding:14px 24px}
+.gomb.vonalas:hover{border-color:var(--tinta);background:transparent}
+.gomb:disabled{opacity:.45;cursor:not-allowed}
+
+/* ============================================================
+   1) NYITÓKÉPERNYŐ
+   ============================================================ */
+.fejlec{
+  position:absolute;top:0;left:0;right:0;z-index:6;
+  display:flex;align-items:center;gap:14px;
+  padding:26px clamp(20px,5vw,64px);
+  border-bottom:1px solid rgba(247,244,238,.16);
+}
+.marka{display:flex;align-items:center;gap:13px;color:var(--krem)}
+.marka .jel{width:38px;height:38px;flex:0 0 auto}
+.marka b{display:block;font-size:1rem;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.marka span{display:block;font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(247,244,238,.62);font-weight:500}
+
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;background:var(--zold-900);overflow:hidden}
+#hero-vaszon{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hero-fatyol{
+  position:absolute;inset:0;
+  background:linear-gradient(100deg,rgba(10,24,18,.94) 0%,rgba(12,26,20,.78) 42%,rgba(12,26,20,.35) 100%);
+}
+.hero-tart{position:relative;z-index:5;padding:120px clamp(20px,5vw,64px) 80px;max-width:1180px;width:100%}
+.hero .szem{color:var(--arany)}
+.hero h1{
+  font-size:clamp(2.5rem,6.4vw,4.9rem);color:var(--krem);margin:28px 0 0;max-width:15ch;
+}
+.hero h1 em{display:block;font-style:italic;color:var(--arany);font-weight:400}
+.hero p{
+  color:rgba(247,244,238,.8);font-size:clamp(1rem,1.5vw,1.16rem);max-width:52ch;margin:30px 0 42px;line-height:1.75;
+}
+.hero-le{
+  position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:5;
+  color:rgba(247,244,238,.5);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;
+  display:flex;flex-direction:column;align-items:center;gap:9px;
+}
+.hero-le i{display:block;width:1px;height:36px;background:linear-gradient(180deg,rgba(247,244,238,.5),transparent);animation:leCsuszik 2.4s ease-in-out infinite}
+@keyframes leCsuszik{0%,100%{opacity:.25;transform:scaleY(.6)}50%{opacity:1;transform:scaleY(1)}}
+
+.szakasz{padding:clamp(70px,10vw,120px) clamp(20px,5vw,64px);background:var(--krem-2)}
+.szakasz.krem{background:var(--krem)}
+.belso{max-width:1180px;margin:0 auto}
+.szakasz .szem{color:var(--zold-600)}
+.szakasz h2{font-size:clamp(1.9rem,4.2vw,3.1rem);margin:22px 0 0;max-width:20ch}
+.szakasz .bevezeto{color:var(--tinta-hal);max-width:56ch;margin-top:20px;font-size:1.03rem}
+
+/* Szerepkör-kártyák */
+.mod-racs{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:56px;border-top:1px solid var(--vonal)}
+@media(max-width:900px){.mod-racs{grid-template-columns:1fr}}
+.mod-kartya{
+  position:relative;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--vonal);
+  border-right:1px solid var(--vonal);padding:34px 30px 30px;cursor:pointer;color:var(--tinta);
+  display:flex;flex-direction:column;gap:16px;min-height:290px;transition:background .25s ease;
+}
+.mod-kartya:last-child{border-right:0}
+@media(max-width:900px){.mod-kartya{border-right:0;min-height:0}}
+.mod-kartya:hover{background:var(--krem)}
+.mod-kartya .fej{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.mod-kartya .ikon{width:44px;height:44px;border:1px solid var(--vonal);display:flex;align-items:center;justify-content:center;color:var(--zold-600);flex:0 0 auto}
+.mod-kartya .ikon svg{width:21px;height:21px}
+.mod-kartya h3{font-family:var(--sans);font-size:1.16rem;font-weight:600;margin:auto 0 0;letter-spacing:-.01em}
+.mod-kartya p{color:var(--tinta-hal);font-size:.92rem;margin:0;line-height:1.6}
+.mod-kartya .allapot{
+  display:flex;align-items:center;gap:9px;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:600;color:var(--tinta-vil);margin-top:6px;
+}
+.mod-kartya[aria-pressed="true"]{background:var(--krem);box-shadow:inset 0 3px 0 0 var(--arany)}
+.mod-kartya[aria-pressed="true"] .allapot{color:var(--zold-600)}
+.mod-kartya[aria-pressed="true"] .ikon{border-color:var(--zold-600);background:var(--zold-800);color:var(--arany)}
+.mod-kartya .allapot .pipa{display:none} .mod-kartya[aria-pressed="true"] .allapot .pipa{display:inline}
+.mod-kartya[aria-pressed="true"] .allapot .valasztas{display:none}
+
+/* Űrlap */
+.urlap{max-width:620px;margin-top:44px}
+.mezo{margin-bottom:34px}
+.mezo label{display:block;font-size:.86rem;font-weight:600;margin-bottom:12px}
+.mezo .beviteli{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--vonal);padding-bottom:11px;transition:border-color .2s}
+.mezo .beviteli:focus-within{border-color:var(--zold-600)}
+.mezo .beviteli svg{width:19px;height:19px;color:var(--tinta-vil);flex:0 0 auto}
+.mezo input{
+  width:100%;border:0;background:transparent;font-family:inherit;font-size:1.05rem;color:var(--tinta);padding:2px 0;
+}
+.mezo input:focus{outline:none}
+.mezo input::placeholder{color:var(--tinta-vil)}
+.mezo .beviteli[data-hibas="1"]{border-color:var(--rossz)}
+.hiba{color:var(--rossz);font-size:.84rem;margin-top:9px;min-height:1.2em}
+.apro{display:flex;align-items:center;gap:9px;color:var(--tinta-vil);font-size:.85rem;margin-top:18px}
+.apro svg{width:17px;height:17px}
+
+.lablec-nyito{
+  background:var(--zold-900);color:rgba(247,244,238,.55);padding:34px clamp(20px,5vw,64px);
+  font-size:.82rem;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center;
+}
+.lablec-nyito .marka b{color:var(--krem)}
+
+/* ============================================================
+   2) JÁTÉKKÉPERNYŐ — 3D jelenet + rávetített döntések
+   ============================================================ */
+#view-game{position:fixed;inset:0;background:#08120E;overflow:hidden}
+#jatek-vaszon{position:absolute;inset:0;width:100%;height:100%;display:block}
+.jelenet-fatyol{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(120% 78% at 50% 38%,rgba(0,0,0,0) 38%,rgba(4,10,7,.62) 100%),
+    linear-gradient(180deg,rgba(6,14,10,.74) 0%,rgba(6,14,10,0) 20%,rgba(6,14,10,0) 34%,rgba(5,12,9,.9) 78%,rgba(4,10,7,.98) 100%);
+}
+
+/* felső sáv */
+.hud-fent{
+  position:absolute;top:0;left:0;right:0;z-index:8;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:16px;
+  padding:22px clamp(16px,3.4vw,40px);pointer-events:none;
+}
+.hud-marka{display:flex;align-items:center;gap:11px;color:rgba(247,244,238,.9)}
+.hud-marka .jel{width:30px;height:30px}
+.hud-marka b{font-size:.86rem;font-weight:600;display:block;line-height:1.25}
+.hud-marka span{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(247,244,238,.5)}
+.hud-jobb{justify-self:end;text-align:right;color:rgba(247,244,238,.72);font-size:.7rem;letter-spacing:.17em;text-transform:uppercase;font-weight:600}
+.hud-jobb .hely{display:block;margin-top:6px;letter-spacing:.04em;text-transform:none;font-size:.78rem;color:rgba(247,244,238,.5);font-weight:400}
+
+/* pontszámláló — felül középen, válasz után megnő, majd visszahúzódik */
+.pontszamlalo{justify-self:center;text-align:center;pointer-events:none}
+.pontszamlalo .ertek{
+  font-family:var(--display);font-size:2.45rem;line-height:1;color:var(--krem);
+  font-variant-numeric:tabular-nums;display:block;
+  text-shadow:0 3px 22px rgba(0,0,0,.65);
+  transform-origin:center top;transition:transform .5s cubic-bezier(.22,1,.36,1),color .5s ease;
+}
+.pontszamlalo.lokes .ertek{transform:scale(1.46)}
+.pontszamlalo .cimke{
+  display:block;margin-top:15px;font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;
+  color:rgba(247,244,238,.52);font-weight:600;
+}
+.pontszamlalo .valtozas{
+  display:block;margin-top:6px;font-size:.86rem;font-weight:700;font-variant-numeric:tabular-nums;
+  opacity:0;transform:translateY(-6px);transition:opacity .35s ease,transform .35s ease;
+}
+.pontszamlalo .valtozas.lat{opacity:1;transform:translateY(0)}
+.valtozas.fel{color:#7FD3A2} .valtozas.le{color:#E88E78} .valtozas.nulla{color:rgba(247,244,238,.6)}
+.pontsav{height:2px;background:rgba(247,244,238,.16);margin-top:11px;width:132px;overflow:hidden}
+.pontsav i{display:block;height:100%;background:var(--arany);width:50%;transition:width .8s cubic-bezier(.22,1,.36,1)}
+
+/* alsó döntési réteg */
+.hud-lent{
+  position:absolute;left:0;right:0;bottom:0;z-index:8;
+  padding:0 clamp(16px,3.4vw,40px) clamp(18px,3vw,34px);
+}
+.hud-lent .kozep{max-width:1140px;margin:0 auto}
+.jelenet-cim{
+  color:var(--arany);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;font-weight:700;margin-bottom:10px;
+}
+.kerdes-szoveg{
+  color:var(--krem);font-family:var(--display);font-size:clamp(1.6rem,3.4vw,2.6rem);
+  line-height:1.18;margin:0 0 12px;max-width:26ch;
+  text-shadow:0 2px 10px rgba(0,0,0,.9),0 6px 34px rgba(0,0,0,.75);
+}
+.kerdes-leiras{
+  color:rgba(247,244,238,.94);font-size:clamp(1.02rem,1.75vw,1.22rem);line-height:1.62;
+  max-width:68ch;margin:0 0 20px;font-weight:400;
+  text-shadow:0 2px 10px rgba(0,0,0,.92),0 6px 30px rgba(0,0,0,.7);
+}
+/* olvasható háttérsáv a kérdés mögé */
+.kerdes-blokk{
+  position:relative;padding:20px 22px 4px;margin:0 -22px 4px;
+  background:linear-gradient(180deg,rgba(6,14,10,0) 0%,rgba(6,14,10,.5) 22%,rgba(6,14,10,.66) 100%);
+  border-radius:2px;
+}
+.valaszok{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:820px){.valaszok{grid-template-columns:1fr}}
+.valasz{
+  display:flex;align-items:flex-start;gap:14px;text-align:left;width:100%;
+  padding:15px 18px;cursor:pointer;color:var(--krem);
+  background:rgba(9,20,15,.72);border:1px solid rgba(247,244,238,.22);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  font-size:1.02rem;line-height:1.5;
+  transition:background .18s ease,border-color .18s ease,transform .12s ease;
+}
+.valasz:hover{background:rgba(23,48,36,.9);border-color:var(--arany)}
+.valasz:active{transform:translateY(1px)}
+.valasz .betu{
+  flex:0 0 auto;width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(247,244,238,.35);font-family:var(--display);font-size:.86rem;
+  color:rgba(247,244,238,.85);
+}
+.valasz[disabled]{cursor:default;opacity:.34}
+.valasz.valasztott{opacity:1;background:rgba(29,62,46,.94);border-color:var(--arany)}
+.valasz.valasztott .betu{background:var(--arany);color:var(--zold-900);border-color:var(--arany)}
+
+/* következmény */
+.kovetkezmeny{
+  background:rgba(9,20,15,.78);border-left:2px solid var(--arany);
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  padding:16px 20px;margin-top:4px;
+  animation:kovBe .45s cubic-bezier(.22,1,.36,1);
+}
+@keyframes kovBe{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.kovetkezmeny .cimke{color:var(--arany);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600}
+.kovetkezmeny p{color:rgba(247,244,238,.95);margin:8px 0 0;font-size:1.03rem;line-height:1.6}
+.hatas-sor{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;align-items:center}
+.pelyhek{font-size:.71rem;padding:3px 10px;border:1px solid rgba(247,244,238,.24);color:rgba(247,244,238,.7);white-space:nowrap}
+.pelyhek.p{color:#8ADCAF;border-color:rgba(138,220,175,.5)}
+.pelyhek.n{color:#EC9C86;border-color:rgba(236,156,134,.5)}
+.tovabb-sor{display:flex;justify-content:flex-end;margin-top:14px}
+
+/* átvezető felirat két jelenet között */
+.atvezeto{
+  position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;
+  background:rgba(5,12,9,.86);opacity:0;pointer-events:none;transition:opacity .26s ease;
+}
+.atvezeto.lat{opacity:1}
+.atvezeto .doboz{text-align:center;padding:0 24px}
+.atvezeto .sor{color:var(--arany);font-size:.68rem;letter-spacing:.26em;text-transform:uppercase;font-weight:600}
+.atvezeto .hely{
+  font-family:var(--display);font-size:clamp(1.6rem,4.6vw,3rem);color:var(--krem);margin-top:14px;
+}
+.atugras{
+  position:absolute;right:clamp(16px,3.4vw,40px);bottom:clamp(18px,3vw,34px);z-index:9;
+  background:rgba(9,20,15,.7);border:1px solid rgba(247,244,238,.24);color:rgba(247,244,238,.85);
+  padding:9px 16px;font-size:.76rem;cursor:pointer;
+}
+.atugras:hover{border-color:var(--arany);color:var(--krem)}
+
+/* --- mobil: tömörebb fejléc és döntési réteg --- */
+@media(max-width:680px){
+  .hud-fent{padding:12px 14px;gap:10px;grid-template-columns:auto 1fr auto}
+  .hud-marka > span{display:none}
+  .hud-marka .jel{width:26px;height:26px}
+  .pontszamlalo .ertek{font-size:1.75rem}
+  .pontszamlalo.lokes .ertek{transform:scale(1.32)}
+  .pontszamlalo .cimke{font-size:.52rem;letter-spacing:.15em;margin-top:11px}
+  .pontszamlalo .valtozas{font-size:.76rem;margin-top:3px}
+  .pontsav{width:92px;margin-top:8px}
+  .hud-jobb{font-size:.58rem;letter-spacing:.1em}
+  .hud-jobb .hely{font-size:.64rem;margin-top:4px}
+  .hud-lent{padding:0 12px 14px}
+  .jelenet-cim{font-size:.58rem;letter-spacing:.16em;margin-bottom:6px}
+  .kerdes-szoveg{font-size:1.42rem;margin-bottom:8px;max-width:none;line-height:1.18}
+  .kerdes-blokk{padding:14px 14px 2px;margin:0 -14px 2px}
+  .kerdes-leiras{font-size:.98rem;line-height:1.5;margin-bottom:14px;
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  .valaszok{gap:8px}
+  .valasz{padding:12px 13px;font-size:.96rem;gap:11px;line-height:1.45}
+  .valasz .betu{width:22px;height:22px;font-size:.74rem}
+  .kovetkezmeny{padding:12px 14px}
+  .kovetkezmeny p{font-size:.98rem}
+  .pelyhek{font-size:.65rem;padding:2px 8px}
+  .gomb{padding:13px 22px;font-size:.88rem}
+  .hud-lent{max-height:82svh;overflow-y:auto;overscroll-behavior:contain}
+  /* válasz után csak a választott opció marad, hogy elférjen a következmény */
+  .hud-lent.valaszolt .valasz:not(.valasztott){display:none}
+  .hud-lent.valaszolt .kerdes-leiras{display:none}
+  .zaro-blokk{padding:28px 20px}
+  .ajanlas-lista .tetel{grid-template-columns:1fr;gap:8px}
+}
+
+/* ============================================================
+   3) ZÁRÓKÉPERNYŐ
+   ============================================================ */
+#view-end{background:var(--krem-2)}
+.zaro-fejlec{
+  background:var(--zold-900);color:var(--krem);padding:clamp(60px,9vw,110px) clamp(20px,5vw,64px) clamp(50px,7vw,80px);
+  text-align:center;position:relative;overflow:hidden;
+}
+.zaro-fejlec .belso{position:relative;z-index:2}
+.zaro-fejlec .szem{color:var(--arany);justify-content:center}
+.zaro-pont{
+  font-family:var(--display);font-size:clamp(5rem,17vw,11rem);line-height:.92;color:var(--krem);
+  font-variant-numeric:tabular-nums;margin:26px 0 0;letter-spacing:-.03em;
+  animation:pontBe 1s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes pontBe{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+.zaro-pont small{font-size:.24em;color:rgba(247,244,238,.45);font-family:var(--sans);letter-spacing:.02em}
+.zaro-szint{
+  display:inline-block;margin-top:18px;padding:8px 22px;border:1px solid var(--arany);
+  color:var(--arany);font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;
+}
+.zaro-osszegzes{color:rgba(247,244,238,.78);max-width:60ch;margin:26px auto 0;font-size:1.02rem;line-height:1.75}
+
+.zaro-racs{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--vonal)}
+@media(max-width:860px){.zaro-racs{grid-template-columns:1fr}}
+.zaro-blokk{padding:clamp(32px,5vw,52px) clamp(24px,4vw,48px);border-bottom:1px solid var(--vonal);border-right:1px solid var(--vonal)}
+.zaro-blokk:nth-child(2){border-right:0}
+@media(max-width:860px){.zaro-blokk{border-right:0}}
+.zaro-blokk h3{font-family:var(--sans);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;font-weight:700;margin:0 0 24px}
+.zaro-blokk.jo h3{color:var(--jo)} .zaro-blokk.fejl h3{color:var(--kozep)}
+.tetel-lista{list-style:none;margin:0;padding:0}
+.tetel-lista li{padding:18px 0;border-top:1px solid var(--vonal)}
+.tetel-lista li:first-child{border-top:0;padding-top:0}
+.tetel-lista .fej{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:8px}
+.tetel-lista .nev{font-weight:600;font-size:1rem}
+.tetel-lista .ert{font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums;color:var(--tinta-vil)}
+.tetel-lista p{margin:0;color:var(--tinta-hal);font-size:.93rem;line-height:1.6}
+.mini-sav{height:3px;background:var(--vonal);margin-bottom:10px}
+.mini-sav i{display:block;height:100%;transition:width 1s cubic-bezier(.22,1,.36,1)}
+
+.dim-lista{display:grid;gap:20px;margin-top:8px}
+.dim-sor .fej{display:flex;justify-content:space-between;align-items:baseline;font-size:.92rem;margin-bottom:8px}
+.dim-sor .fej b{font-weight:600}
+.dim-sor .fej span{font-family:var(--display);font-size:1.25rem;color:var(--tinta-vil);font-variant-numeric:tabular-nums}
+.dim-sav{height:4px;background:var(--vonal)}
+.dim-sav i{display:block;height:100%;transition:width 1s cubic-bezier(.22,1,.36,1)}
+.radar-doboz{display:flex;justify-content:center;padding:10px 0 0}
+.radar-doboz svg{max-width:100%;height:auto}
+
+.ajanlas-lista{display:grid;gap:0;border-top:1px solid var(--vonal);margin-top:46px}
+.ajanlas-lista .tetel{display:grid;grid-template-columns:auto 1fr;gap:26px;padding:26px 0;border-bottom:1px solid var(--vonal);align-items:start}
+.ajanlas-lista .tetel .sz{font-family:var(--display);font-size:1.5rem;color:var(--arany);line-height:1}
+.ajanlas-lista .tetel b{display:block;font-size:1.05rem;margin-bottom:7px;font-weight:600}
+.ajanlas-lista .tetel p{margin:0;color:var(--tinta-hal);font-size:.95rem}
+
+.mintazat-doboz{background:var(--zold-800);color:rgba(247,244,238,.85);padding:clamp(26px,4vw,40px);margin-top:44px}
+.mintazat-doboz .szem{color:var(--arany)}
+.mintazat-doboz p{margin:18px 0 0;font-size:1rem;line-height:1.72}
+.mintazat-doboz b{color:var(--krem)}
+
+details.naplo{border-top:1px solid var(--vonal);border-bottom:1px solid var(--vonal);margin-top:44px}
+details.naplo summary{cursor:pointer;padding:22px 0;font-size:.9rem;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.naplo summary::-webkit-details-marker{display:none}
+details.naplo summary::after{content:"+";font-family:var(--display);font-size:1.5rem;color:var(--tinta-vil)}
+details.naplo[open] summary::after{content:"–"}
+details.naplo ol{margin:0 0 26px;padding-left:20px;color:var(--tinta-hal);font-size:.93rem}
+details.naplo li{margin-bottom:11px}
+details.naplo li b{color:var(--tinta);font-weight:600}
+
+.kuldes-doboz{margin-top:46px}
+.gombsor{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+.allapot{margin-top:16px;font-size:.9rem;min-height:1.4em}
+.allapot.folyamat{color:var(--kozep)} .allapot.siker{color:var(--jo)} .allapot.hiba{color:var(--rossz)}
+textarea.riport{
+  width:100%;min-height:200px;margin-top:14px;padding:16px;border:1px solid var(--vonal);
+  background:var(--krem);color:var(--tinta-hal);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.78rem;line-height:1.6;resize:vertical;
+}
+.betolto{
+  position:fixed;inset:0;z-index:60;background:var(--zold-900);display:flex;align-items:center;justify-content:center;
+  color:var(--krem);flex-direction:column;gap:20px;transition:opacity .6s ease;
+}
+.betolto.tunik{opacity:0;pointer-events:none}
+.betolto .kor{width:44px;height:44px;border:1px solid rgba(247,244,238,.25);border-top-color:var(--arany);border-radius:50%;animation:porog 1s linear infinite}
+@keyframes porog{to{transform:rotate(360deg)}}
+.betolto .sz{font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(247,244,238,.6)}
+@media (prefers-reduced-motion: reduce){*{transition-duration:.01ms !important;animation-duration:.01ms !important}}
+</style>
+</head>
+<body>
+
+<div class="betolto" id="betolto"><div class="kor"></div><div class="sz">Jelenet betöltése</div></div>
+
+<!-- ============ 1. NYITÓ ============ -->
+<section id="view-start">
+  <div class="hero">
+    <canvas id="hero-vaszon" aria-hidden="true"></canvas>
+    <div class="hero-fatyol"></div>
+    <header class="fejlec">
+      <div class="marka">
+        <svg class="jel" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <circle cx="20" cy="20" r="18.5" stroke="#C9A063" stroke-width="1"/>
+          <ellipse cx="17" cy="20" rx="7" ry="8.5" stroke="#F7F4EE" stroke-width="1.1"/>
+          <ellipse cx="23" cy="20" rx="7" ry="8.5" stroke="#C9A063" stroke-width="1.1"/>
+        </svg>
+        <span><b>Vezetői Bizalom</b><span>Döntési technikák</span></span>
+      </div>
+    </header>
+    <div class="hero-tart">
+      <span class="szem">Interaktív vezetői szimuláció</span>
+      <h1>A bizalom nem kijelentés.<em>Döntésekből épül.</em></h1>
+      <p>Tíz valósághű helyzet, öt bizalmi dimenzió. A válaszaid megmutatják, hogyan hat a vezetői működésed azokra, akik számítanak rád.</p>
+      <button class="gomb" type="button" id="lapoz-gomb">Játék indítása <span class="nyil" aria-hidden="true">→</span></button>
+    </div>
+    <div class="hero-le" aria-hidden="true"><i></i>Görgess</div>
+  </div>
+
+  <section class="szakasz krem" id="szerepkor-szakasz">
+    <div class="belso">
+      <span class="szem">01 · Szerepkör</span>
+      <h2>Melyik helyzetben teszed próbára magad?</h2>
+      <p class="bevezeto">Mindhárom pálya ugyanazt a tíz döntési helyzetet járja végig, más környezetben és más érintettekkel.</p>
+      <div class="mod-racs" id="mod-racs" role="group" aria-label="Szerepkör választása"></div>
+      <div class="hiba" id="mod-hiba" role="alert" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="szakasz">
+    <div class="belso">
+      <span class="szem">02 · Azonosítás</span>
+      <h2>Készen állsz?</h2>
+      <p class="bevezeto">A nevedet a személyes értékelésben használjuk, az e-mail-címedre pedig elküldjük az eredményt.</p>
+      <form class="urlap" id="start-form" novalidate>
+        <div class="mezo">
+          <label for="nev">Neved</label>
+          <div class="beviteli" id="nev-doboz">
+            <input type="text" id="nev" autocomplete="name" placeholder="pl. Kovács Anna" aria-describedby="nev-hiba" required>
+          </div>
+          <div class="hiba" id="nev-hiba" role="alert" aria-live="polite"></div>
+        </div>
+        <div class="mezo">
+          <label for="email">E-mail-címed</label>
+          <div class="beviteli" id="email-doboz">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="1.5"/><path d="M3 6l9 7 9-7"/></svg>
+            <input type="email" id="email" autocomplete="email" placeholder="anna@pelda.hu" aria-describedby="email-hiba" required>
+          </div>
+          <div class="hiba" id="email-hiba" role="alert" aria-live="polite"></div>
+        </div>
+        <button class="gomb sotet" type="submit">Belépés a történetbe <span class="nyil" aria-hidden="true">→</span></button>
+        <p class="apro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
+          Személyre szabott értékeléssel
+        </p>
+      </form>
+    </div>
+  </section>
+
+  <footer class="lablec-nyito">
+    <div class="marka">
+      <svg class="jel" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <circle cx="20" cy="20" r="18.5" stroke="#C9A063" stroke-width="1"/>
+        <ellipse cx="17" cy="20" rx="7" ry="8.5" stroke="#F7F4EE" stroke-width="1.1"/>
+        <ellipse cx="23" cy="20" rx="7" ry="8.5" stroke="#C9A063" stroke-width="1.1"/>
+      </svg>
+      <span><b>Vezetői Bizalom</b><span>Döntési technikák</span></span>
+    </div>
+    <div>A történetek fiktívek. A kiértékelés fejlesztő célú, nem minősítés.</div>
+  </footer>
+</section>
+
+<!-- ============ 2. JÁTÉK ============ -->
+<section id="view-game" class="rejt" aria-label="Döntési szimuláció">
+  <canvas id="jatek-vaszon"></canvas>
+  <div class="jelenet-fatyol" aria-hidden="true"></div>
+
+  <div class="hud-fent">
+    <div class="hud-marka">
+      <svg class="jel" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <circle cx="20" cy="20" r="18.5" stroke="#C9A063" stroke-width="1"/>
+        <ellipse cx="17" cy="20" rx="7" ry="8.5" stroke="#F7F4EE" stroke-width="1.1"/>
+        <ellipse cx="23" cy="20" rx="7" ry="8.5" stroke="#C9A063" stroke-width="1.1"/>
+      </svg>
+      <span><b>Vezetői Bizalom</b><span id="hud-palya">Vállalat</span></span>
+    </div>
+
+    <div class="pontszamlalo" id="pontszamlalo">
+      <span class="ertek" id="pont-ertek">50</span>
+      <span class="cimke">Bizalomindex</span>
+      <span class="valtozas" id="pont-valtozas"></span>
+      <div class="pontsav"><i id="pont-sav"></i></div>
+      <p class="sr" role="status" aria-live="polite" id="pont-elo"></p>
+    </div>
+
+    <div class="hud-jobb">
+      <span id="hud-halad">01 / 10 döntés</span>
+      <span class="hely" id="hud-hely"></span>
+    </div>
+  </div>
+
+  <div class="atvezeto" id="atvezeto" aria-hidden="true">
+    <div class="doboz">
+      <div class="sor" id="atvezeto-sor">1. jelenet</div>
+      <div class="hely" id="atvezeto-hely"></div>
+    </div>
+  </div>
+  <button class="atugras rejt" type="button" id="atugras-gomb">Jelenet átugrása</button>
+
+  <div class="hud-lent" id="hud-lent">
+    <div class="kozep">
+      <div class="kerdes-blokk">
+        <div class="jelenet-cim" id="dontes-cimke"></div>
+        <h2 class="kerdes-szoveg" id="dontes-cim"></h2>
+        <p class="kerdes-leiras" id="dontes-leiras"></p>
+      </div>
+      <div class="valaszok" id="valaszok" role="group" aria-label="Válaszlehetőségek"></div>
+      <div class="kovetkezmeny rejt" id="kovetkezmeny" role="status" aria-live="polite">
+        <span class="cimke">Következmény</span>
+        <p id="kovetkezmeny-szoveg"></p>
+        <div class="hatas-sor" id="hatas-sor"></div>
+      </div>
+      <div class="tovabb-sor rejt" id="tovabb-sor">
+        <button class="gomb" type="button" id="tovabb-gomb">Tovább <span class="nyil" aria-hidden="true">→</span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. KIÉRTÉKELÉS ============ -->
+<section id="view-end" class="rejt" aria-labelledby="zaro-cim">
+  <div class="zaro-fejlec">
+    <div class="belso">
+      <span class="szem" id="zaro-cim">Kiértékelés</span>
+      <div class="zaro-pont" id="vegso-pont">50<small>/100</small></div>
+      <div><span class="zaro-szint" id="vegso-szint">Ingadozó</span></div>
+      <p class="zaro-osszegzes" id="vegso-osszegzes"></p>
+    </div>
+  </div>
+
+  <div class="zaro-racs">
+    <div class="zaro-blokk jo">
+      <h3>Előnyeink</h3>
+      <ul class="tetel-lista" id="erossegek"></ul>
+    </div>
+    <div class="zaro-blokk fejl">
+      <h3>Hátrányaink</h3>
+      <ul class="tetel-lista" id="gyengesegek"></ul>
+    </div>
+  </div>
+
+  <section class="szakasz krem">
+    <div class="belso">
+      <span class="szem">Dimenziók</span>
+      <h2>Hol áll most a bizalmad?</h2>
+      <div class="radar-doboz" id="radar-doboz" aria-hidden="true"></div>
+      <p class="sr" id="radar-alt"></p>
+      <div class="dim-lista" id="dim-lista"></div>
+      <div class="mintazat-doboz">
+        <span class="szem">Döntési mintázat</span>
+        <p id="mintazat"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="szakasz">
+    <div class="belso">
+      <span class="szem">Mit csinálj másképp</span>
+      <h2>Három lépés a következő döntéshez</h2>
+      <div class="ajanlas-lista" id="ajanlasok"></div>
+
+      <details class="naplo">
+        <summary>Döntési napló · 10 döntés</summary>
+        <ol id="vegso-naplo"></ol>
+      </details>
+
+      <div class="kuldes-doboz">
+        <span class="szem">Eredmény elküldése</span>
+        <p class="bevezeto" id="email-info" style="margin-top:16px"></p>
+        <div class="gombsor">
+          <button class="gomb sotet" type="button" id="kuld-gomb">Elküldés e-mailben</button>
+          <button class="gomb vonalas" type="button" id="mailto-gomb">Megnyitás levelezőben</button>
+          <button class="gomb vonalas" type="button" id="masol-gomb">Másolás vágólapra</button>
+          <button class="gomb vonalas" type="button" id="letolt-gomb">Letöltés</button>
+        </div>
+        <div class="allapot" id="kuld-allapot" role="status" aria-live="polite"></div>
+        <details class="naplo" style="margin-top:24px">
+          <summary>A kiértékelés szövege</summary>
+          <textarea class="riport" id="riport-szoveg" readonly aria-label="A kiértékelés szövege"></textarea>
+        </details>
+        <div class="gombsor"><button class="gomb vonalas" type="button" id="ujra-gomb">Új játék</button></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="lablec-nyito">
+    <div class="marka">
+      <svg class="jel" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <circle cx="20" cy="20" r="18.5" stroke="#C9A063" stroke-width="1"/>
+        <ellipse cx="17" cy="20" rx="7" ry="8.5" stroke="#F7F4EE" stroke-width="1.1"/>
+        <ellipse cx="23" cy="20" rx="7" ry="8.5" stroke="#C9A063" stroke-width="1.1"/>
+      </svg>
+      <span><b>Vezetői Bizalom</b><span>Döntési technikák</span></span>
+    </div>
+    <div>A történetek fiktívek. A kiértékelés fejlesztő célú, nem minősítés.</div>
+  </footer>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+"use strict";
+
+/* ============================================================================
+   1) BEÁLLÍTÁSOK — EZEKET KELL KITÖLTENED
+   ----------------------------------------------------------------------------
+   EmailJS beállítás (kb. 5 perc, ingyenes csomaggal is működik):
+     1. Regisztrálj: https://www.emailjs.com → Account → API Keys → Public Key.
+     2. Email Services → Add New Service (pl. Gmail) → a kapott Service ID.
+     3. Email Templates → Create New Template, ezekkel a változókkal:
+             To Email:  {{to_email}}
+             Subject :  Vezetoi Bizalom eredmeny - {{player_name}}
+             Content :  {{report}}
+        (Opcionálisan: {{score}}, {{level}}, {{mode}}, {{reply_to}}.)
+     4. Írd be a három értéket alább. Szerveroldali kódra nincs szükség.
+
+   EREDMENY_MASOLAT_CIM: ha ide beírsz egy címet (pl. az oktató e-mail-címét),
+   minden eredményről másolat is megy oda. Üresen hagyva nem küld másolatot.
+   ========================================================================== */
+
+const EMAILJS_PUBLIC_KEY   = "IDE_JON_A_PUBLIC_KEY";
+const EMAILJS_SERVICE_ID   = "IDE_JON_A_SERVICE_ID";
+const EMAILJS_TEMPLATE_ID  = "IDE_JON_A_TEMPLATE_ID";
+const EREDMENY_MASOLAT_CIM = "";
+
+/* A kameramozgás hossza két jelenet között (ms) és a kérdés megjelenéséig eltelt idő. */
+const KAMERA_IDO   = 1250;   /* a kamera ennyi idő alatt ér át a következő helyszínre */
+const JELENET_IDO  = 1550;   /* ennyi idő után jelenik meg a döntés */
+
+/* ============================================================================
+   2) A BIZALOM ÖT DIMENZIÓJA
+   ========================================================================== */
+
+const DIMENZIOK = [
+  { id:"kov", nev:"Következetesség",              rovid:"Következetesség",    kod:"Köv", suly:0.22, leiras:"betartja-e, amit ígért; kiszámítható-e" },
+  { id:"atl", nev:"Átláthatóság és kommunikáció", rovid:"Átláthatóság",       kod:"Átl", suly:0.22, leiras:"nyíltan megosztja-e a döntés okait" },
+  { id:"min", nev:"Döntési minőség",              rovid:"Döntési minőség",    kod:"Min", suly:0.20, leiras:"strukturáltan, tények alapján dönt-e" },
+  { id:"fel", nev:"Felelősségvállalás",           rovid:"Felelősségvállalás", kod:"Fel", suly:0.18, leiras:"vállalja-e a hibát, tanul-e belőle" },
+  { id:"bev", nev:"Érintettek bevonása",          rovid:"Bevonás",            kod:"Bev", suly:0.18, leiras:"bevonja-e azokat, akiket a döntés érint" }
+];
+
+const SZINTEK = [
+  { min:0,  max:39,  nev:"Törékeny bizalom", szin:"var(--rossz)" },
+  { min:40, max:59,  nev:"Ingadozó",         szin:"var(--kozep)" },
+  { min:60, max:79,  nev:"Stabil",           szin:"var(--arany)" },
+  { min:80, max:100, nev:"Kiemelkedő",       szin:"var(--jo)" }
+];
+
+const STILUSOK = {
+  gyors:       "gyors, egyszemélyi döntés",
+  strukturalt: "strukturált, elemző döntés",
+  bevono:      "bevonó, konszenzuskereső döntés",
+  ovatos:      "óvatos, halasztó döntés",
+  delegalo:    "delegáló döntés"
+};
+
+/* ============================================================================
+   3) PONTOZÁSI RENDSZER — mindhárom sztoriban azonos nagyságrend
+     mintaértékű döntés ......  kb. +22 .. +30
+     részben jó döntés .......  kb.  +1 .. +14
+     gyenge döntés ...........  kb.  -7 .. -16
+     súlyosan romboló döntés .  kb. -18 .. -28
+   ========================================================================== */
+const STORIK = {
+
+/* ---------------------------------------------------------------------------
+   A) VÁLLALATI KÖZÉPVEZETŐ — Meridian Kft.
+   A helyzetek hétköznapiak; a mögöttük álló döntéstechnikát a válasz utáni
+   visszajelzés nevezi meg, nem maga a kérdés.
+   ------------------------------------------------------------------------- */
+vallalati:{
+  nev:"Vállalati középvezető",
+  rovid:"Vállalat",
+  alcim:"Meridian Kft.",
+  hos:"középvezető",
+  leiras:"Egy szolgáltatócég csapatát vezeted. Romlik az ügyfélelégedettség, és rád bízták, hogy tegyél vele valamit.",
+  kulcsTechnikak:[
+    {k:"CATWOE",              cim:"CATWOE-lista"},
+    {k:"érintett-térkép",     cim:"érintett-térkép és érintetterőtér"},
+    {k:"halszálka",           cim:"halszálka (Ishikawa) diagram és Pareto-elemzés"},
+    {k:"partnerség",          cim:"érdemi részvétel a részvételi létrán"},
+    {k:"Több nézőpont",       cim:"többféle nézőpont és forrás bevonása"},
+    {k:"Névleges csoport",    cim:"névleges csoport módszer"},
+    {k:"Hibafa",              cim:"hibafa"},
+    {k:"Even Swap",           cim:"Even Swap"},
+    {k:"etikai ellenőrző",    cim:"etikai ellenőrző lista és moralitás detektorok"},
+    {k:"Következtetési létra",cim:"következtetési létra és reflektív gondolkodás"}
+  ],
+  jelenetek:["Az iroda","A tárgyaló","A felettes ajtaja","Két osztály között","Az ügyfélriport","Az asztalod","A rendszerindulás","A mérlegelés","Az éjszakai ügyelet","A csapatszoba"],
+  szituaciok:[
+
+/* 1 */ {
+  cimke:"A csapatod", tema:"a feladat értelmezése",
+  cim:"„Legyen kevesebb panasz”",
+  jelenet:"Az iroda",
+  leiras:"A főnököd egyetlen mondatban adta ki a feladatot. A csapatod már ötletelne. Azt viszont senki nem tudja pontosan, mi történik az ügyféllel, mielőtt leül panaszt írni.",
+  opciok:[
+    { szoveg:"Mielőtt bármit kitaláltok, leültök egy órára: kit érint ez, ki csinálja, mi történik most, és mi az, amit nem tudtok.",
+      technika:"CATWOE-lista", stilus:"strukturalt",
+      hatas:{kov:2, atl:5, min:11, fel:0, bev:7},
+      vissza:"Az egy óra alatt kiderült két olyan dolog, amiről a feladatban szó sem volt. Amit rosszul kérdezel, arra hiába válaszolsz jól.",
+      naplo:"Újrafogalmazta a kapott feladatot, mielőtt megoldást keresett." },
+    { szoveg:"Elfogadod úgy, ahogy jött, és megkéred a csapatot, hozzon ötleteket jövő hétre.",
+      technika:"A kapott problémameghatározás kritika nélküli átvétele", stilus:"gyors",
+      hatas:{kov:1, atl:-2, min:-8, fel:-1, bev:-4},
+      vissza:"Gyorsan haladtok, csak épp arra a kérdésre, amit más tett fel. Ha az rosszul van feltéve, a legjobb ötlet sem segít.",
+      naplo:"Változtatás nélkül vitte tovább a kapott feladatot." },
+    { szoveg:"Szerinted a baj egyszerű: kevés az ember a vonalon. Kérsz két új kollégát.",
+      technika:"A legegyszerűbb magyarázat ellenőrzés nélküli elfogadása", stilus:"gyors",
+      hatas:{kov:-1, atl:-1, min:-6, fel:-1, bev:-4},
+      vissza:"A legkézenfekvőbb magyarázat gyakran igaz, itt viszont senki nem ellenőrizte. Két új ember nem javít meg egy rossz folyamatot.",
+      naplo:"Létszámbővítéssel válaszolt a panaszokra." },
+    { szoveg:"Magadban átfogalmazod: nem a panasz a baj, hanem a hibás megrendelés. Ezt viszont nem beszéled meg senkivel.",
+      technika:"Eredménycélra épülő problémameghatározás", stilus:"ovatos",
+      hatas:{kov:2, atl:3, min:7, fel:0, bev:-1},
+      vissza:"Jó irányba indultál, csak egyedül. Amit nem közösen fogalmaztok meg, azt nem is közösen fogják megoldani.",
+      naplo:"Egyedül fogalmazta újra a problémát." }
+  ]
+},
+
+/* 2 */ {
+  cimke:"A csapatod", tema:"kit érint a döntés",
+  cim:"Kit hívjunk be a megbeszélésre?",
+  jelenet:"A tárgyaló",
+  leiras:"Két hét múlva bemutatod a megoldási irányokat. A tárgyalóban ott ül a csapatod és az értékesítés. Az ügyfelekről, a beszállítókról és a háttérterületekről csak beszéltek — ők maguk nincsenek jelen.",
+  opciok:[
+    { szoveg:"Felírjátok egy táblára, kire hat ez a döntés, és melyikük tud tenni ellene vagy érte. Kiderül, kit nem kérdeztetek meg soha.",
+      technika:"Érintett-térkép és érintetterőtér", stilus:"strukturalt",
+      hatas:{kov:2, atl:5, min:8, fel:0, bev:11},
+      vissza:"Kiderült, hogy akire a legjobban hat, annak van a legkevesebb beleszólása. Innentől tudod, kit kell külön megkeresned.",
+      naplo:"Feltérképezte, kire hat a döntés és kinek mekkora a befolyása." },
+    { szoveg:"Azzal foglalkoztok, akinek van beleszólása. A többiek úgyis elfogadják, ami lesz.",
+      technika:"A kiszolgáltatott pozíciójú érintettek kihagyása", stilus:"gyors",
+      hatas:{kov:0, atl:-2, min:-4, fel:-3, bev:-9},
+      vissza:"A hangosak elégedettek lesznek. A kockázat viszont pont azoktól fog jönni, akiket kihagytatok.",
+      naplo:"Csak a nagy befolyású érintettekkel foglalkozott." },
+    { szoveg:"Csinálsz egy listát az érintettekről, de nem nézitek meg, kinek mekkora a súlya.",
+      technika:"Részleges érintett-elemzés", stilus:"ovatos",
+      hatas:{kov:1, atl:1, min:2, fel:0, bev:3},
+      vissza:"A lista jobb a semminél. Azt viszont továbbra sem tudod, ki tud megállítani egy döntést és ki nem.",
+      naplo:"Érintettlistát készített, elemzés nélkül." },
+    { szoveg:"Nem kérdezel senkit: húsz éve ismered ezt a piacot, tudod, mit akarnak.",
+      technika:"Séma alapú döntés az érintettek mellőzésével", stilus:"gyors",
+      hatas:{kov:1, atl:-2, min:-6, fel:-1, bev:-7},
+      vissza:"A húsz év tapasztalat gyors, és pont ezért nem veszi észre, ha közben megváltozott a helyzet.",
+      naplo:"Saját tapasztalatára hagyatkozott az érintettek megkérdezése helyett." }
+  ]
+},
+
+/* 3 */ {
+  cimke:"A felettesed", tema:"a valódi ok megkeresése",
+  cim:"„Mégis mi ennek az oka?”",
+  jelenet:"A felettes ajtaja",
+  leiras:"A főnököd grafikonja három negyedéve romlik, és most rákérdez. A csapatban mindenkinek megvan a maga magyarázata, és mind meggyőzően hangzik.",
+  opciok:[
+    { szoveg:"Összeültök, és felrajzoljátok, honnan jöhet a baj: ember, folyamat, rendszer, ügyfél. Utána megnézitek, melyik kettő adja a panaszok többségét.",
+      technika:"Halszálka (Ishikawa) diagram és Pareto-elemzés", stilus:"strukturalt",
+      hatas:{kov:2, atl:6, min:11, fel:0, bev:6},
+      vissza:"Kiderült, hogy a panaszok nagy részét két ok adja. Most már azt is tudod, hol érdemes elkezdeni.",
+      naplo:"Ok-okozati elemzéssel tárta fel a romlás okait." },
+    { szoveg:"Elfogadod a leghangosabban képviselt magyarázatot, és arra intézkedsz.",
+      technika:"Az első meggyőző magyarázat elfogadása", stilus:"gyors",
+      hatas:{kov:-1, atl:-2, min:-8, fel:0, bev:-4},
+      vissza:"Az intézkedés elindult, de nem tudod, a valódi okot kezeli-e. Ha nem, fél év múlva ugyanitt lesztek, csak drágábban.",
+      naplo:"A leghangosabb magyarázat alapján intézkedett." },
+    { szoveg:"Kikéred a panaszstatisztikát, és a három leggyakoribb panasztípusra intézkedsz.",
+      technika:"Tünetkezelés adat alapján", stilus:"ovatos",
+      hatas:{kov:1, atl:2, min:3, fel:0, bev:0},
+      vissza:"A gyakoriságot látod, az okot nem. A tünetek kezelése egy darabig javítja a számokat, aztán visszaáll minden.",
+      naplo:"A leggyakoribb panasztípusokra intézkedett ok-okozati elemzés nélkül." },
+    { szoveg:"Azt mondod, hogy romlik a piac, ez nem rajtatok múlik.",
+      technika:"„Hamisan negatív” hiba: a befolyás tagadása", stilus:"gyors",
+      hatas:{kov:-2, atl:-4, min:-5, fel:-9, bev:0},
+      vissza:"Lehet, hogy a piac tényleg romlik. Azzal viszont, hogy nincs ráhatásod, azt is kimondtad, hogy nincs mit tenned.",
+      naplo:"A piacra hárította a romló számokat." }
+  ]
+},
+
+/* 4 */ {
+  cimke:"Társosztályok", tema:"bevonás vagy tájékoztatás",
+  cim:"Nekik is szólni kellene",
+  jelenet:"Két osztály között",
+  leiras:"A készülő megoldás két másik osztály napi munkáját írja át. Eddig nem hallottak róla semmit. El kell döntened, hogyan tudják meg.",
+  opciok:[
+    { szoveg:"Meghívod őket egy közös délutánra: együtt rakjátok össze a megoldást, és a rájuk tartozó kérdésekben ők döntenek.",
+      technika:"Érdemi részvétel: partnerség a részvételi létrán", stilus:"bevono",
+      hatas:{kov:2, atl:7, min:5, fel:0, bev:12},
+      vissza:"Lassabban lett kész, de a végrehajtás mögött ott áll két olyan osztály, amelyik a magáénak érzi.",
+      naplo:"Közös műhelyben, partnerként vonta be a másik két osztályt." },
+    { szoveg:"Küldesz egy körlevelet a kész döntésről.",
+      technika:"Tájékoztatás: a részvételi létra jelképes foka", stilus:"gyors",
+      hatas:{kov:1, atl:-1, min:-1, fel:0, bev:-6},
+      vissza:"A kötelezettséget letudtad, a bevonást nem. Ezt a különbséget mindenki pontosan érzi.",
+      naplo:"Körlevélben tájékoztatta a másik két osztályt a kész döntésről." },
+    { szoveg:"Tartasz nekik egy prezentációt arról, miért jó ez nekik.",
+      technika:"Terápia: kioktatás a részvételi létra alsó fokán", stilus:"gyors",
+      hatas:{kov:0, atl:-6, min:-2, fel:-3, bev:-9},
+      vissza:"Te beszéltél, ők hallgattak. A meggyőzés nem pótolja a bevonást, csak elfedi a hiányát.",
+      naplo:"Meggyőző prezentációval kezelte a másik két osztályt." },
+    { szoveg:"Megígérsz nekik plusz keretet, ha nem akadékoskodnak.",
+      technika:"Kompenzáció: a támogatás megvásárlása", stilus:"gyors",
+      hatas:{kov:-2, atl:-5, min:0, fel:-6, bev:-7},
+      vissza:"A támogatás megvan, a bizalom nincs. Ha átlátnak a szándékon, legközelebb az árat fogják kérdezni, nem az indokot.",
+      naplo:"Anyagi ígérettel szerezte meg a másik két osztály támogatását." }
+  ]
+},
+
+/* 5 */ {
+  cimke:"Adatok", tema:"minek higgyünk",
+  cim:"Az adat vagy a három telefon?",
+  jelenet:"Az ügyfélriport",
+  leiras:"Két dolog fekszik előtted. Egy vaskos adatriport, amit senki nem olvasott végig, és három nagyon emlékezetes ügyfélhívás, amit a múlt héten a saját füleddel hallottál.",
+  opciok:[
+    { szoveg:"Több irányból nézed meg: adat, néhány ügyfélhívás, és megkérdezed az ügyintézőket is. Amit egymásnak ellentmond, azt külön felírod.",
+      technika:"Több nézőpont bevonása, az ellentmondó információk megtartása", stilus:"strukturalt",
+      hatas:{kov:2, atl:6, min:10, fel:0, bev:6},
+      vissza:"Az ellentmondásokat kellemetlen nézni, de pont ott van az új információ. Amit kidobsz, azt már nem tudod megvizsgálni.",
+      naplo:"Több forrásból, több nézőpontból gyűjtött információt." },
+    { szoveg:"A három emlékezetes esetre építesz. Azok mutatják, mi történik valójában.",
+      technika:"Elérhetőségi torzítás", stilus:"gyors",
+      hatas:{kov:-1, atl:-3, min:-8, fel:0, bev:-3},
+      vissza:"Ami frissen és élénken él bennünk, azt gyakoribbnak hisszük. Három eset nem a valóság, csak az, ami eszedbe jut.",
+      naplo:"Három emlékezetes esetre alapozta a döntést." },
+    { szoveg:"Kihagyod az elemzésből azt a két táblát, ami nem illik a kialakult képbe.",
+      technika:"Hárítás: az inkonzisztens információ leértékelése", stilus:"gyors",
+      hatas:{kov:-2, atl:-8, min:-7, fel:-5, bev:0},
+      vissza:"Az oda nem illő adat a legdrágább, amit eldobhatsz: pont az mutatta volna meg, hol téves a képed.",
+      naplo:"Kihagyta az elemzésből a képbe nem illő adatokat." },
+    { szoveg:"A tavalyi felmérést veszed alapul, és mindent ahhoz mérsz.",
+      technika:"Referenciapont (horgonyzás)", stilus:"ovatos",
+      hatas:{kov:2, atl:1, min:-4, fel:0, bev:0},
+      vissza:"A kiindulópont kényelmes, csak odaköti a gondolkodásodat. Az újat kisebb súllyal veszed majd figyelembe, mint kellene.",
+      naplo:"A tavalyi felmérést használta kiinduló referenciapontként." }
+  ]
+},
+
+/* 6 */ {
+  cimke:"A csapatod", tema:"honnan jönnek a javaslatok",
+  cim:"Már megvan a megoldásod",
+  jelenet:"Az asztalod",
+  leiras:"Megvan a probléma, megvannak az okok. Most javaslatok kellenek. Neked már van egy kész ötleted, és elég biztos vagy benne.",
+  opciok:[
+    { szoveg:"Megkéred a csapatot, hogy előbb mindenki magának írja le a javaslatait. Csak azután olvassátok fel őket és vitatkoztok.",
+      technika:"Névleges csoport módszer", stilus:"bevono",
+      hatas:{kov:3, atl:4, min:9, fel:0, bev:10},
+      vissza:"Így nem a leghangosabb köré rendeződtek az ötletek. Két olyan javaslat is bekerült, ami egy szabad vitában elvérzett volna.",
+      naplo:"Előbb önálló írásban, csak utána közösen gyűjtötte a javaslatokat." },
+    { szoveg:"Előadod az ötletedet, és megkérdezed, van-e ellenvetés.",
+      technika:"A vezetői javaslat dominanciája", stilus:"gyors",
+      hatas:{kov:1, atl:-2, min:-6, fel:0, bev:-8},
+      vissza:"Ellenvetés nem lesz, mert a te ötletedről van szó. A csendet ilyenkor könnyű egyetértésnek olvasni.",
+      naplo:"Saját javaslatát terjesztette elő ötletgyűjtés helyett." },
+    { szoveg:"Ötletelést tartotok, de menet közben rögtön megmondod, melyik jó és melyik nem.",
+      technika:"Az ítélkezés felfüggesztésének megsértése", stilus:"gyors",
+      hatas:{kov:0, atl:-1, min:-5, fel:0, bev:-5},
+      vissza:"A harmadik lehűtött ötlet után a többiek már nem szólalnak meg. Az értékelést el kell választani a gyűjtéstől.",
+      naplo:"Ötletelés közben azonnal minősítette a javaslatokat." },
+    { szoveg:"Azt kéritek: hogyan oldaná meg ezt egy étterem, egy repülőtér, egy kórház? Onnan tértek vissza a saját ügyetekhez.",
+      technika:"Szinektika: analógiás gondolkodás", stilus:"strukturalt",
+      hatas:{kov:0, atl:2, min:7, fel:0, bev:5},
+      vissza:"Az analógia szokatlan irányt nyitott. A visszaút a saját helyzethez viszont még munkát igényel.",
+      naplo:"Analógiák mentén keresett megoldásokat." }
+  ]
+},
+
+/* 7 */ {
+  cimke:"Bevezetés", tema:"felkészülés a hibára",
+  cim:"Két hét múlva élesedik",
+  jelenet:"A rendszerindulás",
+  leiras:"Az új folyamat két hét múlva indul. A terv kész, a tesztek zöldek, a csapat magabiztos. Az előző hasonló bevezetésnél menet közben derültek ki a valódi bajok.",
+  opciok:[
+    { szoveg:"Leültök egy órára, és végigveszitek: ha ez elromlik, mi lesz az első jele, mi okozhatja, és ki lép.",
+      technika:"Hibafa", stilus:"strukturalt",
+      hatas:{kov:2, atl:5, min:11, fel:3, bev:6},
+      vissza:"Négy kockázatból háromra lett korai jele és felelőse. Az az óra most sokat spórolt.",
+      naplo:"Előre végigvette a bevezetés lehetséges hibáit." },
+    { szoveg:"A tesztek rendben, indultok. A felesleges aggodalmaskodás csak lassítana.",
+      technika:"Kockázatelemzés mellőzése", stilus:"gyors",
+      hatas:{kov:1, atl:0, min:-7, fel:-4, bev:-3},
+      vissza:"Ha sima az indulás, senki nem veszi észre a különbséget. Ha nem, a csapat arra fog emlékezni, hogy nem kérdezted meg őket.",
+      naplo:"Kockázatelemzés nélkül indította a bevezetést." },
+    { szoveg:"Leírtok három lehetséges kimenetet, de azt nem beszélitek meg, mi lesz, ha a rossz jön be.",
+      technika:"Forgatókönyv-elemzés lépések nélkül", stilus:"ovatos",
+      hatas:{kov:1, atl:3, min:5, fel:0, bev:2},
+      vissza:"A képek megvannak, a döntési támpont nincs. Az elemzés ereje abban lett volna, hogy mit tesztek, ha baj van.",
+      naplo:"Három forgatókönyvet írt, intézkedés nélkül." },
+    { szoveg:"Elhalasztod az indulást, amíg minden kockázat ki nem zárható.",
+      technika:"Döntés halogatása", stilus:"ovatos",
+      hatas:{kov:-7, atl:-1, min:-3, fel:-2, bev:0},
+      vissza:"Minden kockázat sosem zárható ki, így a halasztásnak nincs végpontja. A kiszámíthatóságod viszont már most sérült.",
+      naplo:"Elhalasztotta a bevezetést a kockázatok teljes kizárásáig." }
+  ]
+},
+
+/* 8 */ {
+  cimke:"A csapatod", tema:"mi alapján válassz",
+  cim:"Olcsó, gyors vagy tartós?",
+  jelenet:"A mérlegelés",
+  leiras:"Három megoldás maradt talpon. Az egyik olcsó és gyors, a másik drága, de tartós, a harmadik középen van. A csapat két hete köröz ugyanezen.",
+  opciok:[
+    { szoveg:"Kimondjátok, mennyi többletköltség ér meg mennyi minőséget. Így egyesével kiesnek a szempontok, és marad egy döntés.",
+      technika:"Even Swap: átváltások nyílt mérlegelése", stilus:"strukturalt",
+      hatas:{kov:3, atl:6, min:11, fel:0, bev:5},
+      vissza:"Az átváltás kimondásával a vita számokká vált. Most már az is látszik, mit adtatok fel és miért.",
+      naplo:"Nyílt átváltásokkal szűkítette a szempontokat." },
+    { szoveg:"A leggyorsabbat választod, a többi szempontot elengeded.",
+      technika:"Lexikografikus szabály: egyetlen szempont", stilus:"gyors",
+      hatas:{kov:2, atl:-1, min:-6, fel:-2, bev:-3},
+      vissza:"A gyorsaság megvan, a többi szempont nem tűnt el, csak áttolódott valaki máshoz.",
+      naplo:"Kizárólag a gyorsaság alapján választott." },
+    { szoveg:"Kérsz egy összehasonlító táblázatot egy kollégától, de a súlyokat egyedül te adod meg.",
+      technika:"Haszonérték-elemzés egyszemélyes súlyozással", stilus:"delegalo",
+      hatas:{kov:1, atl:2, min:6, fel:0, bev:-1},
+      vissza:"A számítás rendben lesz, de a súlyok a te értékválasztásod. A súlyozás maga is döntés.",
+      naplo:"Összehasonlító elemzést készíttetett, a súlyokat egyedül adta meg." },
+    { szoveg:"Szavaztok a csapatban, indoklás nélkül, és a többség dönt.",
+      technika:"Vélemények összegzése vita nélkül", stilus:"delegalo",
+      hatas:{kov:0, atl:-2, min:-4, fel:0, bev:3},
+      vissza:"Mindenki részt vett, és senkinek nem kellett megindokolnia semmit. A szám mögött így nem marad érv.",
+      naplo:"Indoklás nélküli szavazással döntött." }
+  ]
+},
+
+/* 9 */ {
+  cimke:"Etika", tema:"amit senki nem lát",
+  cim:"Senki nem fog rákérdezni",
+  jelenet:"Az éjszakai ügyelet",
+  leiras:"A gyorsabb megoldás úgy működne, hogy az ügyfelek adatait tovább tárolnátok a kelleténél. Jogilag szürke zóna, a határidő szorít, és tényleg nem fog rákérdezni senki.",
+  opciok:[
+    { szoveg:"Végigmész pár kérdésen: tudsz-e róla mindent, kit érint, mit szólna hozzá, akit érint, és vállalnád-e, ha kiderül.",
+      technika:"Etikai ellenőrző lista", stilus:"strukturalt",
+      hatas:{kov:4, atl:8, min:6, fel:11, bev:0},
+      vissza:"A kérdéssor nem azt mondja meg, mi a jó döntés, hanem azt, mennyire alaposan készültél rá. Itt éppen ez volt a kérdés.",
+      naplo:"Etikai kérdéssor alapján mérlegelte az adatkezelést." },
+    { szoveg:"Felteszed magadnak az egyetlen kérdést: jól éreznéd magad, ha ez holnap kikerülne? Nem. Ezért elveted.",
+      technika:"Moralitás detektor: napfény teszt", stilus:"strukturalt",
+      hatas:{kov:4, atl:6, min:3, fel:9, bev:0},
+      vissza:"Egyetlen jól feltett kérdés is elég lehet. Amit nem vállalnál a nyilvánosság előtt, azt zárt ajtók mögött sem érdemes.",
+      naplo:"A nyilvánosság próbája alapján vetette el a megoldást." },
+    { szoveg:"Belemész: senkinek nem árt, az adatokat úgysem nézi meg senki.",
+      technika:"„Senkinek sem árt” gátló racionalizálás", stilus:"gyors",
+      hatas:{kov:-3, atl:-8, min:-2, fel:-11, bev:0},
+      vissza:"Ez az érvelés az etikát a többi szempont mellé sorolja. Ami mérlegelhető, azt bármikor el is lehet vetni.",
+      naplo:"A „senkinek sem árt” érvvel fogadta el a megoldást." },
+    { szoveg:"Belemész: a cél jó, az ügyfelek gyorsabb kiszolgálást kapnak.",
+      technika:"„Jó célt szolgál” gátló racionalizálás", stilus:"gyors",
+      hatas:{kov:-2, atl:-7, min:-2, fel:-10, bev:0},
+      vissza:"A végeredmény tényleg értékes, csak az odavezető út nem lett tőle rendben. Pontosan itt kezdődik a cél szentesíti az eszközt.",
+      naplo:"A jó célra hivatkozva fogadta el a szürke zónás megoldást." }
+  ]
+},
+
+/* 10 */ {
+  cimke:"A csapatod", tema:"visszatekintés",
+  cim:"„Miért döntöttél így?”",
+  jelenet:"A csapatszoba",
+  leiras:"A megoldás elindult. A csapat visszanéz az elmúlt hetekre, és most téged kérdeznek: miért pont így döntöttél az egyes pontokon?",
+  opciok:[
+    { szoveg:"Elmondod nekik, mire figyeltél oda, mit feltételeztél, és hol tévedtél. Azt is kimondod, amit közben gondoltál, de akkor nem mondtál ki.",
+      technika:"Következtetési létra és reflektív gondolkodás", stilus:"strukturalt",
+      hatas:{kov:3, atl:9, min:6, fel:10, bev:4},
+      vissza:"Amit magadról kimondasz, az egyszerre lesz tanulható a csapatnak és ellenőrizhető a magad számára.",
+      naplo:"Végigvette és megosztotta a saját döntési folyamatát." },
+    { szoveg:"Elmondod, mi alapján döntöttél, és megkérdezed, ők mit láttak, amit te nem.",
+      technika:"Dialógus: a közlés és a feltárás egyensúlya", stilus:"bevono",
+      hatas:{kov:2, atl:8, min:4, fel:3, bev:8},
+      vissza:"Te érthetővé váltál, ők pedig elmondták, miből indultak ki. Ettől lesz a következő döntés közös.",
+      naplo:"Kölcsönös visszatekintéssel zárta le a folyamatot." },
+    { szoveg:"Elmondod, hogy jó döntések születtek, a hibák pedig a körülményekből jöttek.",
+      technika:"Énmegerősítő attribúció", stilus:"gyors",
+      hatas:{kov:-2, atl:-5, min:-4, fel:-10, bev:-3},
+      vissza:"Az önértékelésed sértetlen marad, a tanulás elmarad. A csapat közben pontosan látja, mi történt.",
+      naplo:"A hibákat a körülményeknek tulajdonította." },
+    { szoveg:"Lezárod a témát, jön a következő feladat.",
+      technika:"A reflexió elhagyása", stilus:"ovatos",
+      hatas:{kov:-1, atl:-2, min:-4, fel:-6, bev:0},
+      vissza:"A következő feladat mindig sürgősebb, mint a visszatekintés. Ezért maradnak bent a hibák a rendszerben.",
+      naplo:"Reflexió nélkül zárta le a folyamatot." }
+  ]
+}
+
+  ]
+},
+
+/* ---------------------------------------------------------------------------
+   B) KATONAI EZREDES — 3. műszaki ezred, árvízi védekezés
+   ------------------------------------------------------------------------- */
+katonai:{
+  nev:"Katonai ezredes",
+  rovid:"Katonai",
+  alcim:"3. műszaki ezred",
+  hos:"ezredes",
+  leiras:"Egy műszaki ezredet vezetsz. Árvízi védekezésre vezényeltek: állomány, törzs, elöljáró és két település között kell döntened.",
+  kulcsTechnikak:[
+    {k:"CATWOE",              cim:"CATWOE-lista"},
+    {k:"érintett-térkép",     cim:"érintett-térkép és érintetterőtér"},
+    {k:"halszálka",           cim:"halszálka (Ishikawa) diagram és Pareto-elemzés"},
+    {k:"partnerség",          cim:"érdemi részvétel a részvételi létrán"},
+    {k:"Több nézőpont",       cim:"többféle nézőpont és forrás bevonása"},
+    {k:"Névleges csoport",    cim:"névleges csoport módszer"},
+    {k:"Hibafa",              cim:"hibafa"},
+    {k:"Even Swap",           cim:"Even Swap"},
+    {k:"etikai ellenőrző",    cim:"etikai ellenőrző lista és moralitás detektorok"},
+    {k:"Következtetési létra",cim:"következtetési létra és reflektív gondolkodás"}
+  ],
+  jelenetek:["A laktanya kapuja","A törzssátor","Az elöljáró vonala","A két gátszakasz","A jelentés","A rádióasztal","A tervasztal","A régi töltés","Az állomány előtt","A gátszakadás után"],
+  szituaciok:[
+
+/* 1 */ {
+  cimke:"A parancs", tema:"a feladat értelmezése",
+  cim:"„A gátat tartani kell”",
+  jelenet:"A laktanya kapuja",
+  leiras:"Ennyi állt a vezénylési parancsban. A törzs már osztaná a homokzsákot. Arról viszont még senki nem beszélt, hogy pontosan mitől szakadhat át a gát.",
+  opciok:[
+    { szoveg:"Mielőtt bárki elindul, húsz percet szánsz rá: kikre hat ez, ki csinálja, mi történik most, mit nem tudtok — és ebből mondod ki, mi a feladat.",
+      technika:"CATWOE-lista", stilus:"strukturalt",
+      hatas:{kov:2, atl:5, min:11, fel:0, bev:7},
+      vissza:"A húsz perc alatt előjött két olyan körülmény, ami a parancsban nem szerepelt. Innentől a feladat nemcsak végrehajtható, hanem érthető is.",
+      naplo:"Végiggondolta és kimondta, mit jelent pontosan a kapott feladat." },
+    { szoveg:"Elfogadod, ahogy jött, és azonnal kiadod a végrehajtási utasításokat.",
+      technika:"A kapott problémameghatározás kritika nélküli átvétele", stilus:"gyors",
+      hatas:{kov:1, atl:-2, min:-8, fel:-1, bev:-4},
+      vissza:"A végrehajtás azonnal indul, de arra a kérdésre, amit más tett fel. Ha rosszul, minden erő rossz helyre megy.",
+      naplo:"Változtatás nélkül vette át a parancs megfogalmazását." },
+    { szoveg:"Szerinted a baj egyszerű: kevés a homokzsák. Rendelsz utánpótlást.",
+      technika:"A legegyszerűbb magyarázat ellenőrzés nélküli elfogadása", stilus:"gyors",
+      hatas:{kov:-1, atl:-1, min:-6, fel:-1, bev:-4},
+      vissza:"A legkézenfekvőbb magyarázat gyakran igaz, csak itt senki nem ellenőrizte. A töltés állapotáról továbbra sem tudsz semmit.",
+      naplo:"Homokzsák-utánpótlásra szűkítette a feladatot." },
+    { szoveg:"Magadban átfogalmazod: nem a gát a lényeg, hanem hogy ne kerüljön víz a lakott területre. Ezt viszont nem osztod meg a törzzsel.",
+      technika:"Eredménycélra épülő problémameghatározás", stilus:"ovatos",
+      hatas:{kov:2, atl:3, min:7, fel:0, bev:-1},
+      vissza:"Jó irányba indultál, csak egyedül. Amit nem közösen fogalmaztok meg, azt nem is közösen hajtják végre.",
+      naplo:"Egyedül fogalmazta újra a feladatot." }
+  ]
+},
+
+/* 2 */ {
+  cimke:"A települések", tema:"kit érint a döntés",
+  cim:"Kikről nem beszélünk?",
+  jelenet:"A törzssátor",
+  leiras:"A törzssátorban a katonai szempontok kerülnek elő. A parti falvak önkormányzata, a vízügy, a helyi gazdák és a tanyavilág csak említés szintjén jelenik meg.",
+  opciok:[
+    { szoveg:"Felírjátok, kire hat ez a védekezés, és melyikük tud tenni ellene vagy érte. Kiderül, kit nem kérdezett meg senki.",
+      technika:"Érintett-térkép és érintetterőtér", stilus:"strukturalt",
+      hatas:{kov:2, atl:5, min:8, fel:0, bev:11},
+      vissza:"Kiderült, hogy akit a legjobban érint, annak van a legkevesebb beleszólása. Innentől tudod, kihez kell külön elmenni.",
+      naplo:"Feltérképezte, kire hat a védekezés és kinek mekkora a befolyása." },
+    { szoveg:"Azzal foglalkoztok, akinek hivatalos beleszólása van. A többiek úgyis elfogadják, ami lesz.",
+      technika:"A kiszolgáltatott pozíciójú érintettek kihagyása", stilus:"gyors",
+      hatas:{kov:0, atl:-2, min:-4, fel:-3, bev:-9},
+      vissza:"A hivatalos egyeztetés rendben lesz. A baj viszont pont azoktól fog jönni, akiket kihagytatok.",
+      naplo:"Csak a hivatalos szereplőket vonta be." },
+    { szoveg:"Készíttetsz egy listát az érintettekről, de nem nézitek meg, kinek mekkora a súlya.",
+      technika:"Részleges érintett-elemzés", stilus:"ovatos",
+      hatas:{kov:1, atl:1, min:2, fel:0, bev:3},
+      vissza:"A lista jobb a semminél. Azt viszont nem tudod, ki tud megállítani egy munkát és ki nem.",
+      naplo:"Érintettlistát készíttetett elemzés nélkül." },
+    { szoveg:"Nem kérdezel senkit: húsz éve dolgozol ilyen terepen, tudod, mi kell.",
+      technika:"Séma alapú döntés az érintettek mellőzésével", stilus:"gyors",
+      hatas:{kov:1, atl:-2, min:-6, fel:-1, bev:-7},
+      vissza:"A húsz év tapasztalat gyors, és pont ezért nem veszi észre, ha ez a terep most máshogy viselkedik.",
+      naplo:"Saját terepismeretére hagyatkozott az érintettek megkérdezése helyett." }
+  ]
+},
+
+/* 3 */ {
+  cimke:"Helyzetkép", tema:"minek higgyünk",
+  cim:"A műszer vagy a rádió?",
+  jelenet:"Az elöljáró vonala",
+  leiras:"Két kép áll rendelkezésre. Egy részletes vízügyi adatsor, amit senki nem olvasott végig, és három nagyon élénk rádiójelentés az elmúlt órából.",
+  opciok:[
+    { szoveg:"Több irányból nézed: műszeres adat, helyszíni bejárás, szakaszparancsnoki jelentés. Amit egymásnak ellentmond, azt külön felírod.",
+      technika:"Több nézőpont bevonása, az ellentmondó információk megtartása", stilus:"strukturalt",
+      hatas:{kov:2, atl:6, min:10, fel:0, bev:6},
+      vissza:"Az ellentmondást kellemetlen nézni, de pont ott van az új információ. Amit kidobsz, azt már nem tudod megvizsgálni.",
+      naplo:"Több forrásból építette fel a helyzetképet." },
+    { szoveg:"A három legfrissebb rádiójelentésre építesz. Azok mutatják, mi történik odakint.",
+      technika:"Elérhetőségi torzítás", stilus:"gyors",
+      hatas:{kov:-1, atl:-3, min:-8, fel:0, bev:-3},
+      vissza:"Ami frissen és élénken él bennünk, azt gyakoribbnak hisszük. Három jelentés még nem helyzetkép.",
+      naplo:"Három friss rádiójelentésre alapozta a döntést." },
+    { szoveg:"Kihagyod az adatsorból azt a két mérési pontot, ami nem illik a képbe.",
+      technika:"Hárítás: az inkonzisztens információ leértékelése", stilus:"gyors",
+      hatas:{kov:-2, atl:-8, min:-7, fel:-5, bev:0},
+      vissza:"Az oda nem illő mérés a legdrágább, amit eldobhatsz: pont az mutatta volna meg, hol téves a képed.",
+      naplo:"Kihagyta a képbe nem illő mérési pontokat." },
+    { szoveg:"A tavalyi árvíz szintjét veszed alapul, és mindent ahhoz mérsz.",
+      technika:"Referenciapont (horgonyzás)", stilus:"ovatos",
+      hatas:{kov:2, atl:1, min:-4, fel:0, bev:0},
+      vissza:"A kiindulópont kényelmes, csak odaköti a gondolkodásodat. Az új adatot kisebb súllyal veszed majd figyelembe, mint kellene.",
+      naplo:"A tavalyi árvízszintet használta referenciapontként." }
+  ]
+},
+
+/* 4 */ {
+  cimke:"Erőforrás", tema:"mi alapján válassz",
+  cim:"Egy gép, két gátszakasz",
+  jelenet:"A két gátszakasz",
+  leiras:"Egyetlen nagy gép van bevethető állapotban. Az egyik szakasz gyorsabban megerősíthető, a másiknál több embert véd a töltés. A törzs órák óta köröz ezen.",
+  opciok:[
+    { szoveg:"Kimondjátok, hány megvédett ház ér meg mennyi többletidőt. Így egyesével kiesnek a szempontok, és marad egy döntés.",
+      technika:"Even Swap: átváltások nyílt mérlegelése", stilus:"strukturalt",
+      hatas:{kov:3, atl:6, min:11, fel:0, bev:5},
+      vissza:"Az átváltás kimondásával a vita számokká vált. Most már az is látszik, mit adtatok fel és miért.",
+      naplo:"Nyílt átváltásokkal döntött a gép bevetéséről." },
+    { szoveg:"A gyorsabban megerősíthető szakaszt választod, a többi szempontot elengeded.",
+      technika:"Lexikografikus szabály: egyetlen szempont", stilus:"gyors",
+      hatas:{kov:2, atl:-1, min:-6, fel:-2, bev:-3},
+      vissza:"A gyorsaság megvan, a többi szempont nem tűnt el, csak áttolódott máshoz.",
+      naplo:"Kizárólag a gyorsaság alapján választott szakaszt." },
+    { szoveg:"Kérsz egy összehasonlítást a törzstől, de a súlyokat egyedül te adod meg.",
+      technika:"Haszonérték-elemzés egyszemélyes súlyozással", stilus:"delegalo",
+      hatas:{kov:1, atl:2, min:6, fel:0, bev:-1},
+      vissza:"A számítás rendben lesz, a súlyok viszont a te értékválasztásod. A súlyozás maga is döntés.",
+      naplo:"Összehasonlítást készíttetett, a súlyokat egyedül adta meg." },
+    { szoveg:"Felezed a gép idejét a két szakasz között, hogy egyik parancsnok se sérelmezze.",
+      technika:"Konfliktuskerülő kompromisszum", stilus:"ovatos",
+      hatas:{kov:-2, atl:0, min:-5, fel:-2, bev:2},
+      vissza:"Éjjel senki nem tiltakozik, reggelre két félkész szakasz lesz. A látszatméltányosság itt kettős csalódás.",
+      naplo:"Felezte a gép idejét a két szakasz között." }
+  ]
+},
+
+/* 5 */ {
+  cimke:"Etika", tema:"ami a papírra kerül",
+  cim:"„Technikai fennakadás”",
+  jelenet:"A jelentés",
+  leiras:"Éjszaka megsérült egy katona, mert kimaradt egy biztonsági lépés. A napi jelentésbe ennyi került: technikai fennakadás. A sérülés könnyű, és nem fog rákérdezni senki.",
+  opciok:[
+    { szoveg:"Végigmész pár kérdésen: tudsz-e róla mindent, kit érint, mit szólna hozzá, akit érint, és vállalnád-e, ha kiderül.",
+      technika:"Etikai ellenőrző lista", stilus:"strukturalt",
+      hatas:{kov:4, atl:8, min:6, fel:11, bev:0},
+      vissza:"A kérdéssor nem azt mondja meg, mi a jó döntés, hanem azt, mennyire alaposan készültél rá. Itt éppen ez volt a kérdés.",
+      naplo:"Etikai kérdéssor alapján javíttatta ki a jelentést." },
+    { szoveg:"Felteszed magadnak az egyetlen kérdést: jól éreznéd magad, ha a valódi ok holnap kiderülne? Nem. Kijavíttatod.",
+      technika:"Moralitás detektor: napfény teszt", stilus:"strukturalt",
+      hatas:{kov:4, atl:6, min:3, fel:9, bev:0},
+      vissza:"Egyetlen jól feltett kérdés is elég lehet. Amit nem vállalnál nyilvánosan, azt papíron sem érdemes.",
+      naplo:"A nyilvánosság próbája alapján javíttatta ki a jelentést." },
+    { szoveg:"Hagyod így: a sérülés könnyű volt, senkinek nem árt, ha nem kerül külön a jelentésbe.",
+      technika:"„Senkinek sem árt” gátló racionalizálás", stilus:"gyors",
+      hatas:{kov:-3, atl:-8, min:-2, fel:-11, bev:0},
+      vissza:"Ez az érvelés az etikát a többi szempont mellé sorolja. Ami mérlegelhető, azt bármikor el is lehet vetni.",
+      naplo:"A „senkinek sem árt” érvvel hagyta a pontatlan jelentést." },
+    { szoveg:"Hagyod így: a védekezés fontosabb, mint egy adminisztratív pontosítás.",
+      technika:"„Jó célt szolgál” gátló racionalizálás", stilus:"gyors",
+      hatas:{kov:-2, atl:-7, min:-2, fel:-10, bev:0},
+      vissza:"A cél tényleg fontos, csak az odavezető út nem lett tőle rendben. Pontosan itt kezdődik a cél szentesíti az eszközt.",
+      naplo:"A védekezés fontosságára hivatkozva hagyta a pontatlan jelentést." }
+  ]
+},
+
+/* 6 */ {
+  cimke:"A lakosság", tema:"bevonás vagy tájékoztatás",
+  cim:"Hol lesz lezárás?",
+  jelenet:"A rádióasztal",
+  leiras:"A védekezés két falut érint közvetlenül: hol lesz útlezárás, kit kell kitelepíteni, hol állnak a gépek. A polgármesterek és a helyi önkéntesek eddig nem vettek részt a tervezésben.",
+  opciok:[
+    { szoveg:"Behívod a polgármestereket és az önkéntesek vezetőjét: együtt rakjátok össze a tervet, és a rájuk tartozó kérdésekben ők döntenek.",
+      technika:"Érdemi részvétel: partnerség a részvételi létrán", stilus:"bevono",
+      hatas:{kov:2, atl:7, min:5, fel:0, bev:12},
+      vissza:"Lassabban lett kész a terv, viszont a helyismeretük két rossz útvonaltól mentett meg.",
+      naplo:"Közös egyeztetésen, partnerként vonta be a településeket." },
+    { szoveg:"Hangosbemondón tájékoztatod a lakosságot a kész döntésről.",
+      technika:"Tájékoztatás: a részvételi létra jelképes foka", stilus:"gyors",
+      hatas:{kov:1, atl:-1, min:-1, fel:0, bev:-6},
+      vissza:"A kötelezettséget letudtad, a bevonást nem. Ezt a különbséget mindenki pontosan érzi.",
+      naplo:"Hangosbemondós tájékoztatással zárta le a lakossági részvételt." },
+    { szoveg:"Fórumot tartasz, ahol elmagyarázod nekik, miért jó ez így, és miért téves, amit gondolnak.",
+      technika:"Terápia: kioktatás a részvételi létra alsó fokán", stilus:"gyors",
+      hatas:{kov:0, atl:-6, min:-2, fel:-3, bev:-9},
+      vissza:"Te beszéltél, ők hallgattak. A meggyőzés nem pótolja a bevonást, csak elfedi a hiányát.",
+      naplo:"Meggyőző fórummal kezelte az érintetteket." },
+    { szoveg:"Kártalanítást ígérsz a leghangosabb gazdáknak, hogy ne akadályozzák a munkát.",
+      technika:"Kompenzáció: a támogatás megvásárlása", stilus:"gyors",
+      hatas:{kov:-2, atl:-5, min:0, fel:-6, bev:-7},
+      vissza:"Az együttműködés megvan, a bizalom nincs. Ha átlátnak a szándékon, legközelebb az árat kérdezik, nem az indokot.",
+      naplo:"Kártalanítás ígéretével szerezte meg a gazdák együttműködését." }
+  ]
+},
+
+/* 7 */ {
+  cimke:"A törzs", tema:"honnan jönnek a javaslatok",
+  cim:"Már megvan az elképzelésed",
+  jelenet:"A tervasztal",
+  leiras:"Megvan a helyzetkép, megvannak az okok. Most védekezési változatok kellenek. Neked már van egy kész elképzelésed, és elég biztos vagy benne.",
+  opciok:[
+    { szoveg:"Megkéred a törzset, hogy előbb mindenki magának írja le a javaslatait. Csak azután olvassátok fel és vitatkoztok.",
+      technika:"Névleges csoport módszer", stilus:"bevono",
+      hatas:{kov:3, atl:4, min:9, fel:0, bev:10},
+      vissza:"Így nem a rangidős érvei köré rendeződtek az ötletek. Két olyan változat is bekerült, ami szabad vitában elvérzett volna.",
+      naplo:"Előbb önálló írásban, csak utána közösen gyűjtötte a változatokat." },
+    { szoveg:"Előadod az elképzelésedet, és megkérdezed, van-e ellenvetés.",
+      technika:"A parancsnoki javaslat dominanciája", stilus:"gyors",
+      hatas:{kov:1, atl:-2, min:-6, fel:0, bev:-8},
+      vissza:"Ellenvetés nem lesz, mert a te elképzelésed, és te vagy a parancsnok. A csendet könnyű egyetértésnek olvasni.",
+      naplo:"Saját elképzelését terjesztette elő ötletgyűjtés helyett." },
+    { szoveg:"Ötletelést tartotok, de menet közben rögtön megmondod, melyik javaslat jó és melyik nem.",
+      technika:"Az ítélkezés felfüggesztésének megsértése", stilus:"gyors",
+      hatas:{kov:0, atl:-1, min:-5, fel:0, bev:-5},
+      vissza:"A harmadik lehűtött javaslat után a többiek már nem szólalnak meg. Az értékelést el kell választani a gyűjtéstől.",
+      naplo:"Ötletelés közben azonnal minősítette a javaslatokat." },
+    { szoveg:"Azt kéritek: hogyan oldaná meg ezt egy tűzoltóság, egy nagy építkezés, egy logisztikai központ? Onnan tértek vissza a terephez.",
+      technika:"Szinektika: analógiás gondolkodás", stilus:"strukturalt",
+      hatas:{kov:0, atl:2, min:7, fel:0, bev:5},
+      vissza:"Az analógia szokatlan irányt nyitott. A visszaút a konkrét terephez viszont még munkát igényel.",
+      naplo:"Analógiák mentén keresett megoldásokat." }
+  ]
+},
+
+/* 8 */ {
+  cimke:"Művelet", tema:"felkészülés a hibára",
+  cim:"Holnap hajnalban indul",
+  jelenet:"A régi töltés",
+  leiras:"Négyszáz fő és harminc jármű indul a nagy gátmegerősítésre. A terv kész, a törzs magabiztos. Az előző hasonló műveletnél menet közben derültek ki a valódi bajok.",
+  opciok:[
+    { szoveg:"Leültök egy órára, és végigveszitek: ha ez elromlik, mi lesz az első jele, mi okozhatja, és ki lép.",
+      technika:"Hibafa", stilus:"strukturalt",
+      hatas:{kov:2, atl:5, min:11, fel:3, bev:6},
+      vissza:"Négy kockázatból háromra lett korai jele és felelőse. Ez az óra sok embert megspórolt.",
+      naplo:"Előre végigvette a művelet lehetséges hibáit." },
+    { szoveg:"A felmérés rendben, indultok. A felesleges aggodalmaskodás csak lassítana.",
+      technika:"Kockázatelemzés mellőzése", stilus:"gyors",
+      hatas:{kov:1, atl:0, min:-7, fel:-4, bev:-3},
+      vissza:"Ha sima a végrehajtás, senki nem veszi észre a különbséget. Ha nem, a törzs arra fog emlékezni, hogy nem kérdezted meg őket.",
+      naplo:"Kockázatelemzés nélkül indította a műveletet." },
+    { szoveg:"Leírtok három lehetséges kimenetet, de azt nem beszélitek meg, mi lesz, ha a rossz jön be.",
+      technika:"Forgatókönyv-elemzés lépések nélkül", stilus:"ovatos",
+      hatas:{kov:1, atl:3, min:5, fel:0, bev:2},
+      vissza:"A képek megvannak, a döntési támpont nincs. Az elemzés ereje abban lett volna, hogy mit tesztek, ha baj van.",
+      naplo:"Három forgatókönyvet írt, intézkedés nélkül." },
+    { szoveg:"Elhalasztod az indulást, amíg minden kockázat ki nem zárható.",
+      technika:"Döntés halogatása", stilus:"ovatos",
+      hatas:{kov:-7, atl:-1, min:-3, fel:-2, bev:0},
+      vissza:"Minden kockázat sosem zárható ki, így a halasztásnak nincs végpontja — a víz viszont nem áll meg.",
+      naplo:"Elhalasztotta a műveletet a kockázatok teljes kizárásáig." }
+  ]
+},
+
+/* 9 */ {
+  cimke:"Az állomány", tema:"a valódi ok megkeresése",
+  cim:"Miért csúszik minden?",
+  jelenet:"Az állomány előtt",
+  leiras:"A feladatok rendre késve indulnak, és az állomány fáradt. Mindenkinek megvan a maga magyarázata: a technika, az időjárás, a váltásrend, a jelentési fegyelem.",
+  opciok:[
+    { szoveg:"Összeültök, és felrajzoljátok, honnan jöhet a csúszás: ember, technika, szervezés, külső körülmény. Utána megnézitek, melyik kettő adja a többségét.",
+      technika:"Halszálka (Ishikawa) diagram és Pareto-elemzés", stilus:"strukturalt",
+      hatas:{kov:2, atl:6, min:11, fel:0, bev:6},
+      vissza:"Kiderült, hogy a csúszások nagy részét két ok adja, és mindkettő a váltásrendhez tartozik. Most már tudod, hol kezdd.",
+      naplo:"Ok-okozati elemzéssel tárta fel a csúszások okait." },
+    { szoveg:"Elfogadod a leghangosabban képviselt magyarázatot, és arra intézkedsz.",
+      technika:"Az első meggyőző magyarázat elfogadása", stilus:"gyors",
+      hatas:{kov:-1, atl:-2, min:-8, fel:0, bev:-4},
+      vissza:"Az intézkedés elindult, de nem tudod, a valódi okot kezeli-e. Ha nem, egy hét múlva ugyanitt lesztek, csak fáradtabban.",
+      naplo:"A leghangosabb magyarázat alapján intézkedett." },
+    { szoveg:"Bekéred a késési kimutatást, és a három leggyakoribb esetre intézkedsz.",
+      technika:"Tünetkezelés adat alapján", stilus:"ovatos",
+      hatas:{kov:1, atl:2, min:3, fel:0, bev:0},
+      vissza:"A gyakoriságot látod, az okot nem. A tünetkezelés egy darabig javítja a számokat, aztán visszaáll minden.",
+      naplo:"A leggyakoribb késési esetekre intézkedett elemzés nélkül." },
+    { szoveg:"Kimondod az állomány előtt, hogy ez az időjárás miatt van, nincs mit tenni.",
+      technika:"„Hamisan negatív” hiba: a befolyás tagadása", stilus:"gyors",
+      hatas:{kov:-2, atl:-4, min:-5, fel:-9, bev:0},
+      vissza:"Lehet, hogy az időjárás tényleg számít. Azzal viszont, hogy nincs ráhatásod, azt is kimondtad, hogy nincs mit tenned.",
+      naplo:"Az időjárásra hárította a csúszásokat." }
+  ]
+},
+
+/* 10 */ {
+  cimke:"A törzs", tema:"visszatekintés",
+  cim:"„Miért döntött így, ezredes úr?”",
+  jelenet:"A gátszakadás után",
+  leiras:"A védekezés véget ért, a gát egy szakaszon átszakadt. Az értékelő megbeszélésen a törzs egyenesen rákérdez a döntéseidre.",
+  opciok:[
+    { szoveg:"Elmondod, mire figyeltél oda, mit feltételeztél, és hol tévedtél. Azt is kimondod, amit közben gondoltál, de akkor nem mondtál ki.",
+      technika:"Következtetési létra és reflektív gondolkodás", stilus:"strukturalt",
+      hatas:{kov:3, atl:9, min:6, fel:10, bev:4},
+      vissza:"Amit magadról kimondasz, az egyszerre lesz tanulható a törzsnek és ellenőrizhető a magad számára.",
+      naplo:"Végigvette és megosztotta a saját döntési folyamatát." },
+    { szoveg:"Elmondod, mi alapján döntöttél, és megkérdezed, ők mit láttak, amit te nem.",
+      technika:"Dialógus: a közlés és a feltárás egyensúlya", stilus:"bevono",
+      hatas:{kov:2, atl:8, min:4, fel:3, bev:8},
+      vissza:"Te érthetővé váltál, ők pedig elmondták, miből indultak ki. Ettől lesz a következő bevetés közös.",
+      naplo:"Kölcsönös visszatekintéssel zárta le az értékelést." },
+    { szoveg:"Elmondod, hogy a döntések jók voltak, a szakadást a körülmények okozták.",
+      technika:"Énmegerősítő attribúció", stilus:"gyors",
+      hatas:{kov:-2, atl:-5, min:-4, fel:-10, bev:-3},
+      vissza:"Az önértékelésed sértetlen marad, a tanulás elmarad. A törzs közben pontosan látja, mi történt.",
+      naplo:"A körülményeknek tulajdonította a gátszakadást." },
+    { szoveg:"Lezárod a témát: a feladat véget ért, jön a következő vezénylés.",
+      technika:"A reflexió elhagyása", stilus:"ovatos",
+      hatas:{kov:-1, atl:-2, min:-4, fel:-6, bev:0},
+      vissza:"A következő feladat mindig sürgősebb, mint a visszatekintés. Ezért maradnak bent a hibák a rendszerben.",
+      naplo:"Reflexió nélkül zárta le a védekezést." }
+  ]
+}
+
+  ]
+},
+
+/* ---------------------------------------------------------------------------
+   C) POLITIKAI KÖZÉPVEZETŐ — bizottsági elnök, digitális oktatási törvény
+   ------------------------------------------------------------------------- */
+politikai:{
+  nev:"Politikai középvezető",
+  rovid:"Politikai",
+  alcim:"Országgyűlési bizottság",
+  hos:"bizottsági elnök",
+  leiras:"Egy bizottság elnöke vagy. Egy digitális oktatási törvényt viszel végig érintettek, szakértők és a nyilvánosság között.",
+  kulcsTechnikak:[
+    {k:"CATWOE",              cim:"CATWOE-lista"},
+    {k:"Állampolgári tanács", cim:"állampolgári tanács (érdemi részvétel)"},
+    {k:"Érintetterőtér",      cim:"érintetterőtér-elemzés és érintetti párbeszéd"},
+    {k:"halszálka",           cim:"halszálka (Ishikawa) diagram és Pareto-elemzés"},
+    {k:"Hat gondolkodó kalap",cim:"hat gondolkodó kalap"},
+    {k:"Névleges csoport",    cim:"névleges csoport módszer"},
+    {k:"Even Swap",           cim:"Even Swap"},
+    {k:"Forgatókönyv",        cim:"forgatókönyv-elemzés"},
+    {k:"etikai ellenőrző",    cim:"etikai ellenőrző lista és moralitás detektorok"},
+    {k:"Vizsgálódó",          cim:"vizsgálódó döntéshozatal"},
+    {k:"Következtetési létra",cim:"következtetési létra és reflektív gondolkodás"}
+  ],
+  jelenetek:["A bizottsági iroda","A társadalmi vita","A lobbista","A bizottsági ülés","A célok ütközése","A hosszú táv","A szavazás","A tüntetés","A plenáris ülés","A csendes szoba"],
+  szituaciok:[
+
+/* 1 */ {
+  cimke:"A tervezet", tema:"a feladat értelmezése",
+  cim:"„Vissza kell szorítani”",
+  jelenet:"A bizottsági iroda",
+  leiras:"A tervezet első mondata szerint az iskolai digitális eszközhasználatot vissza kell szorítani. A tanárok, az informatikai cégek és a szülők mást és mást akarnak. A bizottság már a paragrafusokat írná.",
+  opciok:[
+    { szoveg:"Mielőtt bárki szöveget ír, végigveszitek: kire hat ez, ki hajtja végre, mi történik most az iskolákban, és mi az, amit nem tudtok.",
+      technika:"CATWOE-lista", stilus:"strukturalt",
+      hatas:{kov:2, atl:5, min:11, fel:0, bev:7},
+      vissza:"Kiderült, hogy három szereplő három különböző problémáról beszél. Amit rosszul kérdezel, arra hiába válaszolsz jól.",
+      naplo:"Újrafogalmazta a tervezet alapkérdését, mielőtt szöveget írtak volna." },
+    { szoveg:"Elfogadod a megfogalmazást, ahogy jött, és rögtön a paragrafusok kidolgozásába kezdtek.",
+      technika:"A kapott problémameghatározás kritika nélküli átvétele", stilus:"gyors",
+      hatas:{kov:1, atl:-2, min:-8, fel:-1, bev:-4},
+      vissza:"A szöveg gyorsan halad, csak épp arra a kérdésre válaszol, amit más tett fel. Az minden paragrafust magával visz.",
+      naplo:"Változtatás nélkül vette át a tervezet megfogalmazását." },
+    { szoveg:"Szerinted a baj egyszerű: sok a telefon az iskolában. Betiltjátok.",
+      technika:"A legegyszerűbb magyarázat ellenőrzés nélküli elfogadása", stilus:"gyors",
+      hatas:{kov:-1, atl:-1, min:-6, fel:-1, bev:-4},
+      vissza:"A legkézenfekvőbb magyarázat gyakran igaz, itt viszont senki nem ellenőrizte. Egy tiltás nem old meg egy tanulási problémát.",
+      naplo:"Tiltásra szűkítette a szabályozási kérdést." },
+    { szoveg:"Magadban átfogalmazod: nem az eszköz a baj, hanem a figyelem és az eredmény. Ezt viszont nem beszéled meg a bizottsággal.",
+      technika:"Eredménycélra épülő problémameghatározás", stilus:"ovatos",
+      hatas:{kov:2, atl:3, min:7, fel:0, bev:-1},
+      vissza:"Jó irányba indultál, csak egyedül. Amit nem közösen fogalmaztok meg, azt nem is közösen fogják megvédeni.",
+      naplo:"Egyedül fogalmazta újra a problémát." }
+  ]
+},
+
+/* 2 */ {
+  cimke:"A nyilvánosság", tema:"bevonás vagy tájékoztatás",
+  cim:"Mit kezdjünk a társadalmi vitával?",
+  jelenet:"A társadalmi vita",
+  leiras:"A törvény emberek mindennapjait érinti. A társadalmi egyeztetés formája rád van bízva. A határidő szoros, a téma érzékeny.",
+  opciok:[
+    { szoveg:"Összehívsz húsz hétköznapi embert három napra: kiegyensúlyozott anyagot és szakértőket kapnak, aztán ők mondják meg, mit javasolnak.",
+      technika:"Állampolgári tanács: érdemi részvétel", stilus:"bevono",
+      hatas:{kov:2, atl:7, min:5, fel:0, bev:12},
+      vissza:"Olyan szempontok jöttek elő, amit sem a szakma, sem a politika nem látott. A törvény mögé társadalmi felhatalmazás került.",
+      naplo:"Laikus testülettel dolgoztatta ki a javaslatot." },
+    { szoveg:"Kiadsz egy sajtóközleményt, érdemi vitára nem nyitsz lehetőséget.",
+      technika:"Tájékoztatás: a részvételi létra jelképes foka", stilus:"gyors",
+      hatas:{kov:1, atl:-1, min:-1, fel:0, bev:-6},
+      vissza:"A kötelezettséget letudtad, a bevonást nem. Ezt a különbséget mindenki pontosan érzi.",
+      naplo:"Sajtóközleménnyel zárta le a társadalmi egyeztetést." },
+    { szoveg:"Kampányt indítasz, ami elmagyarázza az embereknek, miért téves, amit gondolnak.",
+      technika:"Terápia: kioktatás a részvételi létra alsó fokán", stilus:"gyors",
+      hatas:{kov:0, atl:-6, min:-2, fel:-3, bev:-9},
+      vissza:"Aki eddig bizonytalan volt, most szemben áll. A látszatrészvétel gyorsabban rombol, mint a nyílt elutasítás.",
+      naplo:"Meggyőző kampányt indított a lakossági kifogások ellen." },
+    { szoveg:"A leghangosabb kritikus szervezeteknek támogatást ígérsz, hogy elhalkuljanak.",
+      technika:"Kompenzáció: a támogatás megvásárlása", stilus:"gyors",
+      hatas:{kov:-2, atl:-5, min:0, fel:-6, bev:-7},
+      vissza:"A kritikus hangok elhalkulnak, a bizalom velük együtt. Ha ez kiderül, minden korábbi döntésed gyanússá válik.",
+      naplo:"Támogatás ígéretével csendesítette le a kritikus szervezeteket." }
+  ]
+},
+
+/* 3 */ {
+  cimke:"Etika", tema:"az ajánlat",
+  cim:"„Ingyen adjuk a rendszert”",
+  jelenet:"A lobbista",
+  leiras:"Egy nagy szoftvercég felajánlja, hogy ingyen adja a rendszert, ha a bizottság számukra kedvező adatkezelési szabályt hoz. A megtakarítás jelentős, és senki nem fog rákérdezni.",
+  opciok:[
+    { szoveg:"Végigmész pár kérdésen: tudsz-e róla mindent, kit érint, mit szólna hozzá, akit érint, és vállalnád-e, ha kiderül.",
+      technika:"Etikai ellenőrző lista", stilus:"strukturalt",
+      hatas:{kov:4, atl:8, min:6, fel:11, bev:0},
+      vissza:"A kérdéssor nem azt mondja meg, mi a jó döntés, hanem azt, mennyire alaposan készültél rá. Itt éppen ez volt a kérdés.",
+      naplo:"Etikai kérdéssor alapján mérlegelte az ajánlatot." },
+    { szoveg:"Felteszed magadnak az egyetlen kérdést: jól éreznéd magad, ha ez az alku holnap címlapra kerülne? Nem. Elutasítod.",
+      technika:"Moralitás detektor: napfény teszt", stilus:"strukturalt",
+      hatas:{kov:4, atl:6, min:3, fel:9, bev:0},
+      vissza:"Az elutasítás pénzbe kerül, a döntés viszont bármikor kiállja a nyilvánosság próbáját.",
+      naplo:"A nyilvánosság próbája alapján utasította el az ajánlatot." },
+    { szoveg:"Elfogadod: senkinek nem árt, az állam meg spórol vele.",
+      technika:"„Senkinek sem árt” gátló racionalizálás", stilus:"gyors",
+      hatas:{kov:-3, atl:-8, min:-2, fel:-11, bev:0},
+      vissza:"Ez az érvelés az etikát a többi szempont mellé sorolja. Ami mérlegelhető, azt bármikor el is lehet vetni.",
+      naplo:"A „senkinek sem árt” érvvel fogadta el az ajánlatot." },
+    { szoveg:"Elfogadod: a cél jó, minden iskola korszerű rendszert kap.",
+      technika:"„Jó célt szolgál” gátló racionalizálás", stilus:"gyors",
+      hatas:{kov:-2, atl:-7, min:-2, fel:-10, bev:0},
+      vissza:"A végeredmény tényleg értékes, csak az odavezető út nem lett tőle rendben. Pontosan itt kezdődik a cél szentesíti az eszközt.",
+      naplo:"A jó célra hivatkozva fogadta el az ajánlatot." }
+  ]
+},
+
+/* 4 */ {
+  cimke:"A bizottság", tema:"honnan jönnek a javaslatok",
+  cim:"Hárman viszik a szót",
+  jelenet:"A bizottsági ülés",
+  leiras:"Szabályozási változatok kellenek. Az ülésen három erős személyiség viszi a szót, a többiek ritkán szólalnak meg. Neked már van egy kész elképzelésed.",
+  opciok:[
+    { szoveg:"Megkéred a tagokat, hogy előbb mindenki magának írja le a javaslatait. Csak azután olvassátok fel és vitatkoztok.",
+      technika:"Névleges csoport módszer", stilus:"bevono",
+      hatas:{kov:3, atl:4, min:9, fel:0, bev:10},
+      vissza:"Így nem a három hangos tag köré rendeződtek az ötletek. Két olyan javaslat is bekerült, ami szabad vitában elvérzett volna.",
+      naplo:"Előbb önálló írásban, csak utána közösen gyűjtötte a javaslatokat." },
+    { szoveg:"Előadod a saját elképzelésedet, és megkérdezed, van-e ellenvetés.",
+      technika:"Az elnöki javaslat dominanciája", stilus:"gyors",
+      hatas:{kov:1, atl:-2, min:-6, fel:0, bev:-8},
+      vissza:"Ellenvetés nem lesz, mert a te javaslatod, és te vezeted az ülést. A csendet könnyű egyetértésnek olvasni.",
+      naplo:"Saját javaslatát terjesztette elő ötletgyűjtés helyett." },
+    { szoveg:"Ötletelést tartotok, de menet közben rögtön megmondod, melyik javaslat jó és melyik nem.",
+      technika:"Az ítélkezés felfüggesztésének megsértése", stilus:"gyors",
+      hatas:{kov:0, atl:-1, min:-5, fel:0, bev:-5},
+      vissza:"A harmadik lehűtött javaslat után a csendesebb tagok már nem szólalnak meg.",
+      naplo:"Ötletelés közben azonnal minősítette a javaslatokat." },
+    { szoveg:"Azt kéritek: hogyan oldják meg ezt a közlekedésben, az egészségügyben, a médiában? Onnan tértek vissza a saját ügyetekhez.",
+      technika:"Szinektika: analógiás gondolkodás", stilus:"strukturalt",
+      hatas:{kov:0, atl:2, min:7, fel:0, bev:5},
+      vissza:"Az analógia szokatlan irányt nyitott. A visszaút a konkrét szabályozáshoz viszont még munkát igényel.",
+      naplo:"Analógiák mentén keresett szabályozási megoldásokat." }
+  ]
+},
+
+/* 5 */ {
+  cimke:"A tervezet", tema:"mi alapján válassz",
+  cim:"Biztonságos vagy tanévkezdésre kész?",
+  jelenet:"A célok ütközése",
+  leiras:"A két cél ütközik. A rendszer legyen nagyon biztonságos, ami drága és lassú, de készüljön el a tanév kezdetére, ami olcsóbb és gyorsabb megoldást kívánna.",
+  opciok:[
+    { szoveg:"Kimondjátok, mennyi csúszás ér meg mennyi biztonságot. Így egyesével kiesnek a szempontok, és marad egy döntés.",
+      technika:"Even Swap: átváltások nyílt mérlegelése", stilus:"strukturalt",
+      hatas:{kov:3, atl:6, min:11, fel:0, bev:5},
+      vissza:"Az átváltás kimondásával a vita számokká vált. Most már az is látszik, mit adtatok fel és miért.",
+      naplo:"Nyílt átváltásokkal súlyozta a biztonságot és a gyorsaságot." },
+    { szoveg:"A leggyorsabb megoldást választod, a biztonságot másodlagos célként elengeded.",
+      technika:"Lexikografikus szabály: egyetlen szempont", stilus:"gyors",
+      hatas:{kov:2, atl:-1, min:-6, fel:-2, bev:-3},
+      vissza:"A tanévkezdés megvan, a biztonsági kockázat viszont a bevezetés utánra tolódott.",
+      naplo:"Kizárólag a gyorsaság szempontja szerint döntött." },
+    { szoveg:"Kérsz egy összehasonlítást a titkárságtól, de a súlyokat egyedül te adod meg.",
+      technika:"Haszonérték-elemzés egyszemélyes súlyozással", stilus:"delegalo",
+      hatas:{kov:1, atl:2, min:6, fel:0, bev:-1},
+      vissza:"A számítás rendben lesz, a súlyok viszont a te értékválasztásod. A súlyozás maga is döntés.",
+      naplo:"Összehasonlítást készíttetett, a súlyokat egyedül adta meg." },
+    { szoveg:"Tovább elemeztetitek a szempontokat, döntés viszont nem születik.",
+      technika:"Túlelemzés, a döntés elmaradása", stilus:"ovatos",
+      hatas:{kov:-7, atl:-2, min:-3, fel:-2, bev:1},
+      vissza:"Az elemzés kifogástalan, döntés nincs. A halogatás is döntés, csak nem te hozod meg, hanem az idő.",
+      naplo:"Végtelen elemzésbe fordult, döntés nélkül." }
+  ]
+},
+
+/* 6 */ {
+  cimke:"Időtáv", tema:"rövid vagy hosszú táv",
+  cim:"Öt év vagy a jövő évi választás?",
+  jelenet:"A hosszú táv",
+  leiras:"A javaslat öt év múlva hoz eredményt. Jövőre viszont választás lesz, és a bevezetés most népszerűtlen. Ami hosszú távon jó, az rövid távon rosszabbnak látszik.",
+  opciok:[
+    { szoveg:"Felvállalod, hogy ez nehéz ügy, és leírtok három lehetséges jövőt: mi lesz, ha minden a terv szerint megy, mi lesz, ha jobban, és mi lesz, ha rosszabbul. Mindegyikhez lépéseket is rendeltek.",
+      technika:"Forgatókönyv-elemzés nehéz problémára", stilus:"strukturalt",
+      hatas:{kov:3, atl:7, min:10, fel:3, bev:5},
+      vissza:"A népszerűtlenség megmarad, a hitelesség viszont nő. Aki nyíltan felvállalja a hosszú távú árat, azt hosszú távon is komolyan veszik.",
+      naplo:"Több lehetséges jövőt végiggondolva vállalta fel a reformot." },
+    { szoveg:"Kiveszed a fájdalmas részeket, és a választásig egy jól kommunikálható, könnyű törvényt csinálsz belőle.",
+      technika:"A nehéz probléma egyszerűvé alakítása", stilus:"gyors",
+      hatas:{kov:-6, atl:-7, min:-5, fel:-4, bev:0},
+      vissza:"A törvény átmegy, és nem old meg semmit. Aki a tartalmat várta, most megtanulta, hogy nálad a naptár erősebb az ügynél.",
+      naplo:"Rövid távra szabta a tervezetet, a nehéz részek kivételével." },
+    { szoveg:"A fiókba teszed a tervezetet a választások utánig.",
+      technika:"Döntés halogatása", stilus:"ovatos",
+      hatas:{kov:-7, atl:-2, min:-5, fel:-4, bev:0},
+      vissza:"A fiókban semmi nem javul, csak az idő fogy. A halogatás a kiszámíthatóságot viszi el, ami a legnehezebben építhető vissza.",
+      naplo:"A választásokig fiókba tette a tervezetet." },
+    { szoveg:"Engedsz a pártvezetés nyomásának, és hagyod, hogy kivegyék a hosszú távú részeket.",
+      technika:"Passzív alkalmazkodás a nyomáshoz", stilus:"ovatos",
+      hatas:{kov:-4, atl:-2, min:-2, fel:-5, bev:-1},
+      vissza:"A konfliktust elkerülted, a tartalmat nem védted meg. Látják, hogy a szakmai álláspontod addig tart, amíg nyomás nem éri.",
+      naplo:"Engedett a pártvezetés nyomásának." }
+  ]
+},
+
+/* 7 */ {
+  cimke:"A bizottság", tema:"hogyan folyjon a vita",
+  cim:"Mindenki a sajátját védi",
+  jelenet:"A szavazás",
+  leiras:"A végső változat előtt még egy vita van hátra. Minden frakció a saját javaslatát propagálja, és a szavazás a küszöbön áll.",
+  opciok:[
+    { szoveg:"Kimondod, hogy most nem meggyőzni kell, hanem tesztelni: minden javaslat gyenge pontját közösen keresitek meg, a kisebbségi véleményt külön is kikéred.",
+      technika:"Vizsgálódó döntéshozatal", stilus:"bevono",
+      hatas:{kov:3, atl:7, min:9, fel:0, bev:9},
+      vissza:"A verseny helyett közös munka lett, és két valós hiba is kiderült. A vita minősége itt egyenesen a döntés minőségét emelte.",
+      naplo:"Tesztelő, nem meggyőző keretben vezette a vitát." },
+    { szoveg:"Hagyod, hogy mindenki a saját javaslatának ügyvédjeként lépjen fel, aztán a többség dönt.",
+      technika:"Pártfogó döntéshozatal", stilus:"gyors",
+      hatas:{kov:1, atl:-3, min:-6, fel:0, bev:-7},
+      vissza:"Ha a cél a meggyőzés, mindenki bagatellizálja a saját javaslata gyengéit. A végén nyertesek és vesztesek lesznek.",
+      naplo:"Meggyőzésre épülő vitát vezetett." },
+    { szoveg:"Kört osztasz: most mindenki csak a tényeket mondja, aztán mindenki csak a kockázatot, aztán mindenki csak a lehetőséget.",
+      technika:"Hat gondolkodó kalap", stilus:"strukturalt",
+      hatas:{kov:2, atl:5, min:7, fel:0, bev:7},
+      vissza:"A párhuzamos gondolkodás kivette a vitából a pozícióharcot: a kritika már nem személyes támadásként érkezett.",
+      naplo:"Szerepkörökre bontva strukturálta a vitát." },
+    { szoveg:"Lezárod a vitát, és a többségeddel megszavaztatod a saját változatodat.",
+      technika:"A kisebbségi vélemény elnyomása", stilus:"gyors",
+      hatas:{kov:-1, atl:-8, min:-4, fel:-2, bev:-10},
+      vissza:"A szavazás lezárult, a kritika nem tűnt el, csak kikerült a teremből. A végrehajtásnál pontosan innen jön majd az ellenállás.",
+      naplo:"Többségi erőből, a vita lezárásával szavaztatott." }
+  ]
+},
+
+/* 8 */ {
+  cimke:"A nyilvánosság", tema:"kit érint a döntés",
+  cim:"Tüntetnek az épület előtt",
+  jelenet:"A tüntetés",
+  leiras:"Egy kiszivárgott feljegyzés miatt civilek tüntetnek az épület előtt. A sajtó ott van, a bizottság tanácstalan, és mindenki tőled vár választ.",
+  opciok:[
+    { szoveg:"Megnézed, kik ők valójában: nagyon érinti őket az ügy, beleszólásuk viszont alig van. Lemész, és leülsz velük beszélni.",
+      technika:"Érintetterőtér-elemzés és érintetti párbeszéd", stilus:"bevono",
+      hatas:{kov:2, atl:8, min:8, fel:2, bev:10},
+      vissza:"A tüntetésből egyeztetés lett, és kiderült, hogy a kifogás egy valós hiányosságra mutatott. A nyílt reakció többet ért minden közleménynél.",
+      naplo:"Párbeszédet kezdeményezett a tüntetőkkel." },
+    { szoveg:"A médiában agresszív kisebbségként mutatod be őket, hogy a bizottság jó színben tűnjön fel.",
+      technika:"A kritikus érintettek lejáratása", stilus:"gyors",
+      hatas:{kov:-2, atl:-8, min:-2, fel:-6, bev:-7},
+      vissza:"A napi sajtóban működhet, de a felvételek megmaradnak. A lejáratás a saját hitelességedből fizeti ki a rövid távú előnyt.",
+      naplo:"A médiában lejáratta a tüntető szervezetet." },
+    { szoveg:"Biztonsági szolgálattal távolíttatod el őket a kamerák elől.",
+      technika:"A nyilvánosság kizárása", stilus:"gyors",
+      hatas:{kov:-3, atl:-10, min:-2, fel:-7, bev:-7},
+      vissza:"A kép eltűnik a kamerák elől, a kérdés nem. Az elhallgatás mindig nagyobb hírt csinál, mint az eredeti ügy.",
+      naplo:"Biztonsági szolgálattal távolíttatta el a tüntetőket." },
+    { szoveg:"Kiadsz egy közleményt, hogy minden észrevételt megvizsgáltok, és nem lépsz tovább.",
+      technika:"Formális válasz érdemi lépés nélkül", stilus:"ovatos",
+      hatas:{kov:-1, atl:-2, min:-2, fel:-3, bev:-4},
+      vissza:"A közlemény megjelent, a párbeszéd nem indult el. A megválaszolatlan visszajelzés többet ront, mintha meg sem kérdezted volna őket.",
+      naplo:"Közleménnyel válaszolt a tüntetésre, érdemi lépés nélkül." }
+  ]
+},
+
+/* 9 */ {
+  cimke:"Plenáris ülés", tema:"a valódi ok megkeresése",
+  cim:"„Mitől lesz ettől jobb?”",
+  jelenet:"A plenáris ülés",
+  leiras:"A záróvitában ezt kérdezik tőled. Az ellenzék számokkal érvel, a bizottság mögötted ül, a sajtó közvetít.",
+  opciok:[
+    { szoveg:"Megmutatod, honnan jön a probléma nagy része, és hogy a tervezet pontosan melyik ágon avatkozik be.",
+      technika:"Halszálka (Ishikawa) diagram és Pareto-elemzés a vitában", stilus:"strukturalt",
+      hatas:{kov:2, atl:8, min:10, fel:1, bev:4},
+      vissza:"Az érvelés így nem véleményről szólt, hanem az okok szerkezetéről. A kritika nem elnémult, hanem megválaszolva lett.",
+      naplo:"Az okok szerkezetével támasztotta alá a tervezetet." },
+    { szoveg:"Nem foglalkozol a számszerű kritikákkal, és a törvény céljairól beszélsz.",
+      technika:"Hárítás: a kritika figyelmen kívül hagyása", stilus:"gyors",
+      hatas:{kov:-2, atl:-6, min:-6, fel:-3, bev:-2},
+      vissza:"A meg nem válaszolt szám a jegyzőkönyvben marad, és minden későbbi vitában előkerül.",
+      naplo:"Figyelmen kívül hagyta a számszerű kritikákat." },
+    { szoveg:"Három emlékezetes iskolai történettel érvelsz, amit a sajtóból mindenki ismer.",
+      technika:"Elérhetőségi torzításra épített érvelés", stilus:"gyors",
+      hatas:{kov:-1, atl:-3, min:-7, fel:-2, bev:-1},
+      vissza:"A történetek megmaradnak, a bizonyíték nem. A könnyen felidézhető eseteket hajlamosak vagyunk gyakoribbnak hinni.",
+      naplo:"Emlékezetes egyedi esetekkel érvelt." },
+    { szoveg:"Elismered, hogy az okokat nem elemeztétek végig, és további vizsgálatot ígérsz.",
+      technika:"Az elemzés hiányának beismerése", stilus:"ovatos",
+      hatas:{kov:0, atl:4, min:1, fel:5, bev:2},
+      vissza:"Az őszinteség sokat ér, a tervezet viszont már a szavazás előtt áll. A vizsgálatot a döntés előtt kellett volna elvégezni.",
+      naplo:"Elismerte az elemzés hiányát, vizsgálatot ígért." }
+  ]
+},
+
+/* 10 */ {
+  cimke:"Önreflexió", tema:"visszatekintés",
+  cim:"Egyedül a szavazás után",
+  jelenet:"A csendes szoba",
+  leiras:"A törvényt elfogadták. Egy csendes szobában végigveszed a saját szerepedet és a döntéseidet az elmúlt hetekből.",
+  opciok:[
+    { szoveg:"Végigveszed, mire figyeltél oda, mit feltételeztél, és hol tévedtél. Leírod azt is, amit közben gondoltál, de nem mondtál ki.",
+      technika:"Következtetési létra és reflektív gondolkodás", stilus:"strukturalt",
+      hatas:{kov:3, atl:9, min:6, fel:10, bev:4},
+      vissza:"A saját vakfoltok kimondása a legolcsóbb tanulás, és a következő törvénynél már döntési minőségben térül meg.",
+      naplo:"Végigvette a saját döntési folyamatát és vakfoltjait." },
+    { szoveg:"Leírod a legfontosabb vitát két oszlopban: mi hangzott el, és mit gondoltál közben, amit nem mondtál ki.",
+      technika:"Baloldali oszlop módszer", stilus:"strukturalt",
+      hatas:{kov:2, atl:6, min:5, fel:8, bev:3},
+      vissza:"A ki nem mondott gondolatok leírása mutatta meg, milyen feltételezésekkel mentél bele a vitába.",
+      naplo:"Írásban elemezte a saját szerepét a vitában." },
+    { szoveg:"Arra jutsz, hogy a siker a te érdemed, a hibák pedig az ellenzéken múltak.",
+      technika:"Énmegerősítő attribúció", stilus:"gyors",
+      hatas:{kov:-2, atl:-5, min:-4, fel:-10, bev:-3},
+      vissza:"Az önértékelésed sértetlen marad, a tanulás elmarad. A környezeted közben pontosan látja, mi történt.",
+      naplo:"A sikert magának, a hibákat másoknak tulajdonította." },
+    { szoveg:"Lezárod a témát, és a következő kampány anyagaira fókuszálsz.",
+      technika:"A reflexió elhagyása", stilus:"ovatos",
+      hatas:{kov:-1, atl:-2, min:-4, fel:-6, bev:0},
+      vissza:"A következő feladat mindig sürgősebb, mint a visszatekintés. Ezért maradnak bent a hibák a rendszerben.",
+      naplo:"Reflexió nélkül lépett tovább." }
+  ]
+}
+
+  ]
+}
+
+};
+
+/* ============================================================================
+   4) 3D MOTOR — Three.js
+   ----------------------------------------------------------------------------
+   Minden pályához tíz különálló "díszlet" készül, egymás mellett az X tengelyen.
+   A kamera díszletről díszletre utazik, így a jelenetek között valódi
+   kameramozgás van. A világítás és az árnyékot vető fény együtt mozog a kamerával.
+   ========================================================================== */
+
+const T = window.THREE;
+const SET_TAV = 46;              /* két díszlet távolsága */
+
+/* --- anyagok és alapelemek --- */
+function anyag(szin, ropp, fem){
+  return new T.MeshStandardMaterial({ color:szin, roughness:(ropp===undefined?0.82:ropp), metalness:(fem||0) });
+}
+function fenylo(szin, ero){
+  return new T.MeshStandardMaterial({ color:szin, emissive:szin, emissiveIntensity:(ero||1.1), roughness:1 });
+}
+function doboz(w,h,d,mat,x,y,z,ry){
+  const m = new T.Mesh(new T.BoxGeometry(w,h,d), mat);
+  m.position.set(x,y,z); if(ry) m.rotation.y = ry;
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function henger(rf,ra,h,mat,x,y,z,szeg){
+  const m = new T.Mesh(new T.CylinderGeometry(rf,ra,h,szeg||14), mat);
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function gomb(r,mat,x,y,z){
+  const m = new T.Mesh(new T.SphereGeometry(r,18,14), mat);
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function sikArnyek(x,z,r){
+  const m = new T.Mesh(new T.CircleGeometry(r||0.42,20), new T.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.24}));
+  m.rotation.x = -Math.PI/2; m.position.set(x,0.012,z);
+  return m;
+}
+
+/* --- öltözetpaletták szerepkör szerint --- */
+const RUHA = {
+  uzletSotet:{ kabat:0x232b33, nadrag:0x1c232a, ing:0xeceff3, nyakkendo:0x7d2b32, cipo:0x14181c },
+  uzletKek:  { kabat:0x2c3b52, nadrag:0x243044, ing:0xf2f5f8, nyakkendo:0xb08a3e, cipo:0x161a20 },
+  uzletNoi:  { kabat:0x3a3340, nadrag:0x322c38, ing:0xf4eee6, nyakkendo:null,    cipo:0x1a161e },
+  ingujj:    { kabat:0xd8dde3, nadrag:0x39414b, ing:0xd8dde3, nyakkendo:0x4a5a6b, cipo:0x21262c },
+  katona:    { kabat:0x4a5138, nadrag:0x434a33, ing:0x4a5138, nyakkendo:null,    cipo:0x2a2721, mellény:0x3b4230 },
+  katonaTiszt:{kabat:0x3f4733, nadrag:0x394030, ing:0x3f4733, nyakkendo:null,    cipo:0x262420, mellény:0x333a29 },
+  civil:     { kabat:0x6b4a3a, nadrag:0x3b4450, ing:0xd9cfc2, nyakkendo:null,    cipo:0x2b2723 },
+  civil2:    { kabat:0x4f6152, nadrag:0x3a3f45, ing:0xe4ded3, nyakkendo:null,    cipo:0x272b28 },
+  politikus: { kabat:0x1f2630, nadrag:0x1a2028, ing:0xf3f5f8, nyakkendo:0x3c5a6e, cipo:0x121519 },
+  politikus2:{ kabat:0x2b2f3a, nadrag:0x252932, ing:0xf0f0f4, nyakkendo:0x6d3140, cipo:0x14161b }
+};
+const BOR = [0xd8ab8a, 0xc59570, 0xa8734f, 0xe2c0a3, 0x8c5a3c];
+const HAJ = [0x3b2f22, 0x5a4231, 0x241d16, 0x7a6549, 0x9a8f80];
+
+/* ============================================================================
+   EMBERALAK
+   Kapszulákból és forgástestből épül: lekerekített végtagok, formált törzs,
+   arcvonások. A `lod:"egyszeru"` a háttértömeghez való, olcsóbb változat.
+   ========================================================================== */
+function kapszula(r, h, mat, x, y, z){
+  const geo = T.CapsuleGeometry ? new T.CapsuleGeometry(r, h, 6, 12)
+                                : new T.CylinderGeometry(r, r, h + r*2, 12);
+  const m = new T.Mesh(geo, mat);
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+/* Forgástest törzs: csípőtől vállig szűkülő, majd táguló profil. */
+function torzsGeo(m){
+  const p = [
+    new T.Vector2(0.005, 0.00),
+    new T.Vector2(0.150, 0.01),
+    new T.Vector2(0.146, 0.09*m),
+    new T.Vector2(0.138, 0.20*m),
+    new T.Vector2(0.163, 0.34*m),
+    new T.Vector2(0.176, 0.45*m),
+    new T.Vector2(0.168, 0.53*m),
+    new T.Vector2(0.105, 0.58*m),
+    new T.Vector2(0.005, 0.585*m)
+  ];
+  return new T.LatheGeometry(p, 20);
+}
+function ember(o){
+  o = o || {};
+  const r   = RUHA[o.ruha || "uzletSotet"];
+  const egyszeru = o.lod === "egyszeru";
+  const bor = new T.MeshStandardMaterial({ color:BOR[(o.bor||0) % BOR.length], roughness:0.62 });
+  const haj = anyag(HAJ[(o.haj||0) % HAJ.length], 0.78);
+  const kabat  = anyag(r.kabat, 0.80);
+  const nadrag = anyag(r.nadrag, 0.84);
+  const ing    = anyag(r.ing, 0.68);
+  const cipo   = new T.MeshStandardMaterial({ color:r.cipo, roughness:0.35, metalness:0.05 });
+  const g  = new T.Group();
+  const ul = o.poz === "ul";
+  const m  = o.magas || 1.0;
+  const csipo = ul ? 0.50*m : 0.88*m;
+  const t = (o.tukor ? -1 : 1);   /* enyhe aszimmetria, hogy ne tűnjön bábunak */
+
+  /* ---------- lábak ---------- */
+  if(ul){
+    [-1,1].forEach(oldal=>{
+      const comb = kapszula(0.082, 0.30, nadrag, oldal*0.105, csipo-0.01, 0.20);
+      comb.rotation.x = Math.PI/2; g.add(comb);
+      g.add(gomb(0.082, nadrag, oldal*0.105, csipo-0.02, 0.36));
+      g.add(kapszula(0.070, 0.30, nadrag, oldal*0.105, csipo-0.21, 0.40));
+      const c = kapszula(0.068, 0.13, cipo, oldal*0.105, 0.055, 0.47);
+      c.rotation.x = Math.PI/2; g.add(c);
+    });
+  } else {
+    [-1,1].forEach(oldal=>{
+      const elore = (oldal===t) ? 0.055 : -0.035;   /* egyik láb kicsit előrébb */
+      const comb = kapszula(0.086, 0.30*m, nadrag, oldal*0.098, csipo-0.20*m, elore*0.4);
+      comb.rotation.x = -elore*0.35; g.add(comb);
+      g.add(gomb(0.080, nadrag, oldal*0.098, csipo-0.40*m, elore*0.55));
+      g.add(kapszula(0.070, 0.30*m, nadrag, oldal*0.098, csipo-0.60*m, elore*0.7));
+      const c = kapszula(0.070, 0.14, cipo, oldal*0.098, 0.052, elore + 0.055);
+      c.rotation.x = Math.PI/2; g.add(c);
+    });
+  }
+
+  /* ---------- törzs ---------- */
+  const torzs = new T.Mesh(torzsGeo(m), kabat);
+  torzs.position.set(0, csipo, 0);
+  torzs.scale.set(1, 1, 0.68);
+  torzs.castShadow = true; torzs.receiveShadow = true;
+  g.add(torzs);
+
+  const vallY = csipo + 0.50*m;
+  const ingMesh = kapszula(0.052, 0.24*m, ing, 0, csipo + 0.36*m, 0.098);
+  ingMesh.scale.set(1.18, 1, 0.35); g.add(ingMesh);
+  if(r.nyakkendo){
+    const ny = kapszula(0.019, 0.19*m, anyag(r.nyakkendo, 0.55), 0, csipo + 0.32*m, 0.114);
+    ny.scale.set(1, 1, 0.5); g.add(ny);
+  }
+  if(!egyszeru && r.kabat !== r.ing){
+    /* keskeny gallér a nyak két oldalán */
+    [-1,1].forEach(oldal=>{
+      const l = doboz(0.030, 0.10*m, 0.018, kabat, oldal*0.052, csipo + 0.45*m, 0.096);
+      l.rotation.z = oldal*0.30; g.add(l);
+    });
+  }
+  if(r.mellény){
+    const v = new T.Mesh(torzsGeo(m*0.92), anyag(r.mellény, 0.92));
+    v.position.set(0, csipo + 0.04, 0); v.scale.set(1.10, 0.86, 0.80);
+    v.castShadow = true; g.add(v);
+  }
+
+  /* ---------- karok ---------- */
+  [-1,1].forEach(oldal=>{
+    const vx = oldal*0.170, mutat = (o.kar === "mutat" && oldal === -t);
+    g.add(gomb(0.076, kabat, vx, vallY, 0));
+    const felkarSzog = mutat ? -1.15 : (ul ? -0.42 : 0.06);
+    const fk = new T.Group(); fk.position.set(vx, vallY, 0);
+    fk.rotation.x = felkarSzog; fk.rotation.z = oldal*0.10;
+    fk.add(kapszula(0.056, 0.24*m, kabat, 0, -0.13*m, 0)); g.add(fk);
+    const konyokY = vallY - Math.cos(felkarSzog)*0.26*m;
+    const konyokZ = -Math.sin(felkarSzog)*0.26*m;
+    g.add(gomb(0.053, kabat, vx + oldal*0.024, konyokY, konyokZ));
+    const alkarSzog = mutat ? -1.55 : (ul ? -1.05 : 0.10);
+    const ak = new T.Group(); ak.position.set(vx + oldal*0.024, konyokY, konyokZ);
+    ak.rotation.x = alkarSzog;
+    ak.add(kapszula(0.047, 0.22*m, kabat, 0, -0.12*m, 0)); g.add(ak);
+    const kezY = konyokY - Math.cos(alkarSzog)*0.24*m;
+    const kezZ = konyokZ - Math.sin(alkarSzog)*0.24*m;
+    const kez = gomb(0.046, bor, vx + oldal*0.028, kezY, kezZ);
+    kez.scale.set(0.85, 1.05, 0.7); g.add(kez);
+  });
+
+  /* ---------- nyak és fej ---------- */
+  g.add(kapszula(0.048, 0.06, bor, 0, vallY + 0.055, -0.005));
+  const fejY = vallY + 0.185;
+  const fej = gomb(0.113, bor, 0, fejY, 0);
+  fej.scale.set(1, 1.16, 1.05); g.add(fej);
+  const all = gomb(0.072, bor, 0, fejY - 0.062, 0.030); all.scale.set(1, 0.9, 1.02); g.add(all);
+  if(!egyszeru){
+    [-1,1].forEach(oldal=>{
+      const f = gomb(0.030, bor, oldal*0.112, fejY + 0.004, -0.004);
+      f.scale.set(0.42, 1.1, 0.85); g.add(f);
+    });
+  }
+
+  if(!(o.ruha === "katona" || o.ruha === "katonaTiszt")){
+    const hajGeo = new T.SphereGeometry(0.118, 20, 14, 0, Math.PI*2, 0, Math.PI*0.68);
+    const h = new T.Mesh(hajGeo, haj);
+    h.position.set(0, fejY + 0.010, 0); h.scale.set(1.02, 1.10, 1.06);
+    h.rotation.x = -0.30; h.castShadow = true; g.add(h);
+  } else {
+    const sisak = new T.Mesh(new T.SphereGeometry(0.126, 20, 14, 0, Math.PI*2, 0, Math.PI*0.72),
+                             anyag(0x424832, 0.72, 0.12));
+    sisak.position.set(0, fejY + 0.012, -0.004); sisak.scale.set(1.06, 1.02, 1.10);
+    sisak.rotation.x = -0.18; sisak.castShadow = true; g.add(sisak);
+    const perem = new T.Mesh(new T.TorusGeometry(0.126, 0.014, 8, 22), anyag(0x3a4029, 0.75));
+    perem.position.set(0, fejY + 0.006, -0.004); perem.rotation.x = Math.PI/2 - 0.18;
+    perem.scale.set(1.06, 1.10, 1); g.add(perem);
+  }
+
+  /* ---------- arcvonások ---------- */
+  if(!egyszeru){
+    const szemFeher = new T.MeshStandardMaterial({ color:0xf3efe8, roughness:0.35 });
+    const pupilla   = new T.MeshStandardMaterial({ color:0x1c1811, roughness:0.25 });
+    [-1,1].forEach(oldal=>{
+      const sz = gomb(0.0225, szemFeher, oldal*0.043, fejY + 0.013, 0.098);
+      sz.scale.set(1, 0.78, 0.6); g.add(sz);
+      g.add(gomb(0.0105, pupilla, oldal*0.043, fejY + 0.011, 0.112));
+      const szemoldok = doboz(0.048, 0.011, 0.012, haj, oldal*0.045, fejY + 0.049, 0.100);
+      szemoldok.rotation.z = -oldal*0.14; g.add(szemoldok);
+    });
+    const orr = new T.Mesh(new T.ConeGeometry(0.020, 0.048, 8), bor);
+    orr.position.set(0, fejY - 0.014, 0.103); orr.rotation.x = Math.PI/2 + 0.5;
+    orr.castShadow = true; g.add(orr);
+    g.add(doboz(0.042, 0.010, 0.012,
+      new T.MeshStandardMaterial({color:0x8d5a4c, roughness:0.55}), 0, fejY - 0.058, 0.094));
+  }
+
+  g.position.set(o.x||0, 0, o.z||0);
+  g.rotation.y = (o.ry||0);
+  g.add(sikArnyek(0, ul?0.2:0.02, 0.42));
+  return g;
+}
+
+/* --- bútor- és tárgykészlet --- */
+const P = {
+  asztal(x,z,w,d,ry,szin){
+    const g=new T.Group(), lap=anyag(szin||0x8a6a49,0.6), lab=anyag(0x2f3439,0.55,0.3);
+    g.add(doboz(w,0.06,d, lap, 0,0.74,0));
+    const hx=w/2-0.09, hz=d/2-0.09;
+    [[-hx,-hz],[hx,-hz],[-hx,hz],[hx,hz]].forEach(p=> g.add(doboz(0.06,0.72,0.06, lab, p[0],0.37,p[1])));
+    g.position.set(x,0,z); if(ry) g.rotation.y=ry; return g;
+  },
+  szek(x,z,ry,szin){
+    const g=new T.Group(), m=anyag(szin||0x394049,0.8);
+    g.add(doboz(0.44,0.06,0.44,m,0,0.45,0));
+    g.add(doboz(0.44,0.52,0.06,m,0,0.71,-0.20));
+    [[-0.18,-0.18],[0.18,-0.18],[-0.18,0.18],[0.18,0.18]].forEach(p=> g.add(doboz(0.05,0.44,0.05, anyag(0x23282e,0.6,0.3), p[0],0.22,p[1])));
+    g.position.set(x,0,z); if(ry) g.rotation.y=ry; return g;
+  },
+  monitor(x,y,z,ry,w){
+    const g=new T.Group();
+    g.add(doboz(w||0.62,0.38,0.03, anyag(0x1b1f24,0.5), 0,0.22,0));
+    g.add(doboz((w||0.62)-0.05,0.33,0.01, fenylo(0x7fb3d6,0.65), 0,0.22,0.021));
+    g.add(doboz(0.16,0.03,0.12, anyag(0x1b1f24,0.5), 0,0.02,0));
+    g.position.set(x,y,z); if(ry) g.rotation.y=ry; return g;
+  },
+  papirkupac(x,y,z,db,ry){
+    const g=new T.Group(); const m=anyag(0xf0ece2,0.95);
+    for(let i=0;i<(db||6);i++) g.add(doboz(0.30,0.012,0.22, m, (i%2)*0.008, 0.013*i, (i%3)*0.006));
+    g.position.set(x,y,z); if(ry) g.rotation.y=ry; return g;
+  },
+  tabla(x,y,z,ry,w,h){
+    const g=new T.Group();
+    g.add(doboz(w||2.4,h||1.4,0.05, anyag(0xd9d5c9,0.96), 0,0,0));
+    g.add(doboz((w||2.4)+0.08,(h||1.4)+0.08,0.02, anyag(0x2c3138,0.6,0.3), 0,0,-0.03));
+    g.position.set(x,y,z); if(ry) g.rotation.y=ry; return g;
+  },
+  lampa(x,z,szin){
+    const g=new T.Group(), m=anyag(0x2a2f35,0.5,0.4);
+    g.add(henger(0.10,0.13,0.03,m,0,0.76,0));
+    g.add(henger(0.02,0.02,0.42,m,0,0.97,0));
+    g.add(henger(0.13,0.07,0.14, anyag(szin||0xd8c9a8,0.7), 0,1.22,0));
+    const f=new T.PointLight(0xffd9a0, 6, 5, 2); f.position.set(0,1.15,0); g.add(f);
+    g.position.set(x,0,z); return g;
+  },
+  szerverRack(x,z,ry){
+    const g=new T.Group(), m=anyag(0x1a1f24,0.6,0.25);
+    g.add(doboz(0.7,2.0,0.9,m,0,1.0,0));
+    for(let i=0;i<9;i++){
+      g.add(doboz(0.62,0.14,0.02, anyag(0x0d1114,0.7), 0, 0.24+i*0.20, 0.46));
+      g.add(doboz(0.03,0.03,0.01, fenylo(i%3===0?0xff6b52:0x7fe0a8, 2.2), 0.24, 0.24+i*0.20, 0.475));
+    }
+    g.position.set(x,0,z); if(ry) g.rotation.y=ry; return g;
+  },
+  oszlop(x,z,h){
+    const g=new T.Group(), m=anyag(0xe6e1d5,0.9);
+    g.add(henger(0.30,0.34,h||5,m,0,(h||5)/2,0,18));
+    g.add(doboz(0.86,0.16,0.86,m,0,0.08,0));
+    g.add(doboz(0.86,0.16,0.86,m,0,(h||5)-0.08,0));
+    g.position.set(x,0,z); return g;
+  },
+  pulpitus(x,z,ry){
+    const g=new T.Group(), m=anyag(0x6d4f37,0.6);
+    g.add(doboz(0.9,1.1,0.6,m,0,0.55,0));
+    g.add(doboz(1.0,0.06,0.7, anyag(0x503724,0.5),0,1.13,0));
+    g.add(henger(0.012,0.012,0.34, anyag(0x1a1e22,0.4,0.6),0.18,1.3,0.05));
+    g.add(gomb(0.035, anyag(0x1a1e22,0.4),0.18,1.47,0.05));
+    g.position.set(x,0,z); if(ry) g.rotation.y=ry; return g;
+  },
+  jarmu(x,z,ry,szin){
+    const g=new T.Group(), m=anyag(szin||0x4c5340,0.8);
+    g.add(doboz(2.0,0.9,4.4,m,0,0.85,0));
+    g.add(doboz(1.8,0.7,1.6, anyag(0x3a4031,0.8),0,1.6,-0.9));
+    g.add(doboz(1.6,0.5,0.06, fenylo(0x5b7f96,0.35),0,1.62,-0.12));
+    [[-0.95,-1.5],[0.95,-1.5],[-0.95,1.5],[0.95,1.5]].forEach(p=>{
+      const k=henger(0.42,0.42,0.32, anyag(0x14161a,0.9), p[0],0.42,p[1],16); k.rotation.z=Math.PI/2; g.add(k);
+    });
+    g.position.set(x,0,z); if(ry) g.rotation.y=ry; return g;
+  },
+  homokzsak(x,z,sor,ry){
+    const g=new T.Group(), m=anyag(0x9c8f74,0.98);
+    for(let r=0;r<3;r++) for(let i=0;i<(sor||6)-r;i++)
+      g.add(doboz(0.46,0.20,0.30, m, (i-((sor||6)-r-1)/2)*0.48 + r*0.12, 0.11+r*0.19, 0));
+    g.position.set(x,0,z); if(ry) g.rotation.y=ry; return g;
+  },
+  sator(x,z,ry){
+    const g=new T.Group(), m=anyag(0x4a5138,0.95);
+    const geo=new T.CylinderGeometry(0.01,2.6,2.4,4);
+    const s=new T.Mesh(geo,m); s.position.y=1.2; s.rotation.y=Math.PI/4; s.castShadow=true; g.add(s);
+    g.add(doboz(1.1,1.5,0.05, anyag(0x2f3427,0.95), 0,0.75,1.7));
+    g.position.set(x,0,z); if(ry) g.rotation.y=ry; return g;
+  },
+  bogre(x,y,z){
+    const g=new T.Group(), m=anyag(0xe8e2d6,0.5);
+    g.add(henger(0.042,0.038,0.095,m,0,0.048,0,14));
+    const f=new T.Mesh(new T.TorusGeometry(0.032,0.010,6,14), m);
+    f.position.set(0.052,0.05,0); f.rotation.y=Math.PI/2; g.add(f);
+    g.position.set(x,y,z); return g;
+  },
+  konyvek(x,y,z,db,ry){
+    const g=new T.Group(), szinek=[0x6b3a32,0x2f4a52,0x5b5233,0x3d3a4a,0x6a5a3e];
+    for(let i=0;i<(db||5);i++){
+      const h=0.24+((i*7)%5)*0.02;
+      g.add(doboz(0.045,h,0.17, anyag(szinek[i%5],0.85), i*0.05, h/2, 0));
+    }
+    g.position.set(x,y,z); if(ry) g.rotation.y=ry; return g;
+  },
+  polc(x,z,ry){
+    const g=new T.Group(), m=anyag(0x5b4633,0.75);
+    g.add(doboz(1.6,0.05,0.34,m,0,0.9,0), doboz(1.6,0.05,0.34,m,0,1.34,0), doboz(1.6,0.05,0.34,m,0,1.78,0));
+    g.add(doboz(0.06,1.9,0.34,m,-0.8,0.95,0), doboz(0.06,1.9,0.34,m,0.8,0.95,0));
+    g.add(P.konyvek(-0.72,0.93,0,7), P.konyvek(0.1,1.37,0,6), P.konyvek(-0.6,1.81,0,5));
+    g.position.set(x,0,z); if(ry) g.rotation.y=ry; return g;
+  },
+  noveny(x,z){
+    const g=new T.Group();
+    g.add(henger(0.20,0.16,0.34, anyag(0x8a7358,0.9),0,0.17,0));
+    for(let i=0;i<7;i++){
+      const l=doboz(0.06,0.62,0.20, anyag(0x3d6b45,0.85), 0,0.62,0);
+      l.rotation.z=(i-3)*0.22; l.rotation.x=(i%2)*0.3-0.15; g.add(l);
+    }
+    g.position.set(x,0,z); return g;
+  }
+};
+
+/* --- környezettípusok: belső tér és külső terep --- */
+function belsoTer(o){
+  o = o || {};
+  const g = new T.Group();
+  const w = o.w || 14, d = o.d || 12, h = o.h || 3.4;
+  const padlo = new T.Mesh(new T.PlaneGeometry(w,d), anyag(o.padlo || 0x5b5148, 0.85));
+  padlo.rotation.x = -Math.PI/2; padlo.receiveShadow = true; g.add(padlo);
+  const falAnyag = anyag(o.fal || 0x8c8579, 0.96);
+  const hatso = doboz(w,h,0.2, falAnyag, 0, h/2, -d/2); g.add(hatso);
+  g.add(doboz(0.2,h,d, falAnyag, -w/2, h/2, 0));
+  g.add(doboz(0.2,h,d, falAnyag,  w/2, h/2, 0));
+  if(o.mennyezet !== false){
+    const menny = new T.Mesh(new T.PlaneGeometry(w,d), anyag(o.plafon || 0x8f897d, 1));
+    menny.rotation.x = Math.PI/2; menny.position.y = h; g.add(menny);
+  }
+  /* ablakok a hátsó falon */
+  if(o.ablak === "sav"){
+    for(let i=0;i<5;i++){
+      const x=-w/2+1.6+i*2.6;
+      g.add(doboz(2.06,1.66,0.05, anyag(0x3b3a35,0.7), x, 1.9, -d/2+0.10));
+      g.add(doboz(1.9,1.5,0.05, fenylo(o.ablakSzin||0x8fb2cc, o.ablakEro||0.42), x, 1.9, -d/2+0.13));
+      g.add(doboz(0.05,1.5,0.02, anyag(0x3b3a35,0.7), x, 1.9, -d/2+0.15));
+    }
+  } else if(o.ablak === "magas"){
+    for(let i=0;i<4;i++){
+      const x=-w/2+2.2+i*3.2;
+      g.add(doboz(1.66,2.76,0.05, anyag(0x3b3a35,0.7), x, 1.7, -d/2+0.10));
+      g.add(doboz(1.5,2.6,0.05, fenylo(o.ablakSzin||0x82a6c2, o.ablakEro||0.40), x, 1.7, -d/2+0.13));
+      g.add(doboz(0.05,2.6,0.02, anyag(0x3b3a35,0.7), x, 1.7, -d/2+0.15));
+    }
+  }
+  if(o.mennyezetiFeny !== false){
+    for(let i=0;i<3;i++){
+      g.add(doboz(1.7,0.05,0.16, fenylo(0xfff4de, 0.9), -3.6+i*3.6, h-0.10, 0.6));
+    }
+  }
+  /* lábazat és párkány: ettől lesz igazi szobája a jelenetnek */
+  const lab = anyag(o.lazat || 0x4a453d, 0.75);
+  g.add(doboz(w,0.13,0.06, lab, 0, 0.065, -d/2+0.13));
+  g.add(doboz(0.06,0.13,d, lab, -w/2+0.13, 0.065, 0));
+  g.add(doboz(0.06,0.13,d, lab,  w/2-0.13, 0.065, 0));
+  const parkany = anyag(o.parkany || 0xd7d2c6, 0.9);
+  g.add(doboz(w,0.10,0.10, parkany, 0, h-0.06, -d/2+0.15));
+  g.add(doboz(0.10,0.10,d, parkany, -w/2+0.15, h-0.06, 0));
+  g.add(doboz(0.10,0.10,d, parkany,  w/2-0.15, h-0.06, 0));
+  /* ajtó a jobb oldali falon */
+  if(o.ajto !== false){
+    const ax = w/2-0.14, az = d/2-2.6;
+    g.add(doboz(0.10,2.24,1.14, anyag(0x5b4633,0.7), ax, 1.12, az));
+    g.add(doboz(0.06,2.06,0.96, anyag(o.ajtoSzin || 0x6b533b, 0.55), ax-0.04, 1.05, az));
+    g.add(gomb(0.035, anyag(0xb2a06a,0.4,0.7), ax-0.10, 1.02, az+0.36));
+  }
+  if(o.szonyeg){
+    const sz = new T.Mesh(new T.PlaneGeometry(o.szonyeg[0], o.szonyeg[1]),
+                          anyag(o.szonyegSzin || 0x6b4a42, 0.98));
+    sz.rotation.x = -Math.PI/2; sz.position.set(o.szonyeg[2]||0, 0.008, o.szonyeg[3]||0);
+    sz.receiveShadow = true; g.add(sz);
+  }
+  return g;
+}
+function kulsoTer(o){
+  o = o || {};
+  const g = new T.Group();
+  g.userData.kulso = true;
+  const fold = new T.Mesh(new T.PlaneGeometry(46,40), anyag(o.talaj || 0x5a5748, 1));
+  fold.rotation.x = -Math.PI/2; fold.receiveShadow = true; g.add(fold);
+  /* égbolt és távoli tájsáv */
+  const eg = new T.Mesh(new T.PlaneGeometry(60,34), fenylo(o.eg || 0x5b7fa0, 1.25));
+  eg.position.set(0,13,-24); g.add(eg);
+  const tav = new T.Mesh(new T.PlaneGeometry(60,7), fenylo(o.tavol || 0x3d5468, 0.75));
+  tav.position.set(0,2.4,-22); g.add(tav);
+  if(o.viz){
+    const viz = new T.Mesh(new T.PlaneGeometry(46,o.vizM||16), new T.MeshStandardMaterial({color:o.vizSzin||0x2c4a52, roughness:0.18, metalness:0.55}));
+    viz.rotation.x = -Math.PI/2; viz.position.set(0,0.05,o.vizZ||-9); g.add(viz);
+  }
+  if(o.toltes){
+    const t = new T.Mesh(new T.CylinderGeometry(0.01,2.6,3.2,4), anyag(o.toltesSzin||0x584f3d,1));
+    t.rotation.z = Math.PI/2; t.rotation.y = Math.PI/4;
+    t.position.set(o.toltesX||0, 1.0, o.toltesZ||-3); t.scale.set(1,4.2,1); t.castShadow=true; g.add(t);
+  }
+  if(o.fak){
+    for(let i=0;i<(o.fak||8);i++){
+      const x=-20+i*5.2+((i*7)%3), z=-15-((i*5)%4);
+      g.add(henger(0.16,0.2,1.6, anyag(0x4a3b2d,0.95), x,0.8,z,8));
+      const k=gomb(1.1, anyag(0x33512f,0.95), x,2.3,z); k.scale.set(1,0.82,1); g.add(k);
+    }
+  }
+  return g;
+}
+
+/* ============================================================================
+   5) DÍSZLETEK — pályánként tíz jelenet
+   Egy díszlet: { epit(g), kamera:{p:[x,y,z], c:[x,y,z]} }  (helyi koordinátákban)
+   ========================================================================== */
+
+const DISZLETEK = {
+
+/* ---------- VÁLLALATI ---------- */
+vallalati:[
+  { /* 1 · Az iroda — a kapott kérdés */
+    epit(g){
+      g.add(belsoTer({ablak:"sav", padlo:0x6b5a48, fal:0xc2bcae, szonyeg:[5.2,4.0,0,-0.4], szonyegSzin:0x5c4640}));
+      g.add(P.asztal(0,0.4,2.4,1.1,0), P.monitor(-0.5,0.77,0.3,0.1), P.papirkupac(0.55,0.78,0.25,7));
+      g.add(P.bogre(0.28,0.78,0.62), P.polc(-5.2,-3.4,0.5), P.konyvek(-1.0,0.78,0.5,4,0.3));
+      g.add(P.szek(-0.2,-1.25,0), P.szek(2.9,0.9,-0.5,0x3c434c), P.noveny(4.6,-2.4));
+      g.add(P.tabla(-4.6,2.0,-5.8,0,2.2,1.3));
+      g.add(ember({x:-0.2,z:-1.2,ry:0.05,ruha:"uzletSotet",poz:"ul",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:2.5,z:0.5,ry:-0.55,ruha:"uzletNoi",bor:3,haj:1,kar:"mutat"}));
+    }, kamera:{p:[1.9,2.0,4.6], c:[0.0,1.3,-1.0]} },
+
+  { /* 2 · A tárgyaló — érintett-elemzés */
+    epit(g){
+      g.add(belsoTer({w:16,d:13,ablak:"magas", padlo:0x6f5f4c, fal:0xcac4b6, szonyeg:[7.5,5.4,0,-0.2], szonyegSzin:0x54463f}));
+      g.add(P.asztal(0,0,4.6,1.6,0,0x7a5a3d));
+      g.add(P.tabla(0,1.9,-6.3,0,3.4,1.8));
+      for(let i=0;i<3;i++){ g.add(P.szek(-1.5+i*1.5,1.25,Math.PI)); g.add(P.szek(-1.5+i*1.5,-1.25,0)); }
+      g.add(ember({x:-1.5,z:-1.3,ry:0,ruha:"uzletKek",poz:"ul",bor:1,haj:2,tukor:0}));
+      g.add(ember({x:0,z:-1.3,ry:0.06,ruha:"ingujj",poz:"ul",bor:3,haj:0,tukor:0}));
+      g.add(ember({x:1.5,z:-1.3,ry:-0.06,ruha:"uzletNoi",poz:"ul",bor:0,haj:3,tukor:1}));
+      g.add(ember({x:-3.1,z:0.4,ry:0.6,ruha:"uzletSotet",bor:2,haj:1,kar:"mutat"}));
+    }, kamera:{p:[1.8,2.2,6.2], c:[-0.3,1.3,-1.0]} },
+
+  { /* 3 · A felettes ajtaja — ok-okozati feltárás */
+    epit(g){
+      g.add(belsoTer({w:8,d:16,h:3.2, padlo:0x4f4640, fal:0xb0aa9d, mennyezetiFeny:true}));
+      g.add(doboz(1.2,2.3,0.12, anyag(0x3b2f24,0.7), 2.5,1.15,-7.85));
+      g.add(doboz(0.1,2.1,0.05, fenylo(0xffe2ad,2.2), 1.92,1.05,-7.82));
+      g.add(P.tabla(-3.85,1.9,-2.0,Math.PI/2,3.0,1.7));
+      g.add(P.noveny(3.2,-1.2));
+      g.add(ember({x:0.7,z:-2.6,ry:0.12,ruha:"uzletSotet",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:-1.4,z:-1.6,ry:0.7,ruha:"ingujj",bor:4,haj:2,kar:"mutat"}));
+    }, kamera:{p:[1.6,1.95,4.6], c:[-0.2,1.35,-2.4]} },
+
+  { /* 4 · Két osztály között — bevonás foka */
+    epit(g){
+      g.add(belsoTer({w:18,d:13,ablak:"sav", padlo:0x6b5a48, fal:0xc4bfb2}));
+      g.add(P.asztal(-4.2,0.6,2.6,1.2,0), P.asztal(4.2,0.6,2.6,1.2,0));
+      g.add(P.monitor(-4.6,0.77,0.35,0), P.monitor(4.0,0.77,0.35,0));
+      g.add(P.szek(-4.6,-0.65,0), P.szek(4.6,-0.65,0));
+      g.add(ember({x:-4.6,z:-0.6,ry:0.1,ruha:"ingujj",poz:"ul",bor:1,haj:0,tukor:0}));
+      g.add(ember({x:-3.0,z:1.2,ry:0.5,ruha:"uzletNoi",bor:3,haj:3,tukor:1}));
+      g.add(ember({x:4.6,z:-0.6,ry:-0.1,ruha:"uzletKek",poz:"ul",bor:2,haj:1,tukor:1}));
+      g.add(ember({x:0,z:0.9,ry:0.05,ruha:"uzletSotet",bor:0,haj:0,kar:"mutat"}));
+      g.add(P.noveny(-7.5,-1.5), P.noveny(7.5,-1.5));
+    }, kamera:{p:[0.4,2.5,7.8], c:[0,1.3,0.2]} },
+
+  { /* 5 · Az ügyfélriport — információ és torzítások */
+    epit(g){
+      g.add(belsoTer({w:10,d:9,h:3.1, padlo:0x60513f, fal:0xbdb7a9, ablak:"sav", szonyeg:[4.4,3.4,0,-0.3]}));
+      g.add(P.bogre(0.9,0.78,0.55), P.polc(-3.6,-2.8,0.4));
+      g.add(P.asztal(0,0.2,2.8,1.3,0,0x8a6a49));
+      g.add(P.papirkupac(-0.7,0.78,0.1,10), P.papirkupac(0.1,0.78,0.35,4,0.4));
+      g.add(P.lampa(1.15,-0.15));
+      g.add(P.monitor(-1.15,0.77,-0.3,0.3,0.5));
+      g.add(P.szek(-0.3,-1.05,0));
+      g.add(ember({x:-0.3,z:-1.0,ry:0.05,ruha:"uzletSotet",poz:"ul",bor:0,haj:0,tukor:0}));
+    }, kamera:{p:[1.5,1.75,4.2], c:[-0.2,1.15,-0.4]} },
+
+  { /* 6 · Az asztalod — alternatívagenerálás */
+    epit(g){
+      g.add(belsoTer({w:12,d:11,ablak:"magas", padlo:0x6b5a48, fal:0xc2bcae, szonyeg:[5.6,4.2,0,-0.2]}));
+      g.add(P.bogre(1.0,0.78,0.6), P.polc(-4.6,-3.2,0.5));
+      g.add(P.asztal(0,0.3,3.0,1.3,0));
+      for(let i=0;i<4;i++) g.add(P.papirkupac(-1.1+i*0.72, 0.78, -0.1+((i%2)*0.4), 5+i*3, i*0.3));
+      g.add(P.monitor(1.25,0.77,-0.2,-0.4));
+      g.add(P.szek(0,-1.05,0));
+      g.add(ember({x:0,z:-1.0,ry:0.05,ruha:"ingujj",poz:"ul",bor:3,haj:1,tukor:1}));
+      g.add(ember({x:-2.5,z:0.9,ry:0.75,ruha:"uzletNoi",bor:0,haj:3,kar:"mutat"}));
+      g.add(ember({x:2.6,z:1.1,ry:-0.7,ruha:"uzletKek",bor:2,haj:0,tukor:0}));
+    }, kamera:{p:[1.4,2.0,5.4], c:[0,1.25,-0.5]} },
+
+  { /* 7 · A rendszerindulás — kockázat */
+    epit(g){
+      g.add(belsoTer({w:14,d:11,h:3.2, padlo:0x2f3439, fal:0x545c63, mennyezetiFeny:false, plafon:0x2a3035}));
+      for(let i=0;i<3;i++) g.add(doboz(3.0,0.05,0.3, fenylo(0x9fd6ff,1.2), -4+i*4, 3.05, -1));
+      for(let i=0;i<5;i++) g.add(P.szerverRack(-4.2+i*2.1, -3.2, 0));
+      g.add(P.asztal(1.0,2.6,2.2,1.0,0,0x3b4147), P.monitor(0.6,0.77,2.5,0.2,0.8));
+      g.add(ember({x:-1.2,z:0.9,ry:0.25,ruha:"ingujj",bor:1,haj:2,kar:"mutat"}));
+      g.add(ember({x:1.5,z:1.2,ry:-0.3,ruha:"uzletSotet",bor:4,haj:0,tukor:0}));
+    }, kamera:{p:[1.6,2.2,5.8], c:[-0.2,1.4,-0.8]} },
+
+  { /* 8 · A mérlegelés — kritériumok és választás */
+    epit(g){
+      g.add(belsoTer({w:12,d:11,ablak:"magas", padlo:0x6f5f4c, fal:0xcfc9bb, ablakSzin:0xc8d8e4}));
+      g.add(P.asztal(0,0,3.2,1.4,0,0x7a5a3d));
+      g.add(P.papirkupac(-0.95,0.78,0,8), P.papirkupac(0,0.78,0.05,8), P.papirkupac(0.95,0.78,0,8));
+      g.add(P.szek(-1.2,-1.35,0), P.szek(1.2,-1.35,0), P.szek(0,-1.35,0));
+      g.add(ember({x:-1.25,z:-1.3,ry:0.18,ruha:"uzletKek",poz:"ul",bor:2,haj:1,tukor:1}));
+      g.add(ember({x:1.25,z:-1.3,ry:-0.18,ruha:"uzletNoi",poz:"ul",bor:0,haj:3,tukor:1}));
+      g.add(ember({x:0,z:-1.3,ry:0,ruha:"uzletSotet",poz:"ul",bor:1,haj:0,tukor:0}));
+      g.add(P.tabla(0,1.9,-5.3,0,2.6,1.5));
+    }, kamera:{p:[1.6,2.1,5.4], c:[0,1.3,-0.8]} },
+
+  { /* 9 · Az éjszakai ügyelet — etikai próba */
+    epit(g){
+      g.add(belsoTer({w:13,d:11,h:3.2, padlo:0x3d3730, fal:0x585149, mennyezetiFeny:false, plafon:0x2b2723,
+                      ablak:"magas", ablakSzin:0x30506e, ablakEro:0.55}));
+      g.add(P.asztal(0,0.6,2.6,1.2,0,0x6b4f37));
+      g.add(P.lampa(1.05,0.25), P.monitor(-0.55,0.77,0.4,0.15,0.7), P.papirkupac(0.35,0.78,0.75,5));
+      g.add(P.szek(-0.2,-0.75,0));
+      g.add(ember({x:-0.2,z:-0.7,ry:0.06,ruha:"ingujj",poz:"ul",bor:0,haj:0,tukor:0}));
+      g.add(P.noveny(4.4,-2.0));
+    }, kamera:{p:[1.5,1.85,4.6], c:[-0.2,1.2,-0.2]} },
+
+  { /* 10 · A csapatszoba — reflexió */
+    epit(g){
+      g.add(belsoTer({w:14,d:12,ablak:"sav", padlo:0x6b5a48, fal:0xc7c1b3, szonyeg:[6.4,5.0,0,0]}));
+      g.add(P.tabla(0,1.85,-5.8,0,3.6,1.9));
+      for(let i=0;i<5;i++){
+        const a = -1.0 + i*0.5;
+        g.add(P.szek(Math.cos(a)*2.4, Math.sin(a)*2.4 + 0.6, -a + Math.PI/2));
+      }
+      g.add(ember({x:-2.1,z:-0.9,ry:0.35,ruha:"uzletNoi",poz:"ul",bor:3,haj:3,tukor:1}));
+      g.add(ember({x:0.1,z:-1.5,ry:0,ruha:"ingujj",poz:"ul",bor:1,haj:0,tukor:0}));
+      g.add(ember({x:2.2,z:-0.9,ry:-0.35,ruha:"uzletKek",poz:"ul",bor:2,haj:2,tukor:0}));
+      g.add(ember({x:-0.2,z:1.5,ry:0.1,ruha:"uzletSotet",bor:0,haj:0,kar:"mutat"}));
+    }, kamera:{p:[2.4,2.3,6.2], c:[0,1.3,-0.9]} }
+],
+
+/* ---------- KATONAI ---------- */
+katonai:[
+  { /* 1 · A laktanya kapuja */
+    epit(g){
+      g.add(kulsoTer({talaj:0x585444, eg:0x2c3d4e, fak:6}));
+      g.add(doboz(0.5,3.4,0.5, anyag(0x6a6656,0.9), -3.4,1.7,0), doboz(0.5,3.4,0.5, anyag(0x6a6656,0.9), 3.4,1.7,0));
+      g.add(doboz(7.3,0.5,0.5, anyag(0x6a6656,0.9), 0,3.6,0));
+      const sorompo = doboz(5.2,0.16,0.16, anyag(0xc4a23a,0.7), -0.9,1.1,1.6); sorompo.rotation.z=0.06; g.add(sorompo);
+      g.add(henger(0.1,0.1,4.6, anyag(0x8f8b7a,0.8), 5.6,2.3,-1,10));
+      const z = doboz(1.5,0.9,0.04, anyag(0xa8a08c,0.9), 6.4,3.9,-1); g.add(z);
+      g.add(P.jarmu(-6.5,3.0,0.1), P.jarmu(-6.5,8.4,0.1,0x3f4636));
+      g.add(ember({x:-1.4,z:2.0,ry:0.4,ruha:"katonaTiszt",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:0.6,z:2.3,ry:-0.5,ruha:"katona",bor:2,haj:1,tukor:1}));
+      g.add(ember({x:2.2,z:3.4,ry:-1.2,ruha:"katona",bor:1,haj:2,tukor:0}));
+    }, kamera:{p:[2.4,2.4,8.4], c:[-0.4,1.5,1.4]} },
+
+  { /* 2 · A törzssátor — érintett-elemzés */
+    epit(g){
+      g.add(kulsoTer({talaj:0x54503f, eg:0x30455a, fak:4}));
+      g.add(P.sator(-3.6,-2.0,0.3));
+      g.add(P.asztal(0.6,1.2,2.6,1.4,0.1,0x5c5340));
+      g.add(doboz(2.2,0.02,1.1, anyag(0xd9d2bc,0.95), 0.6,0.78,1.2, 0.1));
+      g.add(P.lampa(2.1,0.6));
+      g.add(henger(0.06,0.06,3.6, anyag(0x50543f,0.8), 4.6,1.8,-1.2,8));
+      g.add(gomb(0.1, fenylo(0xff6b52,2.2), 4.6,3.65,-1.2));
+      g.add(ember({x:-0.5,z:2.3,ry:2.9,ruha:"katonaTiszt",bor:0,haj:0,kar:"mutat"}));
+      g.add(ember({x:1.7,z:2.2,ry:-2.6,ruha:"katona",bor:3,haj:1,tukor:1}));
+      g.add(ember({x:2.6,z:0.4,ry:-1.6,ruha:"katona",bor:1,haj:2,tukor:0}));
+      g.add(P.jarmu(-8.5,4.0,0.5));
+    }, kamera:{p:[3.0,2.2,6.4], c:[0.4,1.35,1.6]} },
+
+  { /* 3 · Az elöljáró vonala — információ */
+    epit(g){
+      g.add(kulsoTer({talaj:0x504c3d, eg:0x293a4c}));
+      g.add(P.sator(0,-3.0,0));
+      g.add(P.asztal(0,0.4,2.4,1.1,0,0x50493a));
+      g.add(doboz(0.8,0.5,0.4, anyag(0x3b4132,0.7), -0.7,1.0,0.2));
+      for(let i=0;i<4;i++) g.add(doboz(0.06,0.06,0.02, fenylo(i%2?0x7fe0a8:0xffc773,2.4), -0.95+i*0.16,1.16,0.41));
+      g.add(P.monitor(0.7,0.77,0.1,-0.2,0.7));
+      g.add(P.lampa(1.7,-0.4));
+      g.add(ember({x:0,z:-1.0,ry:0.06,ruha:"katonaTiszt",poz:"ul",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:2.1,z:0.9,ry:-0.6,ruha:"katona",bor:4,haj:2,tukor:0}));
+    }, kamera:{p:[1.4,1.95,4.8], c:[0.1,1.25,-0.3]} },
+
+  { /* 4 · A két gátszakasz — kritériumok */
+    epit(g){
+      g.add(kulsoTer({talaj:0x574f3d, eg:0x4d6d8c, viz:true, vizZ:-13, vizM:14, toltes:true, toltesX:-7.5, toltesZ:-6.5}));
+      const t2 = new T.Mesh(new T.CylinderGeometry(0.01,2.2,2.8,4), anyag(0x5a5140,1));
+      t2.rotation.z=Math.PI/2; t2.rotation.y=Math.PI/4; t2.position.set(8.0,0.9,-6.5); t2.scale.set(1,3.6,1); t2.castShadow=true; g.add(t2);
+      g.add(P.homokzsak(-5.6,-2.4,7,0.1), P.homokzsak(6.0,-2.4,7,-0.1));
+      g.add(P.jarmu(-6.2,2.6,0.35,0x585f45));
+      g.add(ember({x:-2.6,z:0.6,ry:0.55,ruha:"katona",bor:1,haj:0,tukor:0}));
+      g.add(ember({x:3.4,z:0.9,ry:-0.55,ruha:"katona",bor:3,haj:2,tukor:0}));
+      g.add(ember({x:0.5,z:2.4,ry:0.08,ruha:"katonaTiszt",bor:0,haj:0,kar:"mutat"}));
+    }, kamera:{p:[0.4,2.6,8.6], c:[0.4,1.4,-1.6]} },
+
+  { /* 5 · A jelentés — etikai próba */
+    epit(g){
+      g.add(kulsoTer({talaj:0x4c4838, eg:0x22303f}));
+      g.add(P.sator(-2.6,-2.4,0.2));
+      g.add(P.asztal(0.4,0.8,2.4,1.2,0,0x554d3c));
+      g.add(P.lampa(1.4,0.2));
+      g.add(doboz(0.34,0.015,0.25, anyag(0xf2eee4,0.95), -0.1,0.79,0.9, 0.15));
+      g.add(doboz(0.5,0.3,0.34, anyag(0xe8e4dc,0.9), 1.5,0.93,1.2));
+      g.add(doboz(0.16,0.05,0.02, anyag(0xc0392b,0.7), 1.5,1.09,1.38));
+      g.add(doboz(0.05,0.16,0.02, anyag(0xc0392b,0.7), 1.5,1.09,1.38));
+      g.add(ember({x:0.3,z:-0.5,ry:0.08,ruha:"katonaTiszt",poz:"ul",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:2.5,z:1.2,ry:-0.7,ruha:"katona",bor:2,haj:1,tukor:1}));
+    }, kamera:{p:[1.6,1.9,4.6], c:[0.3,1.25,0.1]} },
+
+  { /* 6 · A rádióasztal — bevonás */
+    epit(g){
+      g.add(kulsoTer({talaj:0x565243, eg:0x2e4257, fak:5}));
+      g.add(P.sator(-4.2,-2.2,0.25));
+      g.add(P.asztal(0.2,1.0,2.8,1.2,0,0x554d3c));
+      g.add(doboz(1.0,0.55,0.45, anyag(0x3b4132,0.7), -0.5,1.03,1.0));
+      for(let i=0;i<5;i++) g.add(doboz(0.07,0.07,0.02, fenylo(0x7fe0a8,2.2), -0.85+i*0.18,1.2,1.23));
+      g.add(henger(0.05,0.05,4.2, anyag(0x50543f,0.8), 3.8,2.1,-0.4,8));
+      g.add(ember({x:-0.4,z:-0.2,ry:0.1,ruha:"katonaTiszt",poz:"ul",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:2.0,z:1.6,ry:-0.7,ruha:"civil",bor:3,haj:3,tukor:1}));
+      g.add(ember({x:3.3,z:2.6,ry:-0.9,ruha:"civil2",bor:1,haj:0,tukor:0}));
+    }, kamera:{p:[1.8,2.1,6.2], c:[0.6,1.35,0.4]} },
+
+  { /* 7 · A tervasztal — alternatívák */
+    epit(g){
+      g.add(kulsoTer({talaj:0x524e3f, eg:0x2b3d50}));
+      g.add(P.sator(0,-3.4,0));
+      g.add(P.asztal(0,0.8,3.2,1.6,0,0x5c5340));
+      g.add(doboz(2.9,0.02,1.4, anyag(0xd6cfb8,0.95), 0,0.78,0.8));
+      for(let i=0;i<5;i++){
+        g.add(henger(0.012,0.012,0.24, anyag(0x2a2e22,0.6), -1.0+i*0.5,0.9,0.5+((i%2)*0.4),6));
+        g.add(doboz(0.16,0.10,0.01, anyag([0xc0392b,0xd7a13a,0x4a8f63,0x3d6f9e,0xb06d3a][i],0.6), -0.92+i*0.5,1.0,0.5+((i%2)*0.4)));
+      }
+      g.add(P.lampa(2.2,0.4));
+      g.add(ember({x:-1.4,z:2.2,ry:0.35,ruha:"katonaTiszt",bor:0,haj:0,kar:"mutat"}));
+      g.add(ember({x:0.7,z:2.4,ry:-0.3,ruha:"katona",bor:2,haj:1,tukor:1}));
+      g.add(ember({x:2.2,z:1.2,ry:-0.8,ruha:"katona",bor:4,haj:2,tukor:0}));
+      g.add(P.jarmu(-8.0,3.0,0.2), P.jarmu(-8.0,8.0,0.2,0x434a35));
+    }, kamera:{p:[3.4,2.2,6.4], c:[0,1.4,0.9]} },
+
+  { /* 8 · A régi töltés — kockázat */
+    epit(g){
+      g.add(kulsoTer({talaj:0x565040, eg:0x35485c, viz:true, vizZ:-12, vizM:12, toltes:true, toltesX:0, toltesZ:-7.5, toltesSzin:0x5f5642}));
+      g.add(P.homokzsak(-2.4,1.2,8,0), P.homokzsak(3.0,1.4,6,0.05));
+      const rep = doboz(0.12,1.6,0.1, anyag(0x2a2620,1), -0.6,1.6,-1.9); rep.rotation.z=0.25; g.add(rep);
+      g.add(P.jarmu(-7.4,2.4,0.3,0x565d43));
+      g.add(ember({x:-1.4,z:2.6,ry:0.3,ruha:"katonaTiszt",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:0.8,z:2.8,ry:-0.3,ruha:"civil2",bor:1,haj:3,kar:"mutat"}));
+    }, kamera:{p:[2.6,2.5,8.4], c:[-0.3,1.5,-1.2]} },
+
+  { /* 9 · Az állomány előtt — ok-okozati feltárás */
+    epit(g){
+      g.add(kulsoTer({talaj:0x5a5645, eg:0x2f4257, fak:7}));
+      g.add(doboz(3.2,0.4,1.6, anyag(0x6a6252,0.9), -3.6,0.2,1.0));
+      for(let i=0;i<8;i++) g.add(ember({x:-2.4+ (i%4)*1.6, z:3.6 + Math.floor(i/4)*1.5, ry:Math.PI+0.05, ruha:"katona", bor:i%5, haj:i%5, magas:0.97+((i%3)*0.03), lod:"egyszeru", tukor:i%2}));
+      g.add(ember({x:-3.6,z:1.0,ry:0.05,ruha:"katonaTiszt",bor:0,haj:0,kar:"mutat"}));
+      g.add(P.jarmu(7.5,2.0,-0.3));
+    }, kamera:{p:[-1.6,2.6,11.4], c:[-1.2,1.5,3.6]} },
+
+  { /* 10 · A gátszakadás után — reflexió */
+    epit(g){
+      g.add(kulsoTer({talaj:0x4e4a3c, eg:0x1f2c3a, viz:true, vizZ:-6, vizM:20, vizSzin:0x25404a,
+                      toltes:true, toltesX:-8.0, toltesZ:-7.0}));
+      const t2 = new T.Mesh(new T.CylinderGeometry(0.01,2.2,2.8,4), anyag(0x554c3b,1));
+      t2.rotation.z=Math.PI/2; t2.rotation.y=Math.PI/4; t2.position.set(8.0,0.9,-7.0); t2.scale.set(1,3.4,1); g.add(t2);
+      g.add(P.homokzsak(-4.6,0.4,6,0.1));
+      g.add(P.jarmu(-8.2,3.2,0.25,0x4b5239));
+      g.add(P.lampa(2.6,2.6));
+      g.add(ember({x:-0.8,z:3.0,ry:0.25,ruha:"katonaTiszt",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:1.2,z:3.2,ry:-0.25,ruha:"katona",bor:2,haj:1,tukor:1}));
+    }, kamera:{p:[1.0,2.6,9.4], c:[0.2,1.5,0.5]} }
+],
+
+/* ---------- POLITIKAI ---------- */
+politikai:[
+  { /* 1 · A bizottsági iroda — probléma-meghatározás */
+    epit(g){
+      g.add(belsoTer({w:14,d:12,h:3.8,ablak:"magas", padlo:0x6a5238, fal:0xd6d0c0, ablakSzin:0xd5e0ea, szonyeg:[6.6,5.4,0,0], szonyegSzin:0x5a3f3a}));
+      g.add(P.polc(-5.4,-3.0,0.4));
+      const asztal = new T.Mesh(new T.CylinderGeometry(1.9,1.9,0.07,32), anyag(0x7a5a3d,0.6));
+      asztal.position.set(0,0.75,0); asztal.castShadow=true; g.add(asztal);
+      g.add(henger(0.22,0.34,0.72, anyag(0x2f3439,0.5,0.3), 0,0.36,0,16));
+      g.add(P.papirkupac(0.4,0.79,0.3,6,0.4));
+      for(let i=0;i<4;i++){ const a=i*Math.PI/2+0.4; g.add(P.szek(Math.cos(a)*2.5, Math.sin(a)*2.5, -a+Math.PI/2)); }
+      g.add(ember({x:-1.7,z:-1.9,ry:0.55,ruha:"politikus",poz:"ul",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:1.7,z:-1.9,ry:-0.55,ruha:"ingujj",poz:"ul",bor:3,haj:2,tukor:0}));
+      g.add(ember({x:-2.5,z:0.4,ry:1.2,ruha:"civil",poz:"ul",bor:1,haj:3,tukor:1}));
+      g.add(ember({x:2.5,z:0.4,ry:-1.2,ruha:"politikus2",poz:"ul",bor:2,haj:1,tukor:1}));
+      g.add(P.noveny(5.0,-2.6));
+    }, kamera:{p:[0.6,2.6,6.4], c:[0,1.25,-0.9]} },
+
+  { /* 2 · A társadalmi vita — részvétel foka */
+    epit(g){
+      g.add(belsoTer({w:18,d:14,h:4.6,ablak:"magas", padlo:0x5e5442, fal:0xd2ccbc, ablakSzin:0xcbdae6, ajto:false}));
+      g.add(P.pulpitus(-5.6,-3.0,0.4));
+      for(let r=0;r<3;r++) for(let i=0;i<6;i++){
+        g.add(P.szek(-3.4+i*1.35, 1.0+r*1.4, Math.PI, 0x4a4034));
+      }
+      for(let i=0;i<9;i++){
+        const x=-3.4+(i%6)*1.35, z=1.0+Math.floor(i/6)*1.4;
+        g.add(ember({x:x,z:z+0.05,ry:Math.PI,ruha:["civil","civil2","ingujj","politikus2"][i%4],poz:"ul",bor:i%5,haj:(i*2)%5,magas:0.98,lod:"egyszeru",tukor:i%2}));
+      }
+      g.add(ember({x:-5.4,z:-2.3,ry:0.4,ruha:"politikus",bor:0,haj:0,kar:"mutat"}));
+    }, kamera:{p:[7.4,2.5,3.2], c:[-3.6,1.5,-0.6]} },
+
+  { /* 3 · A lobbista — etikai próba */
+    epit(g){
+      g.add(belsoTer({w:11,d:12,h:3.6, padlo:0x4f4436, fal:0xbfb8a8, ablak:"magas", ablakSzin:0x8fa8c0, ablakEro:0.6, mennyezetiFeny:false}));
+      for(let i=0;i<3;i++) g.add(doboz(1.6,0.05,0.28, fenylo(0xffe8c0,1.3), -3+i*3, 3.45, 1.0));
+      g.add(P.asztal(0,-0.4,1.6,0.9,0,0x6b4f37));
+      g.add(doboz(0.46,0.30,0.14, anyag(0x2b2119,0.55), 0.1,0.9,-0.3));
+      g.add(P.noveny(4.2,-3.0));
+      g.add(ember({x:-0.9,z:1.5,ry:0.45,ruha:"politikus",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:0.9,z:1.5,ry:-0.45,ruha:"politikus2",bor:2,haj:1,kar:"mutat"}));
+    }, kamera:{p:[2.4,1.9,4.8], c:[0,1.35,1.3]} },
+
+  { /* 4 · A bizottsági ülés — alternatívák */
+    epit(g){
+      g.add(belsoTer({w:17,d:13,h:4.4, padlo:0x604f3a, fal:0xd8d2c2, ablak:"magas", ablakSzin:0xd0dde8}));
+      for(let i=0;i<7;i++){
+        const a = -1.25 + i*0.42, r=3.6;
+        const x=Math.cos(a)*r, z=Math.sin(a)*r - 1.0;
+        g.add(doboz(1.25,0.72,0.55, anyag(0x74563a,0.65), x, 0.36, z, -a+Math.PI/2));
+        g.add(ember({x:x,z:z-0.55*Math.cos(-a+Math.PI/2),ry:-a-Math.PI/2,ruha:i%2?"politikus":"politikus2",poz:"ul",bor:i%5,haj:(i*3)%5}));
+        g.add(henger(0.01,0.01,0.3, anyag(0x1a1e22,0.4,0.6), x,0.9,z,6));
+      }
+      g.add(P.pulpitus(0,-5.0,0));
+      g.add(ember({x:0,z:-4.2,ry:0,ruha:"politikus",bor:0,haj:0,kar:"mutat"}));
+    }, kamera:{p:[4.6,2.8,6.6], c:[-0.4,1.5,-1.6]} },
+
+  { /* 5 · A célok ütközése — kritériumok */
+    epit(g){
+      g.add(belsoTer({w:12,d:11,h:4.0, padlo:0x655338, fal:0xcfc8b6, ablak:"magas"}));
+      g.add(P.asztal(0,0,3.4,1.5,0,0x7a5a3d));
+      g.add(P.papirkupac(-1.1,0.78,0,9), P.papirkupac(1.1,0.78,0,9));
+      g.add(doboz(0.05,1.1,0.05, anyag(0x8a7b52,0.5,0.6), 0,1.35,0));
+      const kar = doboz(1.7,0.05,0.05, anyag(0x8a7b52,0.5,0.6), 0,1.9,0); kar.rotation.z=0.08; g.add(kar);
+      g.add(henger(0.24,0.24,0.05, anyag(0xa08a52,0.4,0.7), -0.82,1.79,0,16));
+      g.add(henger(0.24,0.24,0.05, anyag(0xa08a52,0.4,0.7),  0.82,1.94,0,16));
+      g.add(P.szek(-1.4,-1.5,0), P.szek(1.4,-1.5,0));
+      g.add(ember({x:-1.4,z:-1.45,ry:0.2,ruha:"politikus2",poz:"ul",bor:1,haj:2,tukor:0}));
+      g.add(ember({x:1.4,z:-1.45,ry:-0.2,ruha:"politikus",poz:"ul",bor:0,haj:0,tukor:0}));
+    }, kamera:{p:[1.4,2.3,5.6], c:[0,1.5,-0.9]} },
+
+  { /* 6 · A hosszú táv — kockázat és jövőkép */
+    epit(g){
+      g.add(kulsoTer({talaj:0x5c5748, eg:0x3d4a63, fak:7}));
+      const ut = new T.Mesh(new T.PlaneGeometry(3.2,34), anyag(0x3b3833,0.95));
+      ut.rotation.x=-Math.PI/2; ut.position.set(0,0.02,-8); g.add(ut);
+      for(let i=0;i<9;i++) g.add(doboz(0.16,0.02,1.2, anyag(0xd8cfae,0.8), 0,0.03,2-i*3.4));
+      for(let i=0;i<5;i++) g.add(doboz(0.34,0.7,0.2, anyag(0xcfc6ae,0.9), 2.3,0.35,-1-i*5.4));
+      g.add(doboz(0.9,1.1,0.9, anyag(0x2e3a44,0.7), -3.4,0.55,2.4));
+      g.add(doboz(0.5,0.06,0.4, anyag(0xe8e2d4,0.9), -3.4,1.12,2.4));
+      g.add(ember({x:0.6,z:4.2,ry:0.1,ruha:"politikus",bor:0,haj:0,tukor:0}));
+      g.add(ember({x:-1.5,z:4.6,ry:0.5,ruha:"civil",bor:3,haj:3,tukor:1}));
+    }, kamera:{p:[2.4,2.4,8.6], c:[0,1.4,-2.0]} },
+
+  { /* 7 · A szavazás — pártfogó és vizsgálódó */
+    epit(g){
+      g.add(belsoTer({w:16,d:12,h:5.0, padlo:0x5b4a35, fal:0xcdc6b4, mennyezetiFeny:false, ajto:false}));
+      for(let i=0;i<4;i++) g.add(doboz(2.6,0.06,0.3, fenylo(0xfff0d2,1.5), -5+i*3.4, 4.7, 1.4));
+      g.add(doboz(7.4,3.0,0.15, anyag(0x22282e,0.7), 0,2.6,-5.6));
+      for(let r=0;r<3;r++) for(let i=0;i<9;i++){
+        const zold=(i+r)%3!==0;
+        g.add(doboz(0.42,0.42,0.05, fenylo(zold?0x4fd68a:0xe0644a, 2.0), -3.4+i*0.85, 3.5-r*0.8, -5.5));
+      }
+      g.add(P.pulpitus(0,-1.6,0));
+      g.add(ember({x:0,z:-0.8,ry:0,ruha:"politikus",bor:0,haj:0,tukor:0}));
+      for(let i=0;i<5;i++) g.add(ember({x:-3.2+i*1.6,z:2.6,ry:Math.PI,ruha:i%2?"politikus":"politikus2",poz:"ul",bor:i%5,haj:i%5,lod:"egyszeru",tukor:i%2}));
+      for(let i=0;i<5;i++) g.add(P.szek(-3.2+i*1.6,2.55,Math.PI,0x4a3f33));
+    }, kamera:{p:[6.6,2.6,4.4], c:[-1.0,2.0,-2.2]} },
+
+  { /* 8 · A tüntetés — érintett-elemzés */
+    epit(g){
+      g.add(kulsoTer({talaj:0x63605a, eg:0x35405a}));
+      g.add(doboz(14,6.5,3.0, anyag(0xd8d2c2,0.9), 0,3.25,-8.5));
+      for(let i=0;i<6;i++) g.add(P.oszlop(-5.5+i*2.2,-6.6,5.2));
+      for(let i=0;i<4;i++) g.add(doboz(15,0.28,1.2-i*0.22, anyag(0xcac3b2,0.9), 0,0.14+i*0.26, -4.4+i*0.5));
+      for(let i=0;i<11;i++){
+        const x=-5.0+(i%6)*1.9, z=3.0+Math.floor(i/6)*1.9;
+        g.add(ember({x:x,z:z,ry:Math.PI+((i%3)-1)*0.2,ruha:["civil","civil2","ingujj"][i%3],bor:i%5,haj:(i*2)%5,magas:0.96+((i%4)*0.03),lod:"egyszeru",tukor:i%2}));
+        if(i%2===0){
+          g.add(henger(0.03,0.03,1.1, anyag(0x6b5a44,0.9), x,1.75,z-0.3,6));
+          g.add(doboz(0.85,0.55,0.03, anyag(0xf0ece0,0.95), x,2.5,z-0.3));
+        }
+      }
+      g.add(ember({x:1.6,z:-1.2,ry:0.2,ruha:"politikus",bor:0,haj:0,tukor:0}));
+    }, kamera:{p:[3.0,3.0,9.0], c:[-0.8,1.6,0.6]} },
+
+  { /* 9 · A plenáris ülés — ok-okozati érvelés */
+    epit(g){
+      g.add(belsoTer({w:20,d:15,h:7.0, padlo:0x5a4732, fal:0xd9d3c1, mennyezetiFeny:false, plafon:0xcfc7b4, ajto:false}));
+      for(let i=0;i<6;i++) g.add(P.oszlop(-8.0+i*3.2,-6.6,6.4));
+      for(let i=0;i<4;i++) g.add(doboz(3.0,0.07,0.4, fenylo(0xffeccb,1.6), -6+i*4, 6.6, 0.5));
+      for(let r=0;r<4;r++){
+        const w = 13 - r*0.8;
+        g.add(doboz(w,0.55+r*0.32,0.7, anyag(0x6d5238,0.7), 0, (0.28+r*0.16), 2.4+r*1.5));
+        for(let i=0;i<7;i++) g.add(ember({x:-4.8+i*1.6, z:2.4+r*1.5-0.62, ry:0, ruha:i%2?"politikus":"politikus2", poz:"ul", bor:(i+r)%5, haj:(i*2+r)%5, magas:0.97, lod:(r>0?"egyszeru":null), tukor:i%2}));
+      }
+      g.add(P.pulpitus(0,-2.4,0));
+      g.add(ember({x:0,z:-1.6,ry:0,ruha:"politikus",bor:0,haj:0,kar:"mutat"}));
+    }, kamera:{p:[3.4,3.4,8.2], c:[0,2.0,0.4]} },
+
+  { /* 10 · A csendes szoba — reflexió */
+    epit(g){
+      g.add(belsoTer({w:9,d:9,h:3.6, padlo:0x5c4a34, fal:0xb8b1a0, mennyezetiFeny:false,
+                      ablak:"magas", ablakSzin:0x3a5470, ablakEro:0.55, szonyeg:[4.0,3.2,0.2,0.2], szonyegSzin:0x4a3a36}));
+      g.add(P.polc(-3.2,-2.6,0.4), P.bogre(0.9,0.78,0.9));
+      g.add(P.asztal(0.3,0.6,1.9,1.0,0,0x6b4f37));
+      g.add(P.lampa(1.0,0.3));
+      g.add(P.papirkupac(-0.2,0.78,0.7,4));
+      g.add(P.szek(0.2,-0.7,0,0x4a3f33));
+      g.add(ember({x:0.2,z:-0.65,ry:0.08,ruha:"politikus",poz:"ul",bor:0,haj:0,tukor:0}));
+      g.add(P.noveny(3.2,-2.4));
+    }, kamera:{p:[1.6,1.75,4.2], c:[0.15,1.2,-0.3]} }
+]
+};
+
+/* ============================================================================
+   6) RENDERELÉS ÉS KAMERAMOZGÁS
+   ========================================================================== */
+
+/* Egyszerű égbolt-gradiens környezeti térképnek: ettől a fényes felületek
+   visszaverik a környezetet, a matt felületek pedig lágyabb fényt kapnak. */
+function kornyezetTerkep(){
+  const c = document.createElement("canvas"); c.width = 32; c.height = 16;
+  const g = c.getContext("2d");
+  const gr = g.createLinearGradient(0,0,0,16);
+  gr.addColorStop(0.00, "#93aec4");
+  gr.addColorStop(0.48, "#6f7b7f");
+  gr.addColorStop(0.52, "#4a443a");
+  gr.addColorStop(1.00, "#2a261f");
+  g.fillStyle = gr; g.fillRect(0,0,32,16);
+  const tex = new T.CanvasTexture(c);
+  tex.mapping = T.EquirectangularReflectionMapping;
+  if("colorSpace" in tex) tex.colorSpace = T.SRGBColorSpace;
+  return tex;
+}
+
+const V = { rend:null, szinter:null, kamera:null, nap:null, vilagitas:null, kontur:null, csoportok:[],
+            poz:new T.Vector3(), cel:new T.Vector3(),
+            posKezd:new T.Vector3(), celKezd:new T.Vector3(),
+            posVeg:new T.Vector3(), celVeg:new T.Vector3(),
+            mozgasT:1, mozgasHossz:KAMERA_IDO, ora:null, vizek:[], epult:null,
+            info:[], ambi:null, fenyCel:{ambi:0.72, nap:2.15, pont:11}, kodCel:new T.Color(0x0d1a15) };
+
+function vilagInit(){
+  const c = document.getElementById("jatek-vaszon");
+  V.rend = new T.WebGLRenderer({ canvas:c, antialias:true, powerPreference:"high-performance" });
+  V.rend.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+  V.rend.shadowMap.enabled = true;
+  V.rend.shadowMap.type = T.PCFSoftShadowMap;
+  if(T.ACESFilmicToneMapping !== undefined){ V.rend.toneMapping = T.ACESFilmicToneMapping; V.rend.toneMappingExposure = 0.94; }
+  if("outputColorSpace" in V.rend) V.rend.outputColorSpace = T.SRGBColorSpace;
+
+  V.szinter = new T.Scene();
+  V.szinter.background = new T.Color(0x0a1410);
+  V.szinter.fog = new T.Fog(0x0d1a15, 30, 92);
+
+  V.kamera = new T.PerspectiveCamera(42, 16/9, 0.1, 220);
+
+  const ambi = new T.HemisphereLight(0xc8dcec, 0x4e4736, 0.72);
+  V.ambi = ambi;
+  V.szinter.add(ambi);
+  V.nap = new T.DirectionalLight(0xffeed4, 2.15);
+  V.nap.castShadow = true;
+  V.nap.shadow.mapSize.set(2048,2048);
+  V.nap.shadow.camera.left=-11; V.nap.shadow.camera.right=11;
+  V.nap.shadow.camera.top=11;  V.nap.shadow.camera.bottom=-11;
+  V.nap.shadow.camera.near=1;  V.nap.shadow.camera.far=42;
+  V.nap.shadow.bias = -0.0012;
+  V.szinter.add(V.nap, V.nap.target);
+  V.vilagitas = new T.PointLight(0xffe2ba, 16, 20, 2);
+  V.szinter.add(V.vilagitas);
+  /* kontúrfény: elválasztja a szereplőket a háttértől, ettől lesz plasztikus a kép */
+  V.kontur = new T.DirectionalLight(0xbfd6e8, 1.25);
+  V.szinter.add(V.kontur, V.kontur.target);
+  /* környezeti térkép: lágy, irányfüggő megvilágítás a felületeken */
+  V.szinter.environment = kornyezetTerkep();
+
+  V.ora = new T.Clock();
+  window.addEventListener("resize", meretez);
+  meretez();
+  renderelj();
+}
+function meretez(){
+  if(!V.rend) return;
+  const w = window.innerWidth, h = window.innerHeight;
+  V.rend.setSize(w,h,false);
+  V.kamera.aspect = w/h; V.kamera.updateProjectionMatrix();
+  if(HERO.rend){
+    const hc = document.getElementById("hero-vaszon");
+    HERO.rend.setSize(hc.clientWidth, hc.clientHeight, false);
+    HERO.kamera.aspect = hc.clientWidth/Math.max(1,hc.clientHeight); HERO.kamera.updateProjectionMatrix();
+  }
+}
+
+/* A tíz díszlet felépítése egymás mellé, az X tengelyen. */
+function vilagEpit(mod){
+  if(V.epult === mod) return;
+  /* korábbi világ eltávolítása */
+  for(let i=V.szinter.children.length-1;i>=0;i--){
+    const o = V.szinter.children[i];
+    if(o.userData && o.userData.diszlet) V.szinter.remove(o);
+  }
+  V.vizek = [];
+  V.info = []; V.csoportok = [];
+  DISZLETEK[mod].forEach((d,i)=>{
+    const g = new T.Group();
+    g.userData.diszlet = true;
+    d.epit(g);
+    g.position.x = i * SET_TAV;
+    V.szinter.add(g);
+    V.csoportok[i] = g;
+    const kulso = g.children.some(c=> c.userData && c.userData.kulso);
+    V.info[i] = kulso
+      ? { kulso:true,  feny:{ambi:2.15, nap:3.9, pont:0},  kod:new T.Color(0x44607a) }
+      : { kulso:false, feny:{ambi:0.72, nap:2.15, pont:11}, kod:new T.Color(0x0d1a15) };
+    g.traverse(function(o){
+      if(o.isMesh && o.material && o.material.metalness > 0.4 && o.geometry && o.geometry.type === "PlaneGeometry") V.vizek.push(o);
+    });
+  });
+  V.epult = mod;
+}
+
+/* Kameraút a következő díszletre. */
+/* A kép alsó fele a döntéseké, ezért a nézőpontot lejjebb visszük:
+   így a szereplők a képmező felső kétharmadába kerülnek. */
+const NEZES_LE = 0.55;   /* mennyivel néz lejjebb a kamera */
+const TAVOLSAG = 1.16;   /* mennyivel áll hátrébb a kamera */
+function kameraUtazas(i, azonnal){
+  const d = DISZLETEK[allapot.mod][i], eltol = i * SET_TAV;
+  const kulso = V.info[i] && V.info[i].kulso;
+  const le  = kulso ? 0.80 : NEZES_LE;
+  const tav = kulso ? 1.52 : TAVOLSAG;
+  const cx = d.kamera.c[0]+eltol, cy = d.kamera.c[1]-le, cz = d.kamera.c[2];
+  const px = d.kamera.p[0]+eltol, py = d.kamera.p[1]+0.30, pz = d.kamera.p[2];
+  V.posVeg.set(cx + (px-cx)*tav, cy + (py-cy)*tav, cz + (pz-cz)*tav);
+  V.celVeg.set(cx, cy, cz);
+  const inf = V.info[i];
+  if(inf){ V.fenyCel = inf.feny; V.kodCel = inf.kod; }
+  /* csak az aktuális és a szomszédos díszletek renderelődnek */
+  V.csoportok.forEach((g,k)=>{ if(g) g.visible = Math.abs(k-i) <= 1; });
+  if(azonnal){
+    V.poz.copy(V.posVeg); V.cel.copy(V.celVeg); V.mozgasT = 1;
+  } else {
+    V.posKezd.copy(V.poz); V.celKezd.copy(V.cel); V.mozgasT = 0;
+  }
+  kamerabaAllit();
+}
+function kamerabaAllit(){
+  V.kamera.position.copy(V.poz);
+  V.kamera.lookAt(V.cel);
+  V.nap.position.set(V.cel.x - 7, 15, V.cel.z + 9);
+  V.nap.target.position.set(V.cel.x, V.cel.y + 0.7, V.cel.z);
+  V.nap.target.updateMatrixWorld();
+  V.vilagitas.position.set(V.cel.x + 0.9, V.cel.y + 1.9, V.cel.z + 2.6);
+  if(V.kontur){
+    V.kontur.position.set(V.cel.x + 5.5, V.cel.y + 4.2, V.cel.z - 7.0);
+    V.kontur.target.position.set(V.cel.x, V.cel.y + 0.7, V.cel.z);
+    V.kontur.target.updateMatrixWorld();
+  }
+}
+
+function renderelj(){
+  requestAnimationFrame(renderelj);
+  if(!V.rend) return;
+  const dt = V.ora.getDelta(), t = V.ora.getElapsedTime();
+  if(V.mozgasT < 1){
+    V.mozgasT = Math.min(1, V.mozgasT + dt*1000/V.mozgasHossz);
+    const e = V.mozgasT<0.5 ? 4*Math.pow(V.mozgasT,3) : 1-Math.pow(-2*V.mozgasT+2,3)/2;
+    V.poz.lerpVectors(V.posKezd, V.posVeg, e);
+    V.cel.lerpVectors(V.celKezd, V.celVeg, e);
+  }
+  /* finom kameramozgás állóképben is, hogy éljen a jelenet */
+  const leg = 0.035;
+  V.kamera.position.set(V.poz.x + Math.sin(t*0.32)*leg, V.poz.y + Math.sin(t*0.24)*leg*0.7, V.poz.z + Math.cos(t*0.28)*leg);
+  V.kamera.lookAt(V.cel);
+  if(V.mozgasT < 1) kamerabaAllit();
+  V.vizek.forEach(v=>{ v.position.y = 0.05 + Math.sin(t*0.9 + v.position.x*0.2)*0.012; });
+  /* fény és ködszín lágy átvezetése a díszletek között */
+  const k = Math.min(1, dt*2.2);
+  if(V.ambi){
+    V.ambi.intensity   += (V.fenyCel.ambi - V.ambi.intensity)*k;
+    V.nap.intensity    += (V.fenyCel.nap  - V.nap.intensity)*k;
+    V.vilagitas.intensity += (V.fenyCel.pont - V.vilagitas.intensity)*k;
+    V.szinter.fog.color.lerp(V.kodCel, k);
+    V.szinter.background.lerp(V.kodCel, k);
+  }
+  V.rend.render(V.szinter, V.kamera);
+  heroRender(t);
+}
+
+/* --- nyitóképernyő háttere: egy előcsarnok, lassú kameramozgással --- */
+const HERO = { rend:null, szinter:null, kamera:null, aktiv:true };
+function heroInit(){
+  const c = document.getElementById("hero-vaszon");
+  if(!c) return;
+  HERO.rend = new T.WebGLRenderer({ canvas:c, antialias:true, alpha:false });
+  HERO.rend.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.7));
+  if("outputColorSpace" in HERO.rend) HERO.rend.outputColorSpace = T.SRGBColorSpace;
+  HERO.szinter = new T.Scene();
+  HERO.szinter.background = new T.Color(0x0b1712);
+  HERO.szinter.fog = new T.Fog(0x0b1712, 12, 40);
+  HERO.kamera = new T.PerspectiveCamera(40, 16/9, 0.1, 120);
+  HERO.szinter.add(new T.HemisphereLight(0xcfe0ee, 0x2a3a30, 0.8));
+  const n = new T.DirectionalLight(0xffeccd, 1.5); n.position.set(-8,14,10); HERO.szinter.add(n);
+  const g = new T.Group();
+  g.add(belsoTer({w:22,d:20,h:8.5, padlo:0x3f4a44, fal:0x9fa8a0, ablak:"magas", ablakSzin:0xbcd2d8, ablakEro:1.0, mennyezetiFeny:false}));
+  for(let i=0;i<4;i++) g.add(P.oszlop(-6.6+i*4.4,-4.0,8.5));
+  g.add(doboz(20,0.35,4.2, anyag(0x6e7871,0.85), 0,4.3,-6.0));
+  g.add(doboz(0.12,1.1,4.2, anyag(0x50594f,0.8), -3.0,3.6,-6.0));
+  g.add(ember({x:-1.4,z:-5.4,ry:1.3,ruha:"uzletSotet",bor:0,haj:0,tukor:0}));
+  g.add(ember({x:0.5,z:-5.4,ry:-1.3,ruha:"uzletNoi",bor:3,haj:3,kar:"mutat"}));
+  g.add(P.noveny(7.4,-1.0), P.noveny(-7.8,0.4));
+  HERO.szinter.add(g);
+  HERO.kamera.position.set(5.2,2.6,7.4);
+  meretez();
+}
+function heroRender(t){
+  if(!HERO.rend || !HERO.aktiv) return;
+  HERO.kamera.position.x = 5.2 + Math.sin(t*0.11)*1.5;
+  HERO.kamera.position.y = 2.6 + Math.sin(t*0.08)*0.35;
+  HERO.kamera.lookAt(-0.4, 2.1, -5.2);
+  HERO.rend.render(HERO.szinter, HERO.kamera);
+}
+
+/* ============================================================================
+   7) JÁTÉKÁLLAPOT ÉS MENET
+   ========================================================================== */
+
+const allapot = { mod:null, nev:"", email:"", index:0, pontok:{}, naplo:[], valaszolt:false, elozoIndex:50 };
+let jelenetIdozito = null;
+
+const $ = s => document.getElementById(s);
+const korlat = (v,a,b) => Math.max(a, Math.min(b, v));
+const dimNev = id => (DIMENZIOK.find(d=>d.id===id)||{}).nev || id;
+const sztori = () => STORIK[allapot.mod];
+const szituaciok = () => sztori().szituaciok;
+const keveseb = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+function ujJatek(){
+  allapot.index = 0; allapot.naplo = []; allapot.valaszolt = false; allapot.pontok = {};
+  DIMENZIOK.forEach(d => allapot.pontok[d.id] = 50);
+  allapot.elozoIndex = 50;
+}
+function foIndex(){
+  let s = 0; DIMENZIOK.forEach(d => s += allapot.pontok[d.id] * d.suly);
+  return Math.round(korlat(s,0,100));
+}
+const szintObj = e => SZINTEK.find(sz => e >= sz.min && e <= sz.max) || SZINTEK[1];
+
+/* --- pontszámláló: válasz után megnő, majd visszahúzódik --- */
+let szamAnim = null;
+function pontFrissit(valtozott){
+  const uj = foIndex(), regi = allapot.elozoIndex, elem = $("pont-ertek");
+  if(szamAnim) cancelAnimationFrame(szamAnim);
+  const kezd = performance.now(), ido = 800;
+  (function lep(t){
+    const q = korlat(((t||kezd)-kezd)/ido, 0, 1), e = 1 - Math.pow(1-q, 3);
+    elem.textContent = Math.round(regi + (uj-regi)*e);
+    if(q < 1) szamAnim = requestAnimationFrame(lep);
+  })(kezd);
+
+  $("pont-sav").style.width = uj + "%";
+  const sz = szintObj(uj);
+  elem.style.color = uj >= 80 ? "#8ADCAF" : uj >= 60 ? "#F7F4EE" : uj >= 40 ? "#E8C87A" : "#EC9C86";
+
+  const v = $("pont-valtozas"), doboz = $("pontszamlalo");
+  if(valtozott === true){
+    const diff = uj - regi;
+    v.className = "valtozas lat " + (diff > 0 ? "fel" : diff < 0 ? "le" : "nulla");
+    v.textContent = (diff > 0 ? "+" : "") + diff;
+    doboz.classList.add("lokes");
+    setTimeout(()=> doboz.classList.remove("lokes"), 760);
+    setTimeout(()=> v.classList.remove("lat"), 3200);
+  } else {
+    v.className = "valtozas"; v.textContent = "";
+  }
+  $("pont-elo").textContent = "Bizalomindex: " + uj + " pont, szint: " + sz.nev + ".";
+  allapot.elozoIndex = uj;
+}
+
+function nezet(melyik){
+  ["view-start","view-game","view-end"].forEach(id=> $(id).classList.toggle("rejt", id !== melyik));
+  HERO.aktiv = (melyik === "view-start");
+  document.body.style.overflow = (melyik === "view-game") ? "hidden" : "";
+  if(melyik !== "view-game") window.scrollTo({top:0, behavior:"instant" in window ? "instant" : "auto"});
+}
+
+/* --- jelenet lejátszása: kamera utazik, majd feljön a döntés --- */
+function jelenetJatszik(i){
+  const sz = szituaciok()[i];
+  allapot.valaszolt = false;
+  $("hud-lent").style.visibility = "hidden";
+  $("hud-hely").textContent = sz.jelenet;
+  $("hud-halad").textContent = String(i+1).padStart(2,"0") + " / " + String(szituaciok().length).padStart(2,"0") + " döntés";
+
+  const atv = $("atvezeto");
+  $("atvezeto-sor").textContent = (i+1) + ". jelenet · " + sztori().alcim;
+  $("atvezeto-hely").textContent = sz.jelenet;
+
+  clearTimeout(jelenetIdozito);
+  if(keveseb()){ kameraUtazas(i, true); kepMegall(); return; }
+
+  atv.classList.add("lat");
+  $("atugras-gomb").classList.remove("rejt");
+  kameraUtazas(i, false);
+  setTimeout(()=> atv.classList.remove("lat"), 420);
+  jelenetIdozito = setTimeout(kepMegall, JELENET_IDO);
+}
+function kepMegall(){
+  clearTimeout(jelenetIdozito);
+  $("atvezeto").classList.remove("lat");
+  $("atugras-gomb").classList.add("rejt");
+  kameraUtazas(allapot.index, true);
+  dontestMutat();
+}
+
+/* Fisher-Yates keverés: a válaszok sorrendje minden jelenetnél más,
+   így nem lehet megtanulni, hogy „az első a jó”. */
+function kever(tomb){
+  const t = tomb.slice();
+  for(let i=t.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    const cs = t[i]; t[i] = t[j]; t[j] = cs;
+  }
+  return t;
+}
+
+function dontestMutat(){
+  const sz = szituaciok()[allapot.index];
+  allapot.valaszolt = false;
+  const lent = $("hud-lent");
+  lent.classList.remove("valaszolt");
+  lent.scrollTop = 0;
+  lent.style.visibility = "visible";
+  lent.style.animation = "none"; void lent.offsetWidth; lent.style.animation = "kovBe .55s cubic-bezier(.22,1,.36,1)";
+
+  $("dontes-cimke").textContent = sz.cimke + " · " + sz.tema;
+  $("dontes-cim").textContent = sz.cim;
+  $("dontes-leiras").textContent = sz.leiras;
+
+  const doboz = $("valaszok"); doboz.innerHTML = "";
+  const betuk = ["A","B","C","D"];
+  const sorrend = kever(sz.opciok.map((_,i)=>i));
+  allapot.sorrend = sorrend;
+  sorrend.forEach((eredetiIdx, hely)=>{
+    const op = sz.opciok[eredetiIdx];
+    const g = document.createElement("button");
+    g.type = "button"; g.className = "valasz";
+    g.innerHTML = '<span class="betu" aria-hidden="true">'+betuk[hely]+'</span><span>'+op.szoveg+'</span>';
+    g.setAttribute("aria-label", betuk[hely]+" válasz: "+op.szoveg);
+    g.addEventListener("click", ()=> valasztas(eredetiIdx, g));
+    doboz.appendChild(g);
+  });
+  $("kovetkezmeny").classList.add("rejt");
+  $("tovabb-sor").classList.add("rejt");
+  const elso = doboz.querySelector("button"); if(elso) elso.focus({preventScroll:true});
+}
+
+function valasztas(idx, gomb){
+  if(allapot.valaszolt) return;
+  allapot.valaszolt = true;
+  const sz = szituaciok()[allapot.index], op = sz.opciok[idx];
+
+  Object.keys(op.hatas).forEach(k=>{
+    if(allapot.pontok[k] === undefined) return;
+    allapot.pontok[k] = korlat(allapot.pontok[k] + op.hatas[k], 0, 100);
+  });
+  allapot.naplo.push({
+    sorszam: allapot.index + 1, cim: sz.cim, cimke: sz.cimke, tema: sz.tema,
+    dontes: op.naplo, technika: op.technika, stilus: op.stilus, hatas: op.hatas,
+    ido: new Date().toLocaleTimeString("hu-HU", {hour:"2-digit", minute:"2-digit"})
+  });
+
+  document.querySelectorAll("#valaszok .valasz").forEach(b=> b.disabled = true);
+  gomb.classList.add("valasztott");
+  $("hud-lent").classList.add("valaszolt");
+
+  $("kovetkezmeny-szoveg").textContent = op.vissza;
+  const hs = $("hatas-sor"); hs.innerHTML = "";
+  const tech = document.createElement("span");
+  tech.className = "pelyhek"; tech.textContent = op.technika; hs.appendChild(tech);
+  Object.keys(op.hatas).forEach(k=>{
+    const v = op.hatas[k]; if(!v) return;
+    const c = document.createElement("span");
+    c.className = "pelyhek " + (v>0 ? "p" : "n");
+    c.textContent = dimNev(k) + " " + (v>0 ? "+" : "") + v;
+    hs.appendChild(c);
+  });
+  $("kovetkezmeny").classList.remove("rejt");
+
+  pontFrissit(true);
+
+  const tovabb = $("tovabb-gomb");
+  tovabb.innerHTML = (allapot.index === szituaciok().length - 1)
+      ? 'Kiértékelés <span class="nyil" aria-hidden="true">→</span>'
+      : 'Tovább <span class="nyil" aria-hidden="true">→</span>';
+  $("tovabb-sor").classList.remove("rejt");
+  tovabb.focus({preventScroll:true});
+}
+
+function tovabb(){
+  if(allapot.index < szituaciok().length - 1){
+    allapot.index++;
+    jelenetJatszik(allapot.index);
+  } else {
+    kiertekeles();
+    nezet("view-end");
+  }
+}
+
+/* ============================================================================
+   8) KIÉRTÉKELÉS
+   ========================================================================== */
+
+const EROS_SZOVEG = {
+  kov:"A szavad tart, számítani lehet rád.",
+  atl:"Nyíltan és időben kommunikálsz.",
+  min:"Módszeresen, tények alapján döntesz.",
+  fel:"Vállalod a döntéseid következményét.",
+  bev:"Bevonod azokat, akiket a döntés érint."
+};
+const KOZEP_SZOVEG = {
+  kov:"Az ígéreteid többnyire tartanak, de a nyomás néhol felülírta őket.",
+  atl:"A lényeget megosztod, a döntés indoka nem mindig jut el mindenkihez.",
+  min:"Van szerkezet a döntéseid mögött, de nem következetesen.",
+  fel:"A felelősséget általában vállalod, néhol késlekedtél.",
+  bev:"Gyakran bevonsz, de nem rendszerszerűen."
+};
+const GYENGE_SZOVEG = {
+  kov:"Az ígéreteid és a döntéseid nehezen kiszámíthatók.",
+  atl:"A döntéseid indoka rejtve marad, a környezeted találgat.",
+  min:"A döntéseid inkább ösztönösek, mint módszeresek.",
+  fel:"A hibáknál késlekedsz vagy megosztod a felelősséget.",
+  bev:"Az érintettek jellemzően csak a kész döntéssel találkoznak."
+};
+
+/* Az ajánlások a kurzus technikáira épülnek, a két leggyengébb dimenzióra szabva. */
+const AJANLASOK = {
+  kov:[
+    { cim:"A kritériumokat előbb rögzítsd, mint a döntést", szoveg:"Írd le a szempontokat és a súlyukat, mielőtt választanál. Így a döntésed később is levezethető, és nem a napi nyomás írja felül." },
+    { cim:"Adj dátumot a halasztásnak", szoveg:"Ha most nem tudsz dönteni, mondd meg, mikor fogsz és mi hiányzik hozzá. A dátum nélküli halogatás is döntés, csak nem te hozod meg." }
+  ],
+  atl:[
+    { cim:"A döntés indoka is kerüljön papírra", szoveg:"Három sor minden döntéshez: mi a döntés, mi az indoka, és mi volt az elvetett alternatíva." },
+    { cim:"Zárd le a bekért véleményeket", szoveg:"Ha megkérdezel valakit, mondd is el, mi lett a válaszából. A megválaszolatlan visszajelzés többet ront, mintha meg sem kérdezted volna." }
+  ],
+  min:[
+    { cim:"Kérdezz rá a problémameghatározásra", szoveg:"Mielőtt megoldást keresel, vedd fel a CATWOE-listát, vagy fogalmazd újra a kérdést az elvárt eredmény felől." },
+    { cim:"Az okokat halszálkával tárd fel", szoveg:"Intézkedés előtt rajzold fel az ok-okozati diagramot, és Pareto-elemzéssel nézd meg, melyik kevés ok adja a problémák többségét." }
+  ],
+  fel:[
+    { cim:"Futtasd le a napfény tesztet", szoveg:"Kényes döntés előtt kérdezd meg magadtól: jól érezném magam, ha ez a döntés holnap napvilágra kerülne?" },
+    { cim:"Mássz le a következtetési létrán", szoveg:"Döntés után írd le, milyen adatot választottál ki és mit feltételeztél. A saját vakfolt feltárása a legolcsóbb tanulás." }
+  ],
+  bev:[
+    { cim:"Rajzold fel az érintetterőteret", szoveg:"Döntés előtt nézd meg, kire hat ez leginkább és kinek mekkora a befolyása. A kiszolgáltatott pozíciójúakat külön kell megszólítani." },
+    { cim:"Az ötleteket előbb önállóan gyűjtsd", szoveg:"Névleges csoport módszerrel mindenki leírja a javaslatát, mielőtt vitáznátok. Így nem a leghangosabb köré rendeződnek az ötletek." }
+  ]
+};
+
+function dimenzioDontesek(dimId, pozitiv){
+  const KUSZOB = 4;
+  return allapot.naplo
+    .filter(b => b.hatas[dimId] !== undefined)
+    .filter(b => pozitiv ? b.hatas[dimId] >= KUSZOB : b.hatas[dimId] <= -KUSZOB)
+    .sort((a,b)=> pozitiv ? b.hatas[dimId]-a.hatas[dimId] : a.hatas[dimId]-b.hatas[dimId]);
+}
+function rangsor(){ return DIMENZIOK.slice().sort((a,b)=> allapot.pontok[b.id] - allapot.pontok[a.id]); }
+function stilusStat(){
+  const db = {}; Object.keys(STILUSOK).forEach(k=> db[k]=0);
+  allapot.naplo.forEach(b=> db[b.stilus] = (db[b.stilus]||0)+1 );
+  return { db, fo:Object.keys(db).sort((a,b)=> db[b]-db[a])[0] };
+}
+function dimTetel(d, hely){
+  const v = Math.round(allapot.pontok[d.id]);
+  const poz = v >= 60;
+  let alap = v >= 70 ? EROS_SZOVEG[d.id] : v >= 50 ? KOZEP_SZOVEG[d.id] : GYENGE_SZOVEG[d.id];
+  if(hely === "eros" && v < 50)
+    alap = "Relatíve a legerősebb területed, de abszolút értékben ez is gyenge: " + alap.charAt(0).toLowerCase() + alap.slice(1);
+  if(hely === "gyenge" && v >= 65) alap = alap + " Itt már csak finomhangolás kell.";
+  const dont = dimenzioDontesek(d.id, poz)[0];
+  const hiv = dont ? (poz ? " Épült: „" : " Sérült: „") + dont.cim + "”." : "";
+  return { v:v, szoveg:alap + hiv };
+}
+function dimSzin(v){ return v >= 70 ? "var(--jo)" : v >= 50 ? "var(--arany)" : v >= 35 ? "var(--kozep)" : "var(--rossz)"; }
+
+function radarRajz(){
+  const SZ=520, MA=400, kx=SZ/2, ky=186, R2=118, n=DIMENZIOK.length;
+  const szog = i => (-Math.PI/2) + i*(2*Math.PI/n);
+  const pont = (i,a)=>[kx+Math.cos(szog(i))*R2*a, ky+Math.sin(szog(i))*R2*a];
+  let s = '<svg viewBox="0 0 '+SZ+' '+MA+'" width="520" style="max-width:100%;height:auto" role="img" aria-labelledby="radar-alt">';
+  [0.2,0.4,0.6,0.8,1].forEach(a=>{
+    const p=[]; for(let i=0;i<n;i++){const q=pont(i,a); p.push(q[0].toFixed(1)+","+q[1].toFixed(1));}
+    s += '<polygon points="'+p.join(" ")+'" fill="none" stroke="#DDD8CD" stroke-width="1"/>';
+  });
+  for(let i=0;i<n;i++){ const q=pont(i,1);
+    s += '<line x1="'+kx+'" y1="'+ky+'" x2="'+q[0].toFixed(1)+'" y2="'+q[1].toFixed(1)+'" stroke="#DDD8CD" stroke-width="1"/>'; }
+  const p2=[]; DIMENZIOK.forEach((d,i)=>{const q=pont(i, korlat(allapot.pontok[d.id],0,100)/100); p2.push(q[0].toFixed(1)+","+q[1].toFixed(1));});
+  s += '<polygon points="'+p2.join(" ")+'" fill="#1B3A2C" fill-opacity="0.14" stroke="#1B3A2C" stroke-width="2.4" stroke-linejoin="round"/>';
+  DIMENZIOK.forEach((d,i)=>{const q=pont(i, korlat(allapot.pontok[d.id],0,100)/100);
+    s += '<circle cx="'+q[0].toFixed(1)+'" cy="'+q[1].toFixed(1)+'" r="4.5" fill="#C9A063"/>';});
+  DIMENZIOK.forEach((d,i)=>{
+    const q=pont(i,1.14), dx=q[0]-kx; let anchor="middle", x=q[0];
+    if(dx>15){anchor="start";x=q[0]+6;} else if(dx<-15){anchor="end";x=q[0]-6;}
+    let y=q[1]; if(Math.abs(dx)<=15) y=q[1]+(q[1]<ky?-6:14);
+    s += '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'" font-family="Inter,sans-serif" font-size="12.5" font-weight="600" fill="#4A5C53" dominant-baseline="middle">'+d.rovid+'</text>';
+    s += '<text x="'+x.toFixed(1)+'" y="'+(y+17).toFixed(1)+'" text-anchor="'+anchor+'" font-family="Playfair Display,serif" font-size="15" fill="#14231C" dominant-baseline="middle">'+Math.round(allapot.pontok[d.id])+'</text>';
+  });
+  return s + '</svg>';
+}
+
+function mintazatMondat(st){
+  const hasznalt=[], hianyzo=[];
+  sztori().kulcsTechnikak.forEach(x=>{
+    const van = allapot.naplo.some(b=> b.technika.toLowerCase().indexOf(x.k.toLowerCase()) >= 0);
+    (van?hasznalt:hianyzo).push(x.cim);
+  });
+  let s = "A tíz döntésedből <b>" + st.db[st.fo] + "</b> volt " + STILUSOK[st.fo] + ". ";
+  s += hasznalt.length ? "Támaszkodtál ezekre: <b>" + hasznalt.slice(0,4).join(", ") + "</b>. " : "A tanult technikák közül egyet sem hívtál segítségül. ";
+  s += hianyzo.length ? "Kimaradt: " + hianyzo.slice(0,4).join(", ") + "." : "Minden fő technikát alkalmaztál legalább egyszer.";
+  return s;
+}
+function ajanlasokValaszt(gyenge, st){
+  const ki = [];
+  (AJANLASOK[gyenge[0].id]||[]).slice(0,2).forEach(a=> ki.push(a));
+  (AJANLASOK[gyenge[1].id]||[]).slice(0,1).forEach(a=> ki.push(a));
+  if(ki.length < 3){
+    if(st.fo === "gyors") ki.push({cim:"Válts pártfogóból vizsgálódóba", szoveg:"Ne a saját javaslatodat védd, hanem teszteld: kérd meg a többieket, hogy cáfolják."});
+    else if(st.fo === "ovatos") ki.push({cim:"A halasztás helyett szűkíts", szoveg:"Ha nem tudsz dönteni, ejts ki egy kritériumot Even Swap-pal, és dönts a maradékról."});
+    else if(st.fo === "delegalo") ki.push({cim:"A delegálás mellé adj keretet", szoveg:"Amit átadsz, ahhoz mondd ki a döntési határt és a visszajelzés módját."});
+    else ki.push({cim:"Tedd nyilvánossá a módszeredet", szoveg:"Ha strukturáltan döntesz, mutasd is meg a szerkezetet. A látható módszer másolható."});
+  }
+  return ki.slice(0,3);
+}
+
+function kiertekeles(){
+  const vegso = foIndex(), sz = szintObj(vegso), r = rangsor();
+  const eros = r.slice(0,2), gyenge = r.slice(-2).reverse(), st = stilusStat();
+
+  $("vegso-pont").innerHTML = vegso + '<small>/100</small>';
+  const vsz = $("vegso-szint"); vsz.textContent = sz.nev;
+  $("vegso-osszegzes").textContent =
+    allapot.nev + " — " + sztori().nev.toLowerCase() + " pálya. Tíz döntés után a Bizalomindexed " + vegso +
+    " pont. Legerősebb területed a(z) " + eros[0].nev.toLowerCase() + ", leginkább fejlesztendő a(z) " + gyenge[0].nev.toLowerCase() + ".";
+
+  function tetelt(d, hely){
+    const t = dimTetel(d, hely);
+    const li = document.createElement("li");
+    li.innerHTML = '<div class="fej"><span class="nev">'+d.nev+'</span><span class="ert">'+t.v+'</span></div>'+
+                   '<div class="mini-sav"><i style="width:'+t.v+'%;background:'+dimSzin(t.v)+'"></i></div>'+
+                   '<p>'+t.szoveg+'</p>';
+    return li;
+  }
+  const eD = $("erossegek"); eD.innerHTML = ""; eros.forEach(d=> eD.appendChild(tetelt(d,"eros")));
+  const gD = $("gyengesegek"); gD.innerHTML = ""; gyenge.forEach(d=> gD.appendChild(tetelt(d,"gyenge")));
+
+  $("radar-doboz").innerHTML = radarRajz();
+  $("radar-alt").textContent = "Radardiagram: " + DIMENZIOK.map(d=> d.nev+" "+Math.round(allapot.pontok[d.id])+" pont").join(", ") + ".";
+
+  const dl = $("dim-lista"); dl.innerHTML = "";
+  DIMENZIOK.forEach(d=>{
+    const v = Math.round(allapot.pontok[d.id]);
+    const el = document.createElement("div"); el.className = "dim-sor";
+    el.innerHTML = '<div class="fej"><b>'+d.nev+'</b><span>'+v+'</span></div>'+
+                   '<div class="dim-sav"><i style="width:'+v+'%;background:'+dimSzin(v)+'"></i></div>';
+    dl.appendChild(el);
+  });
+
+  $("mintazat").innerHTML = mintazatMondat(st);
+
+  const aD = $("ajanlasok"); aD.innerHTML = "";
+  ajanlasokValaszt(gyenge, st).forEach((a,i)=>{
+    const el = document.createElement("div"); el.className = "tetel";
+    el.innerHTML = '<span class="sz">'+String(i+1).padStart(2,"0")+'</span><div><b>'+a.cim+'</b><p>'+a.szoveg+'</p></div>';
+    aD.appendChild(el);
+  });
+
+  const vn = $("vegso-naplo"); vn.innerHTML = "";
+  allapot.naplo.forEach(b=>{
+    const li = document.createElement("li");
+    li.innerHTML = "<b>" + b.cim + "</b> — " + b.dontes;
+    vn.appendChild(li);
+  });
+
+  $("riport-szoveg").value = riportSzoveg(vegso, sz, eros, gyenge, st);
+  $("email-info").textContent = "Címzett: " + allapot.email + (EREDMENY_MASOLAT_CIM ? " (másolat: " + EREDMENY_MASOLAT_CIM + ")" : "") + ".";
+  $("kuld-allapot").textContent = ""; $("kuld-allapot").className = "allapot";
+}
+
+function riportSzoveg(vegso, sz, eros, gyenge, st){
+  const S = [];
+  S.push("VEZETOI BIZALOM — DÖNTÉSI SZIMULÁCIÓ · KIÉRTÉKELÉS");
+  S.push("======================================================");
+  S.push("Játékos: " + allapot.nev + "   |   Pálya: " + sztori().nev);
+  S.push("Dátum: " + new Date().toLocaleString("hu-HU"));
+  S.push("");
+  S.push("BIZALOMINDEX: " + vegso + " / 100  —  " + sz.nev);
+  S.push("");
+  S.push("DIMENZIÓK");
+  DIMENZIOK.forEach(d=>{
+    const v = Math.round(allapot.pontok[d.id]), tele = Math.round(v/5);
+    S.push("  " + (d.nev + " ").padEnd(32,".") + " " + String(v).padStart(3," ") + "  [" + "█".repeat(tele) + "·".repeat(20-tele) + "]");
+  });
+  S.push("");
+  S.push("ELŐNYEINK");
+  eros.forEach(d=>{ const t = dimTetel(d,"eros"); S.push("  • " + d.nev + " (" + t.v + "): " + t.szoveg); });
+  S.push("");
+  S.push("HÁTRÁNYAINK");
+  gyenge.forEach(d=>{ const t = dimTetel(d,"gyenge"); S.push("  • " + d.nev + " (" + t.v + "): " + t.szoveg); });
+  S.push("");
+  S.push("DÖNTÉSI MINTÁZAT");
+  S.push("  " + mintazatMondat(st).replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim());
+  S.push("");
+  S.push("MIT CSINÁLJ MÁSKÉPP");
+  ajanlasokValaszt(gyenge, st).forEach((a,i)=> S.push("  " + (i+1) + ". " + a.cim + " — " + a.szoveg));
+  S.push("");
+  S.push("DÖNTÉSI NAPLÓ");
+  allapot.naplo.forEach(b=> S.push("  " + b.sorszam + ". " + b.cim + " — " + b.dontes + "  [" + b.technika + "]"));
+  S.push("");
+  S.push("A történet fiktív. A kiértékelés fejlesztő célú, nem minősítés.");
+  return S.join("\n");
+}
+
+/* ============================================================================
+   9) E-MAIL — EmailJS, tartalék: mailto, vágólap, letöltés
+   ========================================================================== */
+
+function emailjsBeallitva(){
+  return typeof emailjs !== "undefined"
+      && EMAILJS_PUBLIC_KEY.indexOf("IDE_JON") < 0 && EMAILJS_SERVICE_ID.indexOf("IDE_JON") < 0
+      && EMAILJS_TEMPLATE_ID.indexOf("IDE_JON") < 0;
+}
+function emailjsInit(){
+  if(typeof emailjs === "undefined" || EMAILJS_PUBLIC_KEY.indexOf("IDE_JON") >= 0) return;
+  try { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
+  catch(e){ try { emailjs.init(EMAILJS_PUBLIC_KEY); } catch(e2){} }
+}
+function allapotUzenet(szoveg, tipus){
+  const el = $("kuld-allapot"); el.textContent = szoveg; el.className = "allapot" + (tipus ? " " + tipus : "");
+}
+function targySzoveg(){ return "Vezetői Bizalom eredmény — " + allapot.nev + " (" + sztori().nev + ", " + foIndex() + "/100)"; }
+
+function kuldes(){
+  const riport = $("riport-szoveg").value, gomb = $("kuld-gomb");
+  if(!emailjsBeallitva()){
+    allapotUzenet("Az EmailJS nincs beállítva ebben a példányban, ezért a levelet a saját levelezőprogramoddal tudod elküldeni. Megnyitom a tartalék megoldást.", "hiba");
+    setTimeout(mailtoNyit, 400); return;
+  }
+  gomb.disabled = true;
+  allapotUzenet("Küldés folyamatban…", "folyamat");
+  const params = { to_email:allapot.email, reply_to:allapot.email, player_name:allapot.nev,
+                   mode:sztori().nev, score:String(foIndex()), level:szintObj(foIndex()).nev, report:riport };
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
+    .then(function(){
+      if(EREDMENY_MASOLAT_CIM){
+        const m = Object.assign({}, params, { to_email: EREDMENY_MASOLAT_CIM });
+        return emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, m).catch(function(){});
+      }
+    })
+    .then(function(){
+      gomb.disabled = false;
+      allapotUzenet("Elküldve ide: " + allapot.email + (EREDMENY_MASOLAT_CIM ? " (másolat: " + EREDMENY_MASOLAT_CIM + ")" : "") +
+        ". Ha pár percen belül nem érkezik meg, nézd meg a levélszemét mappát.", "siker");
+    })
+    .catch(function(err){
+      gomb.disabled = false;
+      const ok = (err && (err.text || err.message)) ? (" (" + (err.text || err.message) + ")") : "";
+      allapotUzenet("A küldés nem sikerült" + ok + ". Megnyitom a levelezőprogramodat tartalékként.", "hiba");
+      setTimeout(mailtoNyit, 600);
+    });
+}
+function mailtoNyit(){
+  let torzs = $("riport-szoveg").value;
+  const MAX = 1800;
+  if(torzs.length > MAX) torzs = torzs.slice(0,MAX) + "\n\n[...]\n\nA teljes kiértékelés a záró képernyőn olvasható; a „Másolás vágólapra” gombbal teljes terjedelmében beilleszthető ide.";
+  const url = "mailto:" + encodeURIComponent(allapot.email) + "?subject=" + encodeURIComponent(targySzoveg()) + "&body=" + encodeURIComponent(torzs);
+  try { window.location.href = url; allapotUzenet("Megnyitottam a levelezőprogramodat előre kitöltött levéllel.", "folyamat"); }
+  catch(e){ allapotUzenet("A levelezőprogram nem nyitható meg. Másold vágólapra vagy töltsd le az eredményt.", "hiba"); }
+}
+function vagolapra(){
+  const ta = $("riport-szoveg"), szoveg = ta.value;
+  function tartalek(){
+    try {
+      ta.closest("details").open = true;
+      ta.removeAttribute("readonly"); ta.select(); ta.setSelectionRange(0, szoveg.length);
+      const ok = document.execCommand("copy");
+      ta.setAttribute("readonly","readonly");
+      allapotUzenet(ok ? "Az eredmény a vágólapra került." : "A másolás nem sikerült automatikusan; a szöveg ki van jelölve.", ok ? "siker" : "hiba");
+    } catch(e){ allapotUzenet("A másolás nem sikerült. Nyisd le a szöveges változatot, és másold ki kézzel.", "hiba"); }
+  }
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(szoveg).then(()=> allapotUzenet("Az eredmény a vágólapra került.", "siker")).catch(tartalek);
+  } else tartalek();
+}
+function letoltes(){
+  try{
+    const blob = new Blob([$("riport-szoveg").value], {type:"text/plain;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "vezetoi-bizalom-" + allapot.mod + "-" + (allapot.nev.replace(/[^\wáéíóöőúüűÁÉÍÓÖŐÚÜŰ]+/g,"-").toLowerCase() || "eredmeny") + ".txt";
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    allapotUzenet("Az eredményt letöltöttem szövegfájlként.", "siker");
+  } catch(e){ allapotUzenet("A letöltés ebben a környezetben nem engedélyezett. Használd a vágólapra másolást.", "hiba"); }
+}
+
+/* ============================================================================
+   10) INDÍTÁS
+   ========================================================================== */
+
+const MOD_IKON = {
+  vallalati:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/><path d="M9 9h1.5M13.5 9H15M9 12.5h1.5M13.5 12.5H15"/></svg>',
+  katonai:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3l7.5 3v6c0 4.4-3.1 8.2-7.5 9.4C7.6 20.2 4.5 16.4 4.5 12V6z"/></svg>',
+  politikai:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 21h18M4.5 21V10M9 21V10M15 21V10M19.5 21V10M3 10h18L12 4z"/></svg>'
+};
+function modKartyakEpit(){
+  const doboz = $("mod-racs"); doboz.innerHTML = "";
+  Object.keys(STORIK).forEach((kulcs,i)=>{
+    const st = STORIK[kulcs];
+    const g = document.createElement("button");
+    g.type = "button"; g.className = "mod-kartya"; g.setAttribute("aria-pressed","false"); g.dataset.mod = kulcs;
+    g.innerHTML =
+      '<div class="fej"><span class="sorszam">'+String(i+1).padStart(2,"0")+'</span>'+
+      '<span class="ikon" aria-hidden="true">'+MOD_IKON[kulcs]+'</span></div>'+
+      '<h3>'+st.nev+'</h3><p>'+st.leiras+'</p>'+
+      '<span class="allapot"><span class="valasztas">Kiválasztás &nbsp;›</span><span class="pipa">✓ &nbsp;Kiválasztva</span></span>';
+    g.addEventListener("click", ()=> modValaszt(kulcs));
+    doboz.appendChild(g);
+  });
+}
+function modValaszt(kulcs){
+  allapot.mod = kulcs;
+  document.querySelectorAll(".mod-kartya").forEach(k=> k.setAttribute("aria-pressed", String(k.dataset.mod === kulcs)));
+  $("mod-hiba").textContent = "";
+  try{ localStorage.setItem("vb_mod", kulcs); }catch(e){}
+}
+const emailErvenyes = e => /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(String(e).trim());
+
+function startEllenoriz(ev){
+  ev.preventDefault();
+  const nevMezo = $("nev"), emailMezo = $("email");
+  const nev = (nevMezo.value||"").trim(), email = (emailMezo.value||"").trim();
+  let ok = true;
+  if(!allapot.mod){
+    $("mod-hiba").textContent = "Válassz szerepkört a folytatáshoz.";
+    document.getElementById("szerepkor-szakasz").scrollIntoView({behavior:"smooth", block:"center"});
+    ok = false;
+  }
+  if(nev.length < 2){
+    $("nev-hiba").textContent = "Kérlek, add meg a neved (legalább 2 karakter).";
+    $("nev-doboz").dataset.hibas = "1"; ok = false;
+  } else { $("nev-hiba").textContent = ""; delete $("nev-doboz").dataset.hibas; }
+  if(!emailErvenyes(email)){
+    $("email-hiba").textContent = "Érvényes e-mail-címet adj meg (pl. nev@pelda.hu).";
+    $("email-doboz").dataset.hibas = "1"; ok = false;
+  } else { $("email-hiba").textContent = ""; delete $("email-doboz").dataset.hibas; }
+  if(!ok) return;
+
+  allapot.nev = nev.slice(0,80); allapot.email = email.slice(0,120);
+  try{ localStorage.setItem("vb_nev", allapot.nev); localStorage.setItem("vb_email", allapot.email); }catch(e){}
+  jatekotIndit();
+}
+
+function jatekotIndit(){
+  const bet = $("betolto"); bet.classList.remove("tunik");
+  ujJatek();
+  $("hud-palya").textContent = sztori().alcim;
+  nezet("view-game");
+  setTimeout(function(){
+    vilagEpit(allapot.mod);
+    kameraUtazas(0, true);
+    /* kicsit hátrébbről indul a kamera, hogy legyen ránézés */
+    V.posKezd.copy(V.poz).add(new T.Vector3(2.2, 1.0, 4.0));
+    V.celKezd.copy(V.cel);
+    V.posVeg.copy(V.poz); V.celVeg.copy(V.cel); V.mozgasT = 0;
+    pontFrissit(false);
+    setTimeout(()=> bet.classList.add("tunik"), 260);
+    jelenetJatszik(0);
+  }, 60);
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  modKartyakEpit();
+  try{
+    const n = localStorage.getItem("vb_nev"), e = localStorage.getItem("vb_email"), m = localStorage.getItem("vb_mod");
+    if(n) $("nev").value = n;
+    if(e) $("email").value = e;
+    if(m && STORIK[m]) modValaszt(m);
+  }catch(e){}
+
+  if(typeof T !== "undefined"){ heroInit(); vilagInit(); }
+  emailjsInit();
+  setTimeout(()=> $("betolto").classList.add("tunik"), 500);
+
+  $("lapoz-gomb").addEventListener("click", ()=> document.getElementById("szerepkor-szakasz").scrollIntoView({behavior:"smooth"}));
+  $("start-form").addEventListener("submit", startEllenoriz);
+  $("tovabb-gomb").addEventListener("click", tovabb);
+  $("atugras-gomb").addEventListener("click", kepMegall);
+  $("kuld-gomb").addEventListener("click", kuldes);
+  $("mailto-gomb").addEventListener("click", mailtoNyit);
+  $("masol-gomb").addEventListener("click", vagolapra);
+  $("letolt-gomb").addEventListener("click", letoltes);
+  $("ujra-gomb").addEventListener("click", ()=> nezet("view-start"));
+
+  document.addEventListener("keydown", function(ev){
+    if($("view-game").classList.contains("rejt")) return;
+    const cel = ev.target;
+    if(cel && (cel.tagName === "INPUT" || cel.tagName === "TEXTAREA")) return;
+    const all = $("hud-lent").style.visibility === "visible";
+    if(!all && (ev.key === "s" || ev.key === "S" || ev.key === " ")){ ev.preventDefault(); kepMegall(); return; }
+    if(all && !allapot.valaszolt && ev.key >= "1" && ev.key <= "4"){
+      const g = document.querySelectorAll("#valaszok .valasz")[parseInt(ev.key,10)-1];
+      if(g && !g.disabled){ ev.preventDefault(); g.click(); }
+    } else if(allapot.valaszolt && ev.key === "Enter" && cel === document.body){
+      ev.preventDefault(); tovabb();
+    }
+  });
+});
+</script>
+</body>
+</html>
