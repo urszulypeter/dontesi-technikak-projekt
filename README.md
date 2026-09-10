@@ -254,6 +254,28 @@ A táblát az első beérkező válasz hozza létre, tehát külön migráció n
 Amíg nincs adatbázis, a kérdőív nem hasal el némán: kiírja, hogy nem ment el, és
 az eredmény ettől függetlenül megnézhető.
 
+## QR-kód
+
+A `qr/` mappában van, és a nyitóoldalra mutat. Helyben készült, külső
+szolgáltatás nélkül — így nincs rajta idegen vízjel, és a cím sem került ki
+senkihez.
+
+    qr/vezetoi-bizalom-qr.svg        fekete-fehér, vektoros — ez a nyomdai
+    qr/vezetoi-bizalom-qr.png        ugyanaz, 2048 px — diához, közösségi felületre
+    qr/vezetoi-bizalom-qr-zold.svg   a lap színeivel (#13291F krémen)
+
+33×33 modul, körülötte négy modulnyi csendes zóna — az a fehér keret nem
+dísz, nélküle sok olvasó meg sem találja a kódot. A hibajavítás **Q** szintű:
+a kód negyede sérülhet, és még mindig beolvasható. Nyomtatásnál ez sokat ér.
+
+**Méret.** A kód 41 modul széles a kerettel együtt. Papíron 2,5 cm alá ne
+menj; 3 cm-től kézből kényelmesen olvasható. Plakáton a hüvelykujjszabály:
+a kód szélessége legyen a leolvasási távolság tizede — két méterről tehát
+20 cm.
+
+Ha egyszer saját domain kerül a projekt alá, a kódot újra kell generálni:
+a benne lévő cím fix.
+
 ## Helyi futtatás
 
 A CDN-ek miatt érdemes kiszolgálón megnyitni, nem duplakattintással:
