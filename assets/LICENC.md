@@ -1,7 +1,8 @@
 # Az eszközök forrása és licence
 
-A nyitókép (`heroInit()` az `index.html`-ben) valódi, szabadon felhasználható
-3D-eszközökből épül. Ez a fájl sorolja fel mindet, forrással és licenccel együtt.
+A nyitókép (`heroInit()`) és a játék harminc jelenete (`vilagEpit()`) **ugyanabból
+az eszközkészletből** épül: azonos környezetfény, azonos beszkennelt felületek,
+azonos modellek. Ez a fájl sorolja fel mindet, forrással és licenccel együtt.
 A CC-BY licencű elemeknél a névattribúció kötelező — az alábbi lista teljesíti ezt.
 
 ## Környezetfény (HDRI)
@@ -51,14 +52,48 @@ Ez adja a tér irányfüggő megvilágítását és az ablakon kilátszó valód
 > Ez a hivatkozás jelenik meg a nyitóoldal láblécében is, hogy a licenc a
 > futó alkalmazásban is teljesüljön.
 
+## Hol tartanak az alakok, és miért ott
+
+A három szkennelt alak a nyitóképen **és** a játékjelenetekben is szerepel, de
+csak ott, ahol az öltözetük illik a szerephez, és csak állva:
+
+| Szerep | Mi kerül oda |
+|---|---|
+| álló, üzleti vagy politikai (14 hely) | `ferfi_sotetkek`, `ferfi_fekete` |
+| álló, civil vagy ingujjas (6 hely) | `vendeg` |
+| ülő (29 hely) | épített alak |
+| egyenruhás (19 hely) | épített alak |
+| női (6 hely) | épített alak |
+
+A szkenn egyetlen rögzített testtartás: nem lehet leültetni, egyenruhába adni
+vagy nemet váltani rajta. A hiányzó 52 helyre **kerestünk** további alakot,
+és nem találtunk használhatót:
+
+| Forrás | Miért nem |
+|---|---|
+| [Poly Haven](https://polyhaven.com) | nincs benne ember |
+| **LGA-NA** további 24 szkennje | névvel azonosítható valódi közszereplők (lásd lent) |
+| Renderbot, Renderpeople, Human Alloy, 3DScanStore | zárt licenc, regisztráció, határozott idejű felhasználás, továbbterjesztés tiltva |
+| Sketchfab CC0 „emberek" | alapmesh-ek és anyagkészletek, nem fotószkennek |
+| fotóreális egyenruhás szkennek | kizárólag fizetős (deep3dstudio, ViARsys, Moony_State) |
+| ülő pózú, ingyenes, továbbadható szkenn | nem találtunk ilyet |
+
+Ha egyszer mégis lesz rá keret, egy megvásárolt szkenncsomag megoldja — de a
+repót akkor priváttá kell tenni, mert a `.glb` egy WebGL-oldalon letölthető
+fájl, és a fizetős licencek pontosan ezt tiltják.
+
 ## Amit nem használunk és miért
 
-- **Renderpeople / Human Alloy ingyenes minták** — a licencük tiltja, hogy a
-  modellfájlok külön letölthetők legyenek, márpedig egy WebGL-oldalon azok.
+- **Renderpeople / Human Alloy / Renderbot ingyenes minták** — a licencük tiltja,
+  hogy a modellfájlok külön letölthetők legyenek, márpedig egy WebGL-oldalon azok.
 - **Mixamo-karakterek** — az Adobe feltételei a különálló eszközként való
   továbbterjesztést nem engedik; egy publikus repóban a `.glb` pontosan ez.
-- **Objaverse-ben talált, valódi közszereplőket ábrázoló szkennek** — a
-  személyiségi jog és a témával való nem kívánt asszociáció miatt.
+- **Valódi közszereplőket ábrázoló szkennek** — a személyiségi jog miatt, és
+  mert a játék korrupt vagy hibázó vezetőket is ábrázol: felismerhető élő
+  személyt ilyen szerepbe tenni akkor sem helyes, ha a licenc engedné. Ez zárja
+  ki az „MM" és a „Fitg013" szerzőjének többi szkennjét is, amelyek nevesített
+  személyek (`FITG004 Mortimer Singer`, `Jean Shafiroff`, `Fern Mallis` és
+  társaik) — a két használt alak épp azért maradt benn, mert névtelen.
 
 ## Feldolgozás
 

@@ -20,6 +20,10 @@ kiértékelést kap, amit e-mailben is elküldhet.
   vállalati középvezető, katonai ezredes, politikai középvezető.
 - **3D jelenetek** Three.js-szel. Pályánként tíz díszlet, közöttük valódi
   kameramozgással; a kamera átér a helyszínre, a kép megáll, és feljön a döntés.
+- **A jelenetek ugyanazt a látványt kapják, mint a nyitókép**: ugyanaz a
+  fotografált HDRI-környezetfény, ugyanazok a beszkennelt PBR-felületek,
+  ugyanazok a fotogrammetriás bútorok és alakok, ugyanaz az AgX színkezelés és
+  filmes utómunka. Részletek lentebb: „Egy látvány, két felület".
 - **Telltale-stílusú döntési réteg**: a jelenetre vetített kérdés és válaszok.
 - **Bizalomindex** felül középen. Válasz után megnő, kiírja a változást, majd
   visszahúzódik.
@@ -73,10 +77,11 @@ visszajelzés nevezi meg.
 ## Fájlszerkezet
 
     index.html            a teljes alkalmazás: HTML, CSS, JS, 3D jelenetek, kérdésadatok
-    assets/hdri/          a nyitókép környezetfénye (.hdr)
+    assets/hdri/          környezetfény (.hdr) — a nyitóképé és a jeleneteké is
     assets/felulet/       padló- és falanyag PBR-térképei (.webp)
-    assets/modell/        a nyitókép modelljei (.glb, meshopt-tömörítve)
-    assets/LICENC.md      minden eszköz forrása, szerzője és licence
+    assets/modell/        modellek (.glb, meshopt-tömörítve)
+    assets/LICENC.md      minden eszköz forrása, szerzője és licence; az alakok
+                          elhelyezése és a hozzájuk vezető licenckeresés
     README.md             ez a leírás
 
 Nincs build lépés. Külső függőség: Three.js `0.180.0` (3D, importmap-en át
@@ -86,12 +91,13 @@ A kód ES-modul (`<script type="module">`), ezért a Three.js kiegészítői
 (`GLTFLoader`, `RGBELoader`, utómunka-passzok) importtal érhetők el. Az
 importmap az `index.html` tetején van; a verzió egy helyen cserélhető.
 
-## A nyitókép eszközei
+## Az eszközök
 
-A nyitókép minden eleme szabadon felhasználható forrásból származik, és a
-repóban optimalizált formában van benne — így nem függ egy külső CDN
-elérhetőségétől. Összesen ~4,8 MB, de **nem egyszerre**: két ütemben tölt be
-(lásd lentebb), és a szöveg mindvégig olvasható.
+Minden eszköz szabadon felhasználható forrásból származik, és a repóban
+optimalizált formában van benne — így nem függ egy külső CDN elérhetőségétől.
+Összesen ~4,8 MB, de **nem egyszerre**: két ütemben tölt be (lásd lentebb), és
+a szöveg mindvégig olvasható. Ugyanez a készlet szolgálja ki a játék harminc
+jelenetét is, ezért a játék indításakor általában nincs mit letölteni.
 
 | Mi | Honnan | Licenc |
 |---|---|---|
@@ -110,6 +116,42 @@ textúrák WebP-be, geometria `EXT_meshopt_compression`-nel, a szkennelt alakok
 **Amit tudatosan nem használunk:** a Renderpeople és a Mixamo ingyenes
 karaktereit. Mindkettő licence tiltja, hogy a modellfájl önálló fájlként
 letölthető legyen — egy WebGL-oldalon pontosan az.
+
+## Egy látvány, két felület
+
+A nyitókép és a harminc játékjelenet két külön WebGL-környezet, de egyetlen
+eszközkészletből és egyetlen képi receptből él. Az eszközök egyszer töltődnek
+le és egyszer értelmeződnek (`eszkozTer()`, `eszkozModellek()`); a GPU-ra
+mindkét renderelő külön tölti fel őket, mert két külön környezet.
+
+Amit a játékvilág a nyitóképtől átvett:
+
+| Mi | Előtte | Utána |
+|---|---|---|
+| Környezetfény | 32×16 képpontos rajzolt színátmenet | ugyanaz a fotografált HDRI |
+| Padló, fal, mennyezet | egyszínű felületek | beszkennelt PBR-anyagok (Poly Haven) |
+| Ablak | a falra festett világító téglalap | valódi nyílás, béléttel, osztóbordával, túlexponált kilátással |
+| Növények, mennyezeti lámpák | dobozokból és hengerekből | fotogrammetriás modellek |
+| Álló üzleti és politikai alakok | kapszulákból épített figura | ugyanaz a három 3D-szkennelt ember |
+| Színkezelés | ACES | AgX, a nyitókép expozíciójához hangolva |
+| Utómunka | nincs | ragyogás, vignetta, filmszemcse, objektív-színbontás |
+
+**Ami nem lett átvéve, és miért.** A 72 alakból 52 továbbra is épített figura:
+ülő, egyenruhás és női szerepekhez nincs szabad licencű, továbbadható
+ember-szkenn. A keresés végigjárt forrásai és az elvetés indoka —
+személyiségi jogtól a licencfeltételekig — az `assets/LICENC.md`-ben van,
+hogy ne kelljen még egyszer végigjárni.
+
+Két apró, de fontos fogás a felületeknél:
+
+- **A csempézés az UV-n áll be, nem a textúrán.** Így egyetlen anyagpéldány
+  szolgál ki minden szobaméretet; máskülönben harminc díszlet harmincszor annyi
+  anyagot és ugyanannyi shaderfordítást jelentene. Az anyagtár árnyalatonként
+  egyszer készíti el őket (`tarolt()`).
+- **A díszletek régi színei árnyalattá szelídültek** (`arnyalat()`). Ezek még
+  abból az időből valók, amikor a padló és a fal egyszínű volt; alapszínként a
+  beszkennelt gránitra szorozva sárba nyomták — a rajzolat eltűnt, és maradt
+  egy sötét folt.
 
 ## A nyitókép teljesítménye
 
