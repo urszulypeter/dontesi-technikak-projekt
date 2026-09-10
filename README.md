@@ -11,6 +11,11 @@ kiértékelést kap, amit e-mailben is elküldhet.
 
 ## Mit tud
 
+- **Fotórealisztikus nyitókép.** A kezdőoldal háttere nem stilizált díszlet:
+  fotografált HDRI-környezetfény, beszkennelt PBR-anyagok, fotogrammetriás
+  bútorok és három 3D-szkennelt alak, valódi napfénnyel, hosszú ablakárnyékokkal
+  és filmes utómunkával (AgX színkezelés, ragyogás, vignetta, filmszemcse,
+  objektív-színbontás). A források és licencek: `assets/LICENC.md`.
 - **Három pálya** ugyanazzal a tíz döntési ívvel, más környezetben:
   vállalati középvezető, katonai ezredes, politikai középvezető.
 - **3D jelenetek** Three.js-szel. Pályánként tíz díszlet, közöttük valódi
@@ -67,11 +72,106 @@ visszajelzés nevezi meg.
 
 ## Fájlszerkezet
 
-    index.html    a teljes alkalmazás: HTML, CSS, JS, 3D jelenetek, kérdésadatok
-    README.md     ez a leírás
+    index.html            a teljes alkalmazás: HTML, CSS, JS, 3D jelenetek, kérdésadatok
+    assets/hdri/          a nyitókép környezetfénye (.hdr)
+    assets/felulet/       padló- és falanyag PBR-térképei (.webp)
+    assets/modell/        a nyitókép modelljei (.glb, meshopt-tömörítve)
+    assets/LICENC.md      minden eszköz forrása, szerzője és licence
+    README.md             ez a leírás
 
-Egyetlen fájl, nincs build lépés. Külső függőség: Three.js (3D), Google Fonts
-(tipográfia), EmailJS (eredményküldés) — mind CDN-ről.
+Nincs build lépés. Külső függőség: Three.js `0.180.0` (3D, importmap-en át
+CDN-ről), Google Fonts (tipográfia), EmailJS (eredményküldés).
+
+A kód ES-modul (`<script type="module">`), ezért a Three.js kiegészítői
+(`GLTFLoader`, `RGBELoader`, utómunka-passzok) importtal érhetők el. Az
+importmap az `index.html` tetején van; a verzió egy helyen cserélhető.
+
+## A nyitókép eszközei
+
+A nyitókép minden eleme szabadon felhasználható forrásból származik, és a
+repóban optimalizált formában van benne — így nem függ egy külső CDN
+elérhetőségétől. Összesen ~4,8 MB, de **nem egyszerre**: két ütemben tölt be
+(lásd lentebb), és a szöveg mindvégig olvasható.
+
+| Mi | Honnan | Licenc |
+|---|---|---|
+| Környezetfény (Dresden Square HDRI, 768×384) | Poly Haven | CC0 |
+| Padló- és falanyag | Poly Haven | CC0 |
+| Fotelek, kanapé, asztal, növények, lámpa, sakk-készlet, váza, óra, mellszobor, konzol | Poly Haven | CC0 |
+| A két alak („Fitg013”, LGA-NA) | Sketchfab / Objaverse | **CC BY 4.0** |
+
+A CC-BY névattribúció a nyitóoldal láblécében és az `assets/LICENC.md`-ben is
+szerepel — ez a licenc feltétele, ne töröld.
+
+Az eszközök feldolgozása `@gltf-transform`-mal és `sharp`-pal történt:
+textúrák WebP-be, geometria `EXT_meshopt_compression`-nel, a szkennelt alakok
+1 499 992 → 2 × 32 000, illetve 916 867 → 53 916 háromszögre egyszerűsítve.
+
+**Amit tudatosan nem használunk:** a Renderpeople és a Mixamo ingyenes
+karaktereit. Mindkettő licence tiltja, hogy a modellfájl önálló fájlként
+letölthető legyen — egy WebGL-oldalon pontosan az.
+
+## A nyitókép teljesítménye
+
+A nyitókép háttér: nem foghatja el a gépet a szöveg és a görgetés elől. A
+végleges költség egy integrált GPU-n **12 ms / képkocka**, 30 kép/mp-re
+korlátozva — tehát a GPU nagyjából harmadát használja. Az első működő változat
+ugyanezen a gépen 120 ms / képkocka volt (8 kép/mp); ami a különbséget adta,
+mérési sorrendben:
+
+| Mit | Miért került sokba | Nyereség |
+|---|---|---|
+| Egyetlen `transmission`-os anyag (a falióra üvegje) | Ha a jelenetben bárminek van átvilágítása, a three **az egész jelenetet még egyszer** lerajzolja egy külön pufferbe | 480 000 → 240 000 háromszög/kép |
+| GTAO (takarási árnyalás) | Saját mélységképéhez szintén újrarajzolja a jelenetet | −56 ms |
+| Üveg `MeshPhysicalMaterial`, kétoldalas, átlátszó | A kép felét lefedi, tehát minden mögötte lévő képpontot újra árnyékol — pedig az üvegen csak tükröződés látszik | −31 ms |
+| Mélységélesség (bokeh) | Ugyancsak külön mélységrajzolás | −11 ms |
+| Többmintás élsimítás (MSAA) | Integrált GPU-n drágább, mint amennyit ér: MSAA nélkül 2,9 Mpixel olcsóbb, mint kétmintásan 1,4 Mpixel | −8 ms |
+| Hat pontfény | Minden fény minden képpont árnyékolását drágítja | −13 ms |
+| Vak képpontarány (`devicePixelRatio` × 1,9) | Retina-kijelzőn 5,2 millió képpont; helyette képpont**keret** van | ~2× |
+
+Ezenkívül: az árnyéktérkép egyszer rajzolódik meg (a nap és a berendezés áll),
+és ha a nyitókép kigörgetett a képernyőről, egyáltalán nem renderelünk.
+
+Ha egy gépen mégis akadna, a `heroMinoseg()` három fokozata (`alap`, `kozep`,
+`magas`) egy helyen állítja a képpontkeretet, az árnyéktérképet és a porszemek
+számát.
+
+## A nyitókép betöltése
+
+A 3D nem várakoztathatja meg a lapot. Három dolgon múlik, mikor jelenik meg:
+
+**1. Ne kelljen sorban állni.** Az importtérkép, a `modulepreload` és a
+`preload` sorok a `<head>`-ben vannak: a böngésző így már a HTML olvasása
+közben elkezdi tölteni a Three.js modulokat *és* az első ütem eszközeit.
+Enélkül a modul lefutásáig — mérve 1,4 másodpercig — egyetlen eszköz sem
+indult el. (Az importtérképnek meg kell előznie a `modulepreload` sorokat,
+különben a kiegészítők `three` hivatkozása feloldhatatlan.)
+
+**2. Két ütem.** Az első ütem csak az, ami nélkül nincs mit mutatni: a
+környezetfény és a tér felületei — 1,3 MB. Ebből már valódi, helyesen
+megvilágított helyiség lesz, és azonnal látszik. A berendezés és az alakok
+(3,5 MB) csak ezután indulnak, hogy ne vegyék el a sávszélességet az elsőtől,
+és megérkezéskor lágyan beúsznak, nem pattannak be.
+
+**3. Kevesebb bájt.** A HDRI 1024×512-ről 768×384-re ment (1489 → 829 kB): az
+ablakon kilátszó városkép ekkora méretben megkülönböztethetetlen, mert a
+szórt üvegen át amúgy is lágy. A padló domborzat- és durvaságtérképét pedig
+egyszerűen töröltük — az anyaga már nem használta őket, mégis letöltődtek.
+
+**4. Ne akadjon el a lap.** A modellek értelmezése, a shaderfordítás és a
+textúrafeltöltés mind főszálas munka. Egyben ez másodperc körüli akadás, amit
+a görgetés is megérez; ezért a tizenkét modell egyenként, képkockánként
+dolgozódik fel (`heroFelkeszit()` egy képkockányi idő után átengedi a szót).
+A leghosszabb akadás így 1101 ms-ról 424 ms-ra csökkent, a nyitókép
+megjelenése utáni képkockák pedig egyenletesen 17 ms-osak.
+
+Mért idő az első képig:
+
+| Kapcsolat | Előtte | Utána |
+|---|---|---|
+| helyi kiszolgáló | 2,3 mp | 1,0 mp |
+| 9 Mbit/s | 6,8 mp | 2,4 mp |
+| 4 Mbit/s | 14,2 mp | 4,8 mp |
 
 ## Helyi futtatás
 

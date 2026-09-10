@@ -5,6 +5,37 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vezetői Bizalom — döntési szimuláció</title>
 <meta name="description" content="Interaktív vezetői döntésjáték három szerepkörben, 3D jelenetekkel.">
+<!-- Az importtérképnek meg kell előznie minden modulbetöltést és -előjegyzést,
+     különben a kiegészítők `three` hivatkozását a böngésző nem tudja feloldani. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+
+<!-- A nyitókép 3D-je két dolgot vár: a Three.js modulokat a CDN-ről és a saját
+     eszközeit. Előjegyzés nélkül ez sorban állás: a böngésző csak a modul
+     lefutása után tudja meg, milyen eszközre van szükség — a mérés szerint így
+     1,4 másodperc telt el az első eszközkérésig. Az alábbi sorok mindkettőt
+     azonnal elindítják, párhuzamosan. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.core.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/GLTFLoader.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/loaders/RGBELoader.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/libs/meshopt_decoder.module.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/postprocessing/EffectComposer.js" crossorigin>
+
+<!-- Az első ütem eszközei: enélkül nincs mit mutatni, ezért ezek élveznek elsőbbséget. -->
+<link rel="preload" as="fetch" href="assets/hdri/dresden_square_768.hdr" crossorigin="anonymous" fetchpriority="high">
+<link rel="preload" as="image" href="assets/felulet/padlo_diff.webp" crossorigin="anonymous" fetchpriority="high">
+<link rel="preload" as="image" href="assets/felulet/fal_diff.webp" crossorigin="anonymous">
+<link rel="preload" as="image" href="assets/felulet/fal_nor.webp" crossorigin="anonymous">
+<link rel="preload" as="image" href="assets/felulet/fal_arm.webp" crossorigin="anonymous">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -89,12 +120,22 @@ button{font-family:inherit}
 .marka span{display:block;font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(247,244,238,.62);font-weight:500}
 
 .hero{position:relative;min-height:100svh;display:flex;align-items:center;background:var(--zold-900);overflow:hidden}
-#hero-vaszon{position:absolute;inset:0;width:100%;height:100%;display:block}
+#hero-vaszon{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .9s ease}
+#hero-vaszon.lat{opacity:1}
 .hero-fatyol{
   position:absolute;inset:0;
-  background:linear-gradient(100deg,rgba(10,24,18,.94) 0%,rgba(12,26,20,.78) 42%,rgba(12,26,20,.35) 100%);
+  background:
+    linear-gradient(96deg,rgba(8,19,14,.93) 0%,rgba(9,21,16,.80) 30%,rgba(9,21,16,.42) 55%,rgba(9,21,16,.10) 78%,rgba(9,21,16,0) 100%),
+    linear-gradient(180deg,rgba(8,19,14,.55) 0%,rgba(8,19,14,0) 22%,rgba(8,19,14,0) 68%,rgba(8,19,14,.42) 100%);
 }
 .hero-tart{position:relative;z-index:5;padding:120px clamp(20px,5vw,64px) 80px;max-width:1180px;width:100%}
+/* Álló képernyőn a szöveg a kép közepén ül, ezért ott kell a fátyol, nem balra. */
+@media (max-width:760px){
+  .hero-fatyol{
+    background:
+      linear-gradient(180deg,rgba(8,19,14,.62) 0%,rgba(9,21,16,.30) 14%,rgba(9,21,16,.74) 30%,rgba(9,21,16,.80) 62%,rgba(9,21,16,.52) 80%,rgba(8,19,14,.72) 100%);
+  }
+}
 .hero .szem{color:var(--arany)}
 .hero h1{
   font-size:clamp(2.5rem,6.4vw,4.9rem);color:var(--krem);margin:28px 0 0;max-width:15ch;
@@ -166,6 +207,11 @@ button{font-family:inherit}
   font-size:.82rem;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center;
 }
 .lablec-nyito .marka b{color:var(--krem)}
+.lablec-jobb{text-align:right;display:flex;flex-direction:column;gap:6px}
+.lablec-jobb .forras{font-size:.72rem;color:rgba(247,244,238,.38);line-height:1.6}
+.lablec-jobb .forras a{color:rgba(247,244,238,.55);text-decoration:underline;text-underline-offset:2px}
+.lablec-jobb .forras a:hover{color:var(--arany)}
+@media (max-width:700px){.lablec-jobb{text-align:left}}
 
 /* ============================================================
    2) JÁTÉKKÉPERNYŐ — 3D jelenet + rávetített döntések
@@ -493,7 +539,14 @@ textarea.riport{
       </svg>
       <span><b>Vezetői Bizalom</b><span>Döntési technikák</span></span>
     </div>
-    <div>A történetek fiktívek. A kiértékelés fejlesztő célú, nem minősítés.</div>
+    <div class="lablec-jobb">
+      <div>A történetek fiktívek. A kiértékelés fejlesztő célú, nem minősítés.</div>
+      <div class="forras">
+        Nyitókép: HDRI és bútorok — <a href="https://polyhaven.com" rel="noopener" target="_blank">Poly Haven</a> (CC0) ·
+        alakok: „Fitg013” és „MM” — <a href="https://sketchfab.com/3d-models/59d4622960164eed88fe31ea284cc1ab" rel="noopener" target="_blank">LGA-NA</a>,
+        <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener" target="_blank">CC BY 4.0</a>, szerkesztve
+      </div>
+    </div>
   </footer>
 </section>
 
@@ -629,14 +682,30 @@ textarea.riport{
       </svg>
       <span><b>Vezetői Bizalom</b><span>Döntési technikák</span></span>
     </div>
-    <div>A történetek fiktívek. A kiértékelés fejlesztő célú, nem minősítés.</div>
+    <div class="lablec-jobb">
+      <div>A történetek fiktívek. A kiértékelés fejlesztő célú, nem minősítés.</div>
+      <div class="forras">
+        Nyitókép: HDRI és bútorok — <a href="https://polyhaven.com" rel="noopener" target="_blank">Poly Haven</a> (CC0) ·
+        alakok: „Fitg013” és „MM” — <a href="https://sketchfab.com/3d-models/59d4622960164eed88fe31ea284cc1ab" rel="noopener" target="_blank">LGA-NA</a>,
+        <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener" target="_blank">CC BY 4.0</a>, szerkesztve
+      </div>
+    </div>
   </footer>
 </section>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
+<script type="module">
 "use strict";
+
+import * as T from "three";
+import { GLTFLoader }        from "three/addons/loaders/GLTFLoader.js";
+import { RGBELoader }        from "three/addons/loaders/RGBELoader.js";
+import { MeshoptDecoder }    from "three/addons/libs/meshopt_decoder.module.js";
+import { EffectComposer }    from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass }        from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass }   from "three/addons/postprocessing/UnrealBloomPass.js";
+import { ShaderPass }        from "three/addons/postprocessing/ShaderPass.js";
+import { OutputPass }        from "three/addons/postprocessing/OutputPass.js";
 
 /* ============================================================================
    1) BEÁLLÍTÁSOK — EZEKET KELL KITÖLTENED
@@ -1664,7 +1733,6 @@ politikai:{
    kameramozgás van. A világítás és az árnyékot vető fény együtt mozog a kamerával.
    ========================================================================== */
 
-const T = window.THREE;
 const SET_TAV = 46;              /* két díszlet távolsága */
 
 /* --- anyagok és alapelemek --- */
@@ -2522,12 +2590,11 @@ const V = { rend:null, szinter:null, kamera:null, nap:null, vilagitas:null, kont
             posKezd:new T.Vector3(), celKezd:new T.Vector3(),
             posVeg:new T.Vector3(), celVeg:new T.Vector3(),
             mozgasT:1, mozgasHossz:KAMERA_IDO, ora:null, vizek:[], epult:null,
-            info:[], ambi:null, fenyCel:{ambi:0.72, nap:2.15, pont:11}, kodCel:new T.Color(0x0d1a15) };
+            info:[], ambi:null, aktiv:false, fenyCel:{ambi:0.72, nap:2.15, pont:11}, kodCel:new T.Color(0x0d1a15) };
 
 function vilagInit(){
   const c = document.getElementById("jatek-vaszon");
   V.rend = new T.WebGLRenderer({ canvas:c, antialias:true, powerPreference:"high-performance" });
-  V.rend.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
   V.rend.shadowMap.enabled = true;
   V.rend.shadowMap.type = T.PCFSoftShadowMap;
   if(T.ACESFilmicToneMapping !== undefined){ V.rend.toneMapping = T.ACESFilmicToneMapping; V.rend.toneMappingExposure = 0.94; }
@@ -2563,15 +2630,35 @@ function vilagInit(){
   meretez();
   renderelj();
 }
+/* Hány képpontot rajzoljunk. Nem a képpontarányt korlátozzuk, mert ugyanaz az
+   arány egy sűrű kijelzőn négyszer annyi képpontot jelent, a rajzolás költsége
+   pedig a képpontok számával nő — a keret ezért képpontban van megadva. */
+const JATEK_KERET = 3.2e6;
+function pixelArany(w, h, keret){
+  const dpr = window.devicePixelRatio || 1;
+  return Math.max(0.8, Math.min(dpr, Math.sqrt(keret / Math.max(1, w*h))));
+}
+
 function meretez(){
   if(!V.rend) return;
   const w = window.innerWidth, h = window.innerHeight;
+  V.rend.setPixelRatio(pixelArany(w, h, JATEK_KERET));
   V.rend.setSize(w,h,false);
   V.kamera.aspect = w/h; V.kamera.updateProjectionMatrix();
   if(HERO.rend){
     const hc = document.getElementById("hero-vaszon");
-    HERO.rend.setSize(hc.clientWidth, hc.clientHeight, false);
-    HERO.kamera.aspect = hc.clientWidth/Math.max(1,hc.clientHeight); HERO.kamera.updateProjectionMatrix();
+    const hw = hc.clientWidth, hh = Math.max(1, hc.clientHeight);
+    const arany = heroPixelArany(hw, hh);
+    HERO.rend.setPixelRatio(arany);
+    HERO.rend.setSize(hw, hh, false);
+    HERO.kamera.aspect = hw/hh; HERO.kamera.updateProjectionMatrix();
+    if(HERO.komp){
+      /* Az EffectComposer a képpontarányt a létrehozásakor jegyzi meg, és csak
+         a setPixelRatio frissíti. Enélkül az utómunka célpuffere elszakad a
+         renderelő felbontásától, és a képpontkeret nem ér semmit. */
+      HERO.komp.setSize(hw, hh);
+      HERO.komp.setPixelRatio(arany);
+    }
   }
 }
 
@@ -2646,6 +2733,8 @@ function renderelj(){
   requestAnimationFrame(renderelj);
   if(!V.rend) return;
   const dt = V.ora.getDelta(), t = V.ora.getElapsedTime();
+  /* a nyitóoldalon a játékvilág nem látszik, tehát nem is renderelünk rá */
+  if(!V.aktiv){ heroRender(t, dt); return; }
   if(V.mozgasT < 1){
     V.mozgasT = Math.min(1, V.mozgasT + dt*1000/V.mozgasHossz);
     const e = V.mozgasT<0.5 ? 4*Math.pow(V.mozgasT,3) : 1-Math.pow(-2*V.mozgasT+2,3)/2;
@@ -2668,41 +2757,732 @@ function renderelj(){
     V.szinter.background.lerp(V.kodCel, k);
   }
   V.rend.render(V.szinter, V.kamera);
-  heroRender(t);
 }
 
-/* --- nyitóképernyő háttere: egy előcsarnok, lassú kameramozgással --- */
-const HERO = { rend:null, szinter:null, kamera:null, aktiv:true };
-function heroInit(){
+/* ============================================================================
+   NYITÓKÉP — fotórealisztikus előcsarnok
+   ----------------------------------------------------------------------------
+   Nem stilizált díszlet, hanem valódi eszközökből épített tér:
+
+     · a fény egy fotografált HDRI környezetből jön (Poly Haven, CC0) — ez adja
+       az ablakon kilátszó teret és a felületek irányfüggő megvilágítását is;
+     · a padló és a fal valódi, beszkennelt PBR anyag (Poly Haven, CC0);
+     · a bútorok, növények, tárgyak fotogrammetriás modellek (Poly Haven, CC0);
+     · a két alak 3D-szkennelt ember (Objaverse / Sketchfab, CC-BY).
+
+   A pontos forráslista és a névattribúció: assets/LICENC.md.
+   ========================================================================== */
+
+const ESZKOZ = {
+  hdri:    "assets/hdri/dresden_square_768.hdr",
+  /* a padló csak színtérképet kap: az anyaga állandó fényességű, lásd heroTer() */
+  padlo:   { diff:"assets/felulet/padlo_diff.webp" },
+  fal:     { diff:"assets/felulet/fal_diff.webp",   nor:"assets/felulet/fal_nor.webp",   arm:"assets/felulet/fal_arm.webp" },
+  modell: {
+    emberek:  "assets/modell/emberek.glb",
+    vendeg:   "assets/modell/vendeg.glb",
+    fotel:    "assets/modell/modern_arm_chair_01.glb",
+    kanape:   "assets/modell/sofa_02.glb",
+    asztal:   "assets/modell/modern_coffee_table_01.glb",
+    palma:    "assets/modell/potted_plant_01.glb",
+    bokor:    "assets/modell/potted_plant_02.glb",
+    lampa:    "assets/modell/modern_ceiling_lamp_01.glb",
+    sakk:     "assets/modell/chess_set.glb",
+    vaza:     "assets/modell/ceramic_vase_01.glb",
+    ora:      "assets/modell/wall_clock.glb",
+    mellszobor:"assets/modell/marble_bust_01.glb",
+    konzol:   "assets/modell/ClassicConsole_01.glb"
+  }
+};
+
+/* A tér méretei méterben. Egy helyen vannak, mert a bútorok elhelyezése,
+   az árnyékkamera és a fénysugarak mind ugyanezekből számolnak. */
+const TER = {
+  balFal: -6.2, jobbFal: 6.8, hatFal: -16.0, elolFal: 4.6,
+  magas: 3.95,
+  ablakAlj: 0.0, ablakTeto: 3.62,          /* padlótól plafonig érő üvegezés */
+  ablakOszt: 2.85, ablakKeret: 0.16,       /* egy ablakszakasz és a pillér */
+  ablakFrom: -15.4, ablakDb: 6
+};
+
+const HERO = {
+  rend:null, szinter:null, kamera:null, komp:null, nap:null,
+  aktiv:true, lathato:true, kesz:false, mozog:true,
+  por:null, film:null, ora:null, minoseg:null, hatralek:0
+};
+/* A kamera olyan lassan sodródik, hogy 30 kép/mp-nél nem látszik különbség,
+   viszont a fele annyi képkocka fele annyi GPU-idő — és marad hely a lap
+   görgetésének. Ez szándékos korlát, nem a képkockák elvesztése. */
+const HERO_KEPKOCKA = 1/30;
+
+/* --- minőségi fokozat: egyszer dől el, és utána mindenre ez érvényes ------- */
+function heroMinoseg(){
+  const szeles = window.innerWidth;
+  const durva = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || szeles < 900;
+  const mag = navigator.hardwareConcurrency || 4;
+  /* `keret` a rajzolási képpontok felső határa. Ez a mérvadó, nem a
+     képpontarány: ugyanaz az arányszám egy Retina-kijelzőn négyszer annyi
+     képpontot jelent, és a jelenet költsége a képpontok számával nő.
+
+     Többmintás élsimítás (MSAA) nincs: méréssel kiderült, hogy integrált
+     GPU-n drágább, mint amennyit ér — MSAA nélkül 2,9 millió képpont
+     olcsóbb, mint kétmintás élsimítással 1,4 millió. Ugyanazért a GPU-időért
+     tehát több valódi képpontot kapunk, ami élesebb képet ad, mint a
+     kevesebb, de simított. */
+  if(durva || mag <= 4) return { nev:"alap",  keret:1.20e6, arnyek:1024, por:110, sugar:false };
+  if(mag <= 8)          return { nev:"kozep", keret:1.90e6, arnyek:2048, por:240, sugar:true  };
+  return                       { nev:"magas", keret:2.60e6, arnyek:2048, por:420, sugar:true  };
+}
+/* A képpontarány a keretből következik, a kijelző sűrűségére korlátozva. */
+function heroPixelArany(w, h){ return pixelArany(w, h, HERO.minoseg.keret); }
+
+/* --- textúrák -------------------------------------------------------------
+   A felületi térképeket előre, várakozva töltjük be. Ha bármelyik hiányzik,
+   a betöltés itt, néven nevezve hasal el — nem néma fehér falakkal.
+   -------------------------------------------------------------------------- */
+async function heroFeluletek(){
+  const betolto = new T.TextureLoader();
+  const utak = [...new Set([
+    ESZKOZ.padlo.diff,
+    ESZKOZ.fal.diff, ESZKOZ.fal.nor, ESZKOZ.fal.arm
+  ])];
+  const keszek = await Promise.all(utak.map(u =>
+    betolto.loadAsync(u).catch(() => { throw new Error("Nem tölthető be a felületi térkép: " + u); })
+  ));
+  const terkep = new Map();
+  utak.forEach((u,i) => terkep.set(u, keszek[i]));
+  return terkep;
+}
+/* Ugyanaz a kép több ismétléssel is kell (padló és fal), ezért a betöltött
+   textúrából példányt készítünk: a kép a GPU-n közös marad. */
+function heroTextura(felulet, url, szinTer, ismX, ismY){
+  const forras = felulet.get(url);
+  if(!forras) throw new Error("Nem betöltött felületi térkép: " + url);
+  const t = forras.clone();
+  t.colorSpace = szinTer;
+  t.wrapS = t.wrapT = T.RepeatWrapping;
+  t.repeat.set(ismX, ismY);
+  t.anisotropy = HERO.rend.capabilities.getMaxAnisotropy();
+  t.needsUpdate = true;
+  return t;
+}
+/* A padló, a falak és a mennyezet a kép nagy részét kitöltik, tehát minden
+   fölösleges textúraolvasásuk sok millió képpontra sokszorozódik. Takarási
+   térképet (aoMap) ezért nem kapnak: sík felületen úgysem látszana, a
+   plasztikát a domborzattérkép és a nap vetett árnyéka adja. */
+function heroAnyag(felulet, keszlet, ismX, ismY, extra){
+  return new T.MeshStandardMaterial(Object.assign({
+    map:          heroTextura(felulet, keszlet.diff, T.SRGBColorSpace,       ismX, ismY),
+    normalMap:    heroTextura(felulet, keszlet.nor,  T.LinearSRGBColorSpace, ismX, ismY),
+    roughnessMap: heroTextura(felulet, keszlet.arm,  T.LinearSRGBColorSpace, ismX, ismY),
+    metalness: 0
+  }, extra || {}));
+}
+
+/* --- a tér héja ----------------------------------------------------------- */
+function heroTer(felulet){
+  const g = new T.Group();
+  const szel = TER.jobbFal - TER.balFal, mely = TER.elolFal - TER.hatFal;
+  const kx = (TER.balFal + TER.jobbFal)/2, kz = (TER.hatFal + TER.elolFal)/2;
+
+  /* A padló a kép közel felét kitölti, súrló szögben nézve. Ott a domborzat- és
+     a durvaságtérkép alig látszik, viszont képpontonként két textúraolvasás —
+     ezért csak a színt tartjuk meg, a fényességet állandóval. */
+  const padloAnyag = new T.MeshStandardMaterial({
+    map: heroTextura(felulet, ESZKOZ.padlo.diff, T.SRGBColorSpace, szel/2.1, mely/2.1),
+    roughness: 0.24, metalness: 0, envMapIntensity: 0.95
+  });
+  const padlo = new T.Mesh((new T.PlaneGeometry(szel, mely)), padloAnyag);
+  padlo.rotation.x = -Math.PI/2; padlo.position.set(kx, 0, kz);
+  padlo.receiveShadow = true; g.add(padlo);
+
+  const falAnyag = heroAnyag(felulet, ESZKOZ.fal, 5, 1.6, { roughness:0.94, color:0xb9b3a7 });
+  /* A fal sötét vakolata plafonnak feketének látszana; a mennyezet világos
+     festett felület, csak a domborzatát vesszük át a falétól. */
+  const plafonAnyag = new T.MeshStandardMaterial({
+    color: 0xdcd6c9, roughness: 0.97, metalness: 0,
+    normalMap: heroTextura(felulet, ESZKOZ.fal.nor, T.LinearSRGBColorSpace, 5, 6),
+    normalScale: new T.Vector2(0.35, 0.35)
+  });
+
+  const fal = (w,h,x,y,z,ry)=>{
+    const m = new T.Mesh((new T.PlaneGeometry(w,h)), falAnyag);
+    m.position.set(x,y,z); m.rotation.y = ry; m.receiveShadow = true; m.castShadow = false;
+    return m;
+  };
+  g.add(fal(mely, TER.magas, TER.jobbFal, TER.magas/2, kz, -Math.PI/2));   /* jobb fal */
+  g.add(fal(szel, TER.magas, kx, TER.magas/2, TER.hatFal, 0));             /* hátfal   */
+
+  const plafon = new T.Mesh((new T.PlaneGeometry(szel, mely)), plafonAnyag);
+  plafon.rotation.x = Math.PI/2; plafon.position.set(kx, TER.magas, kz);
+  plafon.receiveShadow = true; g.add(plafon);
+
+  g.add(heroUvegfal(falAnyag));
+  g.add(heroSzegelyek(falAnyag));
+  return g;
+}
+
+/* A bal oldali üvegezés. A pillérek vetnek árnyékot, az üveg nem — ettől
+   rajzolódik ki a padlón az ablakok fénymintája. */
+function heroUvegfal(falAnyag){
+  const g = new T.Group();
+  const keretAnyag = new T.MeshStandardMaterial({ color:0x2a2c2b, roughness:0.42, metalness:0.72 });
+  /* Az üveg átlátszó és a kép közel felét lefedi, így minden mögötte lévő
+     képpontot még egyszer beárnyékol. Márpedig az üvegen a szórt fénynek
+     semmi szerepe: amit látunk rajta, az tükröződés. Ezért nem PBR-anyag,
+     hanem a lehető legolcsóbb: egyetlen környezettérkép-mintavétel,
+     fényszámítás, árnyéktérkép és IBL nélkül, és csak a befelé néző lapja. */
+  const uvegAnyag = new T.MeshBasicMaterial({
+    color:0x2c3a3e, envMap:HERO.szinter.environment, reflectivity:0.62,
+    combine:T.AddOperation, transparent:true, opacity:0.16,
+    side:T.FrontSide, depthWrite:false
+  });
+  const x = TER.balFal;
+  const teljes = TER.ablakDb * TER.ablakOszt;
+
+  /* mellvéd és szemöldök */
+  const savo = (h, y) => {
+    const m = new T.Mesh((new T.BoxGeometry(0.34, h, teljes)), falAnyag);
+    m.position.set(x - 0.17, y, TER.ablakFrom + teljes/2);
+    m.castShadow = true; m.receiveShadow = true; return m;
+  };
+  g.add(savo(TER.ablakAlj, TER.ablakAlj/2));
+  g.add(savo(TER.magas - TER.ablakTeto, (TER.magas + TER.ablakTeto)/2));
+
+  for(let i=0;i<=TER.ablakDb;i++){
+    const z = TER.ablakFrom + i*TER.ablakOszt;
+    const p = new T.Mesh(new T.BoxGeometry(0.46, TER.ablakTeto - TER.ablakAlj, TER.ablakKeret), keretAnyag);
+    p.position.set(x - 0.10, (TER.ablakAlj + TER.ablakTeto)/2, z);
+    p.castShadow = true; p.receiveShadow = true; g.add(p);
+  }
+  for(let i=0;i<TER.ablakDb;i++){
+    const z = TER.ablakFrom + (i + 0.5)*TER.ablakOszt;
+    const u = new T.Mesh(new T.PlaneGeometry(TER.ablakOszt - TER.ablakKeret, TER.ablakTeto - TER.ablakAlj), uvegAnyag);
+    u.rotation.y = -Math.PI/2;      /* befelé fordul, hogy a FrontSide látszódjon */
+    u.position.set(x - 0.02, (TER.ablakAlj + TER.ablakTeto)/2, z);
+    u.castShadow = false; u.receiveShadow = false; g.add(u);
+    /* vízszintes osztóborda: rajta megtörik a fény, ettől lesz hihető az üveg */
+    const b = new T.Mesh(new T.BoxGeometry(0.40, 0.09, TER.ablakOszt - TER.ablakKeret), keretAnyag);
+    b.position.set(x - 0.10, TER.ablakAlj + (TER.ablakTeto - TER.ablakAlj)*0.62, z);
+    b.castShadow = true; g.add(b);
+  }
+  return g;
+}
+
+/* lábazat és párkány: enélkül a falak papírvékonynak látszanak */
+function heroSzegelyek(falAnyag){
+  const g = new T.Group();
+  const kAnyag = new T.MeshStandardMaterial({ color:0xd6d1c6, roughness:0.72, metalness:0 });
+  const mely = TER.elolFal - TER.hatFal, szel = TER.jobbFal - TER.balFal;
+  const kz = (TER.hatFal + TER.elolFal)/2, kx = (TER.balFal + TER.jobbFal)/2;
+  const el = (w,h,d,x,y,z)=>{
+    const m = new T.Mesh(new T.BoxGeometry(w,h,d), kAnyag);
+    m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; return m;
+  };
+  g.add(el(0.13, 0.20, mely, TER.jobbFal - 0.065, 0.10, kz));
+  g.add(el(szel, 0.20, 0.13, kx, 0.10, TER.hatFal + 0.065));
+  g.add(el(0.15, 0.14, mely, TER.jobbFal - 0.075, TER.magas - 0.07, kz));
+  g.add(el(szel, 0.14, 0.15, kx, TER.magas - 0.07, TER.hatFal + 0.075));
+  return g;
+}
+
+/* --- fény ----------------------------------------------------------------- */
+function heroFenyek(){
+  const g = new T.Group();
+  /* a nap: alacsonyan, a bal oldali üvegezésen át, hosszú vetett fényfoltokkal */
+  const nap = new T.DirectionalLight(0xffe6bd, 10.0);
+  nap.position.set(-15.5, 14.5, 6.5);
+  nap.target.position.set(2.2, 0.4, -6.5);
+  nap.castShadow = true;
+  nap.shadow.mapSize.set(HERO.minoseg.arnyek, HERO.minoseg.arnyek);
+  nap.shadow.camera.left = -14; nap.shadow.camera.right = 14;
+  nap.shadow.camera.top = 12;   nap.shadow.camera.bottom = -12;
+  nap.shadow.camera.near = 4;   nap.shadow.camera.far = 46;
+  nap.shadow.bias = -0.0006;
+  nap.shadow.normalBias = 0.028;
+  g.add(nap, nap.target);
+  HERO.nap = nap;
+
+  /* a padlóról visszaverődő fény: csak a lefelé néző felületeket éri,
+     ettől nem lesz koromfekete a mennyezet */
+  g.add(new T.HemisphereLight(0x000000, 0xe3d2b6, 0.55));
+
+  /* a belső tér saját, meleg világítása — a mennyezeti lámpasor fénye */
+  /* Két pontfény a lámpasorra. Minden további fény minden képpont árnyékolását
+     drágítja, a látványhoz pedig alig tesz hozzá — a búrák maguk világítanak. */
+  const belso = new T.PointLight(0xffd6a2, 13, 20, 2);
+  belso.position.set(2.2, 3.15, -7.2);
+  g.add(belso);
+  return g;
+}
+
+/* --- fénysugarak az ablakokból -------------------------------------------- */
+const SUGAR_VERT = `
+  varying vec3 vLocal;
+  void main(){
+    vLocal = position;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }`;
+const SUGAR_FRAG = `
+  uniform vec3  szin;
+  uniform float ero;
+  uniform float hossz;
+  uniform vec2  keresztmetszet;
+  varying vec3 vLocal;
+  void main(){
+    /* a nyaláb a lokális -Z mentén fut, a 0 az ablak síkja */
+    float t = clamp(-vLocal.z / hossz, 0.0, 1.0);
+    float halvanyul = pow(1.0 - t, 1.7);
+    /* a széleken lágyan elfogy */
+    vec2 p = abs(vLocal.xy) / keresztmetszet;
+    float perem = (1.0 - smoothstep(0.55, 1.0, p.x)) * (1.0 - smoothstep(0.35, 1.0, p.y));
+    gl_FragColor = vec4(szin, halvanyul * perem * ero);
+  }`;
+
+function heroSugarak(){
+  const csoport = new T.Group();
+  if(!HERO.minoseg.sugar) return csoport;
+  const irany = new T.Vector3().subVectors(HERO.nap.target.position, HERO.nap.position).normalize();
+  const hossz = 9;
+  const szeles = TER.ablakOszt - TER.ablakKeret;
+  const magas  = TER.ablakTeto - TER.ablakAlj;
+  for(let i=0;i<TER.ablakDb;i++){
+    const z = TER.ablakFrom + (i + 0.5)*TER.ablakOszt;
+    if(z > -5.0) continue;                 /* a kamerához közeli nyalábok csak ködösítenék a képet */
+    const geo = new T.BoxGeometry(szeles*1.05, magas*1.02, hossz);
+    geo.translate(0, 0, -hossz/2);
+    const nyalab = new T.ShaderMaterial({
+      vertexShader: SUGAR_VERT, fragmentShader: SUGAR_FRAG,
+      uniforms: {
+        szin: { value: new T.Color(0xffd9a0) },
+        ero:  { value: 0.028 },
+        hossz:{ value: hossz },
+        keresztmetszet: { value: new T.Vector2(szeles*0.525, magas*0.51) }
+      },
+      transparent:true, depthWrite:false, blending:T.AdditiveBlending, side:T.BackSide
+    });
+    const m = new T.Mesh(geo, nyalab);
+    m.position.set(TER.balFal, (TER.ablakAlj + TER.ablakTeto)/2, z);
+    m.lookAt(m.position.clone().add(irany));
+    m.renderOrder = 3;
+    csoport.add(m);
+  }
+  return csoport;
+}
+
+/* --- porszemek a fényben --------------------------------------------------- */
+function heroPor(){
+  const db = HERO.minoseg.por;
+  const poz = new Float32Array(db*3), seb = new Float32Array(db);
+  for(let i=0;i<db;i++){
+    poz[i*3]   = TER.balFal + Math.random()*16;
+    poz[i*3+1] = 0.4 + Math.random()*(TER.magas - 0.9);
+    poz[i*3+2] = TER.ablakFrom + Math.random()*(TER.ablakDb*TER.ablakOszt + 12);
+    seb[i]     = 0.02 + Math.random()*0.05;
+  }
+  const geo = new T.BufferGeometry();
+  geo.setAttribute("position", new T.BufferAttribute(poz, 3));
+
+  const c = document.createElement("canvas"); c.width = c.height = 64;
+  const cx = c.getContext("2d");
+  const gr = cx.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,   "rgba(255,244,224,1)");
+  gr.addColorStop(0.35,"rgba(255,240,214,0.42)");
+  gr.addColorStop(1,   "rgba(255,238,210,0)");
+  cx.fillStyle = gr; cx.fillRect(0,0,64,64);
+  const sprite = new T.CanvasTexture(c);
+  sprite.colorSpace = T.SRGBColorSpace;
+
+  const pontok = new T.Points(geo, new T.PointsMaterial({
+    size:0.035, map:sprite, transparent:true, depthWrite:false,
+    blending:T.AdditiveBlending, opacity:0.85, sizeAttenuation:true
+  }));
+  pontok.renderOrder = 4;
+  pontok.userData.seb = seb;
+  HERO.por = pontok;
+  return pontok;
+}
+
+/* --- betöltött modellek elhelyezése ---------------------------------------- */
+/* A betöltött modellek anyagait itt hozzuk közös nevezőre. A legfontosabb, amit
+   itt kikapcsolunk, az átvilágítás (`transmission`): ha a jelenetben akár egyetlen
+   anyagnak van ilyenje, a three minden képkockán MÉG EGYSZER lerajzolja az egész
+   jelenetet egy külön pufferbe, hogy legyen mit átengedni az üvegen. A faliórába
+   épített óraüveg így egymaga megduplázta a nyitókép rajzolási költségét. Ekkora
+   képméretnél a sima átlátszóság megkülönböztethetetlen tőle. */
+function heroArnyekol(o){
+  o.traverse(x=>{
+    if(!x.isMesh) return;
+    x.castShadow = true; x.receiveShadow = true;
+    const anyagok = Array.isArray(x.material) ? x.material : [x.material];
+    anyagok.forEach(m=>{
+      if(!m) return;
+      m.envMapIntensity = 1.0;
+      if(m.transmission > 0){
+        m.transmission = 0;
+        m.transparent = true;
+        m.opacity = Math.min(m.opacity ?? 1, 0.34);
+        m.needsUpdate = true;
+      }
+    });
+  });
+  return o;
+}
+/* A betöltött csomópont saját transzformációját sosem írjuk felül: a meshopt
+   tömörítés abban tárolja a geometria eltolását és léptékét, így ha
+   ráállítunk egy pozíciót, a modell elcsúszik (pl. félig a padló alá kerül).
+   Ezért minden elhelyezés külön keretcsoportba történik. */
+function heroElhelyez(objektum, x, y, z, ry, meret){
+  const keret = new T.Group();
+  keret.position.set(x, y, z);
+  if(ry)    keret.rotation.y = ry;
+  if(meret) keret.scale.setScalar(meret);
+  keret.add(heroArnyekol(objektum));
+  return keret;
+}
+function heroRak(gltf, x, z, ry, meret){
+  return heroElhelyez(gltf.scene.clone(true), x, 0, z, ry, meret);
+}
+
+function heroButor(m){
+  const g = new T.Group();
+
+  /* ülőgarnitúra a kép jobb oldalán, közel — ez adja a kép első síkját */
+  g.add(heroRak(m.kanape,  2.60, -9.40, -Math.PI/2 - 0.05));
+  g.add(heroRak(m.fotel,   1.75, -6.55,  Math.PI*0.42));
+  g.add(heroRak(m.fotel,   2.05, -3.05,  Math.PI*0.80));
+  g.add(heroRak(m.asztal,  3.15, -4.85,  0.05));
+
+  /* a sakk-készlet a dohányzóasztalon: a döntés motívuma, kézzelfoghatóan */
+  g.add(heroElhelyez(m.sakk.scene.clone(true), 3.15, 0.39, -4.85, 0.42));
+  g.add(heroElhelyez(m.vaza.scene.clone(true), 3.72, 0.39, -3.95, 0));
+
+  /* növények: az egyik az ablaknál, a másik a jobb fal tövében */
+  g.add(heroRak(m.palma, -4.55, -12.10,  0.7));
+  g.add(heroRak(m.palma,  5.55,  -9.60, -0.5));
+  g.add(heroRak(m.bokor, -4.75,  -2.70,  1.9));
+
+  /* konzolasztal mellszoborral a jobb fal előtt */
+  g.add(heroRak(m.konzol, 0.85, -15.55, 0));
+  g.add(heroElhelyez(m.mellszobor.scene.clone(true), 0.85, 0.93, -15.55, 0.22));
+
+  /* falióra a hátfalon */
+  g.add(heroElhelyez(m.ora.scene.clone(true), 0.85, 2.55, TER.hatFal + 0.13, 0));
+
+  /* mennyezeti lámpasor: a búra maga is világít, alatta kis fényforrás */
+  for(let i=0;i<4;i++){
+    const z = -2.4 - i*3.4;
+    const l = heroElhelyez(m.lampa.scene.clone(true), 1.6, TER.magas - 0.02, z, 0);
+    l.traverse(x=>{ if(x.isMesh) x.castShadow = false; });
+    g.add(l);
+    /* a búra maga világít; a tényleges fényforrás a heroFenyek() két pontfénye */
+    l.traverse(x=>{
+      if(x.isMesh && x.material && x.material.emissive){
+        x.material.emissive = new T.Color(0xffd7a4);
+        x.material.emissiveIntensity = 1.6;
+      }
+    });
+  }
+  return g;
+}
+
+/* A szkennelt alakok alapállásban +Z felé néznek, kivéve a vendéget, aki
+   −X felé — ezért kap fél fordulatnyi eltolást. */
+function heroEmberek(modellek){
+  const g = new T.Group();
+  const forras = {};
+  modellek.emberek.scene.children.forEach(n=>{ forras[n.name] = n; });
+  modellek.vendeg.scene.children.forEach(n=>{ forras[n.name] = n; });
+
+  const tesz = (nev, x, z, ry)=>{
+    const n = forras[nev];
+    if(!n) throw new Error("Hiányzó alak a modellben: " + nev);
+    g.add(heroElhelyez(n.clone(true), x, 0, z, ry));
+  };
+  /* ketten állnak beszélgetve, félig egymás felé fordulva, a fényben */
+  tesz("ferfi_sotetkek", -2.55, -4.35,  1.20);
+  tesz("ferfi_fekete",   -1.35, -5.15, -1.90);
+  /* és egy várakozó vendég hátrébb, aki felnéz a térbe */
+  tesz("vendeg",          0.98,  -9.73, 0.46 + Math.PI/2);
+  return g;
+}
+
+/* --- utómunka: az, ami fényképpé teszi a renderképet ----------------------- */
+const FILM_SHADER = {
+  uniforms: {
+    tDiffuse:  { value:null },
+    ido:       { value:0 },
+    vignetta:  { value:1.02 },
+    szemcse:   { value:0.012 },
+    aberracio: { value:0.0016 }
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform float ido, vignetta, szemcse, aberracio;
+    varying vec2 vUv;
+    float zaj(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
+    void main(){
+      vec2 k = vUv - 0.5;
+      float r2 = dot(k,k);
+      /* objektív-színbontás: a kép széle felé nő */
+      vec2 el = k * aberracio * r2 * 4.0;
+      vec4 sz;
+      sz.r = texture2D(tDiffuse, vUv + el).r;
+      sz.g = texture2D(tDiffuse, vUv).g;
+      sz.b = texture2D(tDiffuse, vUv - el).b;
+      sz.a = 1.0;
+      /* vignetta */
+      sz.rgb *= 1.0 - vignetta * r2 * 0.86;
+      /* filmszemcse: fényerőfüggő, sötétben erősebb */
+      float lum = dot(sz.rgb, vec3(0.2126,0.7152,0.0722));
+      float g = zaj(vUv * vec2(1024.0, 640.0) + ido) - 0.5;
+      sz.rgb += g * szemcse * (1.0 - lum*0.55);
+      gl_FragColor = sz;
+    }`
+};
+
+/* A képsor szándékosan rövid. A takarási árnyalás (GTAO) és a mélységélesség
+   is újrarajzoltatja az egész jelenetet a saját mélységképéhez — kettő közülük
+   megháromszorozta a képkockánkénti geometriát, és egy integrált GPU-n ez
+   önmagában 8 kép/mp-re vitte le a nyitóképet. A fényrajz nagy részét úgyis a
+   nap veti árnyékai adják, azok pedig ingyen vannak: egyszer rajzolódnak meg.
+   Az élsimítás sokszoros felbontás helyett többmintás célpufferrel készül. */
+function heroKompozit(){
+  const cel = new T.WebGLRenderTarget(1, 1, {
+    type: T.HalfFloatType,
+    colorSpace: T.LinearSRGBColorSpace
+  });
+  const komp = new EffectComposer(HERO.rend, cel);
+  komp.addPass(new RenderPass(HERO.szinter, HERO.kamera));
+  /* A ragyogás lágy folt: fél felbontáson ugyanúgy néz ki, negyedannyiba kerül. */
+  const virag = new UnrealBloomPass(new T.Vector2(1,1), 0.26, 0.58, 1.05);
+  const viragMeret = virag.setSize.bind(virag);
+  virag.setSize = (w,h) => viragMeret(Math.round(w/2), Math.round(h/2));
+  komp.addPass(virag);
+  const film = new ShaderPass(FILM_SHADER);
+  komp.addPass(film);
+  HERO.film = film;
+  komp.addPass(new OutputPass());
+  return komp;
+}
+
+/* --- összerakás ------------------------------------------------------------ */
+async function heroInit(){
   const c = document.getElementById("hero-vaszon");
   if(!c) return;
-  HERO.rend = new T.WebGLRenderer({ canvas:c, antialias:true, alpha:false });
-  HERO.rend.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.7));
-  if("outputColorSpace" in HERO.rend) HERO.rend.outputColorSpace = T.SRGBColorSpace;
+  HERO.minoseg = heroMinoseg();
+  HERO.mozog = !keveseb();
+
+  HERO.rend = new T.WebGLRenderer({ canvas:c, antialias:false, alpha:false, powerPreference:"high-performance" });
+  HERO.rend.outputColorSpace = T.SRGBColorSpace;
+  HERO.rend.toneMapping = T.AgXToneMapping;
+  HERO.rend.toneMappingExposure = 0.68;
+  HERO.rend.shadowMap.enabled = true;
+  HERO.rend.shadowMap.type = T.PCFSoftShadowMap;
+  /* a nap és a berendezés áll, csak a kamera mozog: az árnyéktérképet elég
+     egyszer megrajzolni, nem képkockánként */
+  HERO.rend.shadowMap.autoUpdate = false;
+
   HERO.szinter = new T.Scene();
-  HERO.szinter.background = new T.Color(0x0b1712);
-  HERO.szinter.fog = new T.Fog(0x0b1712, 12, 40);
-  HERO.kamera = new T.PerspectiveCamera(40, 16/9, 0.1, 120);
-  HERO.szinter.add(new T.HemisphereLight(0xcfe0ee, 0x2a3a30, 0.8));
-  const n = new T.DirectionalLight(0xffeccd, 1.5); n.position.set(-8,14,10); HERO.szinter.add(n);
-  const g = new T.Group();
-  g.add(belsoTer({w:22,d:20,h:8.5, padlo:0x3f4a44, fal:0x9fa8a0, ablak:"magas", ablakSzin:0xbcd2d8, ablakEro:1.0, mennyezetiFeny:false}));
-  for(let i=0;i<4;i++) g.add(P.oszlop(-6.6+i*4.4,-4.0,8.5));
-  g.add(doboz(20,0.35,4.2, anyag(0x6e7871,0.85), 0,4.3,-6.0));
-  g.add(doboz(0.12,1.1,4.2, anyag(0x50594f,0.8), -3.0,3.6,-6.0));
-  g.add(ember({x:-1.4,z:-5.4,ry:1.3,ruha:"uzletSotet",bor:0,haj:0,tukor:0}));
-  g.add(ember({x:0.5,z:-5.4,ry:-1.3,ruha:"uzletNoi",bor:3,haj:3,kar:"mutat"}));
-  g.add(P.noveny(7.4,-1.0), P.noveny(-7.8,0.4));
-  HERO.szinter.add(g);
-  HERO.kamera.position.set(5.2,2.6,7.4);
+  HERO.kamera = new T.PerspectiveCamera(34, 16/9, 0.1, 220);
+  HERO.ora = new T.Clock();
+
+  /* a meshopt-kicsomagolás külön szálon fut, különben megakasztja a főszálat,
+     és a nyitóoldal betöltésjelzője láthatóan megdermed */
+  MeshoptDecoder.useWorkers(2);
+  const gltf = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+
+  /* ---- első ütem: a tér ---------------------------------------------------
+     A környezetfény és a felületek nélkül nincs mit mutatni — ezek nélkül a
+     kép sötét doboz volna. Ez a legkisebb csomag, amiből már valódi helyiség
+     lesz, ezért ezt várjuk meg, és már mutatjuk is. A berendezés utána jön. */
+  const [hdr, felulet] = await Promise.all([
+    new RGBELoader().loadAsync(ESZKOZ.hdri)
+      .catch(()=> { throw new Error("Nem tölthető be a környezetfény: " + ESZKOZ.hdri); }),
+    heroFeluletek()
+  ]);
+
+  /* a HDRI adja a környezetfényt és az ablakon kilátszó valódi teret is */
+  const pmrem = new T.PMREMGenerator(HERO.rend);
+  pmrem.compileEquirectangularShader();
+  HERO.szinter.environment = pmrem.fromEquirectangular(hdr).texture;
+  hdr.mapping = T.EquirectangularReflectionMapping;
+  HERO.szinter.background = hdr;
+  HERO.szinter.backgroundIntensity = 1.18;      /* a külső tér túlvilágít, mint a valóságban */
+  HERO.szinter.environmentIntensity = 0.30;
+  HERO.szinter.backgroundRotation  = new T.Euler(0, 1.62, 0);
+  HERO.szinter.environmentRotation = new T.Euler(0, 1.62, 0);
+  pmrem.dispose();
+
+  HERO.szinter.add(heroFenyek());
+  HERO.szinter.add(heroTer(felulet));
+  HERO.szinter.add(heroSugarak());
+  HERO.szinter.add(heroPor());
+
+  HERO.kamera.position.copy(HERO_KAMERA.fekvo.poz);
+  HERO.komp = heroKompozit();
+  /* a shaderfordítás így a háttérben fut le, nem egyetlen hosszú akadásban */
+  await HERO.rend.compileAsync(HERO.szinter, HERO.kamera);
+  HERO.rend.shadowMap.needsUpdate = true;
+  heroLathatosag(c);
+  HERO.kesz = true;
   meretez();
+  c.classList.add("lat");
+
+  /* ---- második ütem: a berendezés és az alakok ----------------------------
+     Ezek töltése csak most indul, hogy a sávszélességért ne versenyezzenek az
+     első ütemmel. A letöltés párhuzamos, a feldolgozás viszont egyesével,
+     képkockánként: egy modell értelmezése tizedmásodperces nagyságrendű
+     főszálas munka, tizenkettőé egyben már látható akadás a lapon. */
+  const nevek = Object.keys(ESZKOZ.modell);
+  const pufferek = await Promise.all(nevek.map(n =>
+    fetch(ESZKOZ.modell[n]).then(v => {
+      if(!v.ok) throw new Error("Nem tölthető be a modell: " + ESZKOZ.modell[n]);
+      return v.arrayBuffer();
+    })
+  ));
+  const modellek = {};
+  for(let i = 0; i < nevek.length; i++){
+    modellek[nevek[i]] = await gltf.parseAsync(pufferek[i], "");
+    await new Promise(r => requestAnimationFrame(r));
+  }
+
+  const berendezes = new T.Group();
+  berendezes.add(heroButor(modellek));
+  berendezes.add(heroEmberek(modellek));
+  /* Az átlátszóvá tétel a fordítás ELŐTT történik, különben a beúszás első
+     képkockáján kellene új shadervátozatokat fordítani — épp ott akadna meg. */
+  const beuszo = heroAtlatszova(berendezes);
+  HERO.szinter.add(berendezes);
+  await heroFelkeszit(berendezes);
+  HERO.rend.shadowMap.needsUpdate = true;   /* az új tárgyaknak is legyen árnyéka */
+  heroBeuszik(beuszo, 700);
 }
-function heroRender(t){
-  if(!HERO.rend || !HERO.aktiv) return;
-  HERO.kamera.position.x = 5.2 + Math.sin(t*0.11)*1.5;
-  HERO.kamera.position.y = 2.6 + Math.sin(t*0.08)*0.35;
-  HERO.kamera.lookAt(-0.4, 2.1, -5.2);
-  HERO.rend.render(HERO.szinter, HERO.kamera);
+
+/* A shaderfordítás és a textúrafeltöltés is főszálas munka: egyben közel
+   másodperces akadás, amit a lap görgetése is megérez. Ezért tárgyanként
+   végezzük, és amint egy képkockányi időt elhasználtunk, átengedjük a szót.
+   A nyitókép ilyenkor már látszik, tehát ez senkit nem várakoztat. */
+async function heroFelkeszit(csoport){
+  const KEPKOCKA_MS = 8;
+  const darabok = [];
+  csoport.traverse(o => { if(o.isMesh) darabok.push(o); });
+  let kezdet = performance.now();
+  for(const o of darabok){
+    await HERO.rend.compileAsync(o, HERO.kamera, HERO.szinter);
+    (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+      if(!m) return;
+      for(const kulcs of ["map","normalMap","roughnessMap","metalnessMap","aoMap","emissiveMap"]){
+        if(m[kulcs]) HERO.rend.initTexture(m[kulcs]);
+      }
+    });
+    if(performance.now() - kezdet > KEPKOCKA_MS){
+      await new Promise(r => requestAnimationFrame(r));
+      kezdet = performance.now();
+    }
+  }
+}
+
+/* Beúsztatás két lépésben. Az eredetileg is átlátszó anyagok (üveg,
+   levélkivágások) megtartják a saját átlátszóságukat — a beúszás csak
+   felskálázza őket, így a végén minden pontosan olyan, mintha végig ott
+   lett volna. */
+function heroAtlatszova(csoport){
+  const anyagok = [];
+  csoport.traverse(o=>{
+    if(!o.isMesh) return;
+    (Array.isArray(o.material) ? o.material : [o.material]).forEach(m=>{
+      if(!m || anyagok.some(a=>a.m === m)) return;
+      anyagok.push({ m, atlatszo: m.transparent, ero: m.opacity });
+      m.transparent = true;
+      m.opacity = 0;
+    });
+  });
+  return anyagok;
+}
+function heroBeuszik(anyagok, ido){
+  const kezd = performance.now();
+  (function lep(){
+    const q = Math.min(1, (performance.now() - kezd) / ido);
+    const e = 1 - Math.pow(1 - q, 3);
+    anyagok.forEach(a => { a.m.opacity = a.ero * e; });
+    if(q < 1){ requestAnimationFrame(lep); return; }
+    /* Az eredetileg átlátszatlan anyagokat visszaállítjuk: átlátszóként a
+       rajzoló nem tudja őket előre kizárni a mélységi teszttel. */
+    anyagok.forEach(a => { a.m.opacity = a.ero; a.m.transparent = a.atlatszo; });
+  })();
+}
+
+/* A nyitóoldal hosszú: szerepkörválasztás, űrlap, lábléc. Amíg ezeken görget
+   valaki, a nyitókép már rég kilóg a képernyőről, de rajzolni ugyanannyiba
+   kerül. Ezért ha nem látszik, meg sem rajzoljuk. */
+function heroLathatosag(vaszon){
+  if(!("IntersectionObserver" in window)){ HERO.lathato = true; return; }
+  new IntersectionObserver(be => {
+    HERO.lathato = be[0].isIntersecting;
+  }, { threshold: 0 }).observe(vaszon);
+}
+
+/* --- kamera ---------------------------------------------------------------
+   A kompozíciót fekvő, 16:9-es képre terveztük. Álló képernyőn ugyanez a
+   beállítás kettévágná a jelenetet, ezért a kamera három adata — látószög,
+   állás és nézőpont — a képaránytól függ. Egy szabály, nem két kompozíció.
+   -------------------------------------------------------------------------- */
+const HERO_KAMERA = {
+  fekvo:   { fov:34, poz:new T.Vector3( 4.20, 1.48,  2.60), cel:new T.Vector3(-1.15, 1.34, -5.20) },
+  keskeny: { fov:48, poz:new T.Vector3( 2.55, 1.66, -1.05), cel:new T.Vector3(-2.60, 0.62, -4.40) }
+};
+const heroKeskenyseg = aspect => korlat((1.40 - aspect) / 0.90, 0, 1);
+function heroKameraAllas(aspect, poz, cel){
+  const k = heroKeskenyseg(aspect);
+  const F = HERO_KAMERA.fekvo, K = HERO_KAMERA.keskeny;
+  poz.lerpVectors(F.poz, K.poz, k);
+  cel.lerpVectors(F.cel, K.cel, k);
+  return F.fov + (K.fov - F.fov)*k;
+}
+
+/* --- kameramozgás és képkocka --------------------------------------------- */
+const HERO_POZ = new T.Vector3(), HERO_CEL = new T.Vector3();
+function heroRender(t, dt){
+  if(!HERO.kesz || !HERO.aktiv || !HERO.lathato) return;
+  HERO.hatralek += dt;
+  if(HERO.hatralek < HERO_KEPKOCKA) return;
+  dt = HERO.hatralek;
+  HERO.hatralek = 0;
+  const fov = heroKameraAllas(HERO.kamera.aspect, HERO_POZ, HERO_CEL);
+  if(HERO.kamera.fov !== fov){ HERO.kamera.fov = fov; HERO.kamera.updateProjectionMatrix(); }
+  if(HERO.mozog){
+    /* lassú beúszás előre, alig érzékelhető oldalirányú sodródással:
+       ettől lesz kézben tartott kamera érzete, nem körhinta */
+    const be = 1 - Math.exp(-t*0.10);
+    HERO.kamera.position.set(
+      HERO_POZ.x - be*0.55 + Math.sin(t*0.19)*0.055,
+      HERO_POZ.y + be*0.05 + Math.sin(t*0.27)*0.016,
+      HERO_POZ.z - be*1.10 + Math.cos(t*0.16)*0.038
+    );
+    HERO.kamera.lookAt(
+      HERO_CEL.x + Math.sin(t*0.13)*0.10,
+      HERO_CEL.y + Math.sin(t*0.21)*0.035,
+      HERO_CEL.z
+    );
+    if(HERO.por){
+      const p = HERO.por.geometry.attributes.position, s = HERO.por.userData.seb;
+      for(let i=0;i<s.length;i++){
+        p.array[i*3+1] += s[i]*dt*0.42;
+        p.array[i*3]   += Math.sin(t*0.4 + i)*dt*0.05;
+        if(p.array[i*3+1] > TER.magas - 0.3) p.array[i*3+1] = 0.4;
+      }
+      p.needsUpdate = true;
+    }
+    HERO.film.uniforms.ido.value = t;
+  } else {
+    HERO.kamera.position.set(HERO_POZ.x - 0.35, HERO_POZ.y + 0.03, HERO_POZ.z - 0.70);
+    HERO.kamera.lookAt(HERO_CEL);
+  }
+  HERO.komp.render(dt);
 }
 
 /* ============================================================================
@@ -2764,6 +3544,7 @@ function pontFrissit(valtozott){
 function nezet(melyik){
   ["view-start","view-game","view-end"].forEach(id=> $(id).classList.toggle("rejt", id !== melyik));
   HERO.aktiv = (melyik === "view-start");
+  V.aktiv    = (melyik !== "view-start");
   document.body.style.overflow = (melyik === "view-game") ? "hidden" : "";
   if(melyik !== "view-game") window.scrollTo({top:0, behavior:"instant" in window ? "instant" : "auto"});
 }
@@ -3271,7 +4052,8 @@ document.addEventListener("DOMContentLoaded", function(){
     if(m && STORIK[m]) modValaszt(m);
   }catch(e){}
 
-  if(typeof T !== "undefined"){ heroInit(); vilagInit(); }
+  vilagInit();
+  heroInit().catch(h => console.error("A nyitókép nem tudott betölteni:", h));
   emailjsInit();
   setTimeout(()=> $("betolto").classList.add("tunik"), 500);
 
