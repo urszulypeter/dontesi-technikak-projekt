@@ -46,6 +46,25 @@ export async function tablat(db){
       nev  text      NOT NULL CHECK (char_length(nev) BETWEEN 1 AND 40),
       nap  date      NOT NULL DEFAULT current_date
     )`;
+  /* A ToC output-indikátoraihoz. Egyetlen táblában, mert a három esemény
+     ugyanazt a néhány mezőt használja, és külön táblákban ugyanezt kellene
+     háromszor leírni. A pontszám és a dimenziók csak a befejezésnél vannak
+     kitöltve — a másik két eseménynél nincs mit beírni.
+
+     Névtelen: itt sem név, sem e-mail, sem IP nincs. */
+  await db`
+    CREATE TABLE IF NOT EXISTS esemeny (
+      id             bigserial   PRIMARY KEY,
+      tipus          text        NOT NULL CHECK (tipus IN ('inditas','befejezes','ertekeles_kuldve')),
+      palya          text        NOT NULL,
+      pont           smallint    CHECK (pont BETWEEN 0 AND 100),
+      kovetkezetesseg smallint   CHECK (kovetkezetesseg BETWEEN 0 AND 100),
+      atlathatosag   smallint    CHECK (atlathatosag   BETWEEN 0 AND 100),
+      minoseg        smallint    CHECK (minoseg        BETWEEN 0 AND 100),
+      felelosseg     smallint    CHECK (felelosseg     BETWEEN 0 AND 100),
+      bevonas        smallint    CHECK (bevonas        BETWEEN 0 AND 100),
+      letrehozva     timestamptz NOT NULL DEFAULT now()
+    )`;
   tablaKesz = true;
 }
 

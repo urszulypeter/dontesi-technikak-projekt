@@ -11,7 +11,7 @@ export default async function handler(req, res){
     const db = adatbazis();
     await tablat(db);
 
-    const [ossz, ertekelesek, k1, k2, palyak, napok, resztvevok] = await Promise.all([
+    const [ossz, ertekelesek, k1, k2, palyak, napok, resztvevok, esemenyek, dimenziok] = await Promise.all([
       /* A Postgres az idézőjel nélküli aliast kisbetűsíti, ezért itt minden
          név kisbetűs és aláhúzásos — így a JS-oldal is azt látja, ami van. */
       db`SELECT count(*)::int                     AS db,
@@ -47,8 +47,26 @@ export default async function handler(req, res){
            FROM resztvevo
           GROUP BY nev
           ORDER BY lower(nev)
-          LIMIT 1000`
+          LIMIT 1000`,
+
+      /* ToC output-indikátorok: ebből jön a részvételi és befejezési arány */
+      db`SELECT tipus, count(*)::int AS db FROM esemeny GROUP BY tipus`,
+
+      /* Az öt bizalmi dimenzió átlaga a végigjátszók körében. Ez a ToC
+         outcome-oldalának egyetlen belülről mérhető indikátora: az
+         átláthatóság és a bevonás megítélése. */
+      db`SELECT coalesce(avg(kovetkezetesseg),0)::float AS kovetkezetesseg,
+                coalesce(avg(atlathatosag),0)::float    AS atlathatosag,
+                coalesce(avg(minoseg),0)::float         AS minoseg,
+                coalesce(avg(felelosseg),0)::float      AS felelosseg,
+                coalesce(avg(bevonas),0)::float         AS bevonas,
+                count(*)::int                           AS db
+           FROM esemeny WHERE tipus = 'befejezes'`
     ]);
+
+    const esemenySzam = t => (esemenyek.find(e => e.tipus === t) || { db:0 }).db;
+    const inditasok   = esemenySzam("inditas");
+    const befejezesek = esemenySzam("befejezes");
 
     res.setHeader("Cache-Control", "no-store");
     res.status(200).json({
@@ -57,6 +75,16 @@ export default async function handler(req, res){
       atlagPont: ossz[0].atlag_pont,
       /* hányan játszottak végig — ez független a kérdőív kitöltésétől */
       jatszottak: resztvevok.reduce((s, r) => s + r.db, 0),
+      /* ToC output-indikátorok. A befejezési arány csak akkor értelmes, ha
+         volt indítás — nulla osztóval null megy vissza, és a felület kiírja,
+         hogy még nincs mit mutatni. */
+      toc: {
+        inditasok,
+        befejezesek,
+        kikuldottErtekelesek: esemenySzam("ertekeles_kuldve"),
+        befejezesiArany: inditasok ? befejezesek / inditasok : null,
+        dimenziok: dimenziok[0]
+      },
       ertekelesek, k1, k2, palyak, napok, resztvevok
     });
   }catch(h){

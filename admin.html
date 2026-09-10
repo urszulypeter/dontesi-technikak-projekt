@@ -172,6 +172,30 @@ details table{margin-top:12px}
       </div>
     </div>
 
+    <div class="racs" style="margin-bottom:18px">
+      <div class="kartya">
+        <span class="szem">Hatásmodell · output</span>
+        <h2>Output indikátorok</h2>
+        <p class="alcim">A ToC-ábra output szintje. Ami az alkalmazásból mérhető, az itt magától frissül.</p>
+        <div id="toc-output"></div>
+      </div>
+    </div>
+
+    <div class="racs ketto" style="margin-bottom:18px">
+      <div class="kartya">
+        <span class="szem">Hatásmodell · outcome</span>
+        <h2>Bevonás és transzparencia megítélése</h2>
+        <p class="alcim">A bizalmi dimenziók átlaga a végigjátszók körében. Mindegyik 50 pontról indul, 0 és 100 között mozog — az 50 fölötti rész a döntéseken múlt.</p>
+        <div id="toc-dimenziok"></div>
+      </div>
+      <div class="kartya">
+        <span class="szem">Hatásmodell · lefedettség</span>
+        <h2>Amit nem innen mérünk</h2>
+        <p class="alcim">Ezek is szerepelnek a ToC-ban, de nem az alkalmazásból jönnek. Külső felmérés kell hozzájuk — a bemutatón érdemes kimondani, hogy ezek még nem adatok.</p>
+        <div id="toc-hianyzo"></div>
+      </div>
+    </div>
+
     <div class="racs ketto" style="margin-bottom:18px">
       <div class="kartya">
         <span class="szem">01 kérdés</span>
@@ -465,6 +489,100 @@ function tablazat(hely, fejek, sorok){
   hely.appendChild(t);
 }
 
+/* --- hatásmodell (ToC) ----------------------------------------------------
+   Az „elkészült szcenáriók és játékelemek száma" nem futásidejű mérőszám,
+   hanem a kész tartalom mérete: az index.html STORIK és DIMENZIOK
+   szerkezetéből számolva. Ha új pálya vagy szituáció kerül a játékba, ezt a
+   négy számot itt kell utánavezetni — a többi magától frissül. */
+const JATEKELEMEK = { palya:3, szituacio:30, valasz:120, dimenzio:5 };
+
+/* A ToC-ábra indikátorai, amikhez nincs adatunk az alkalmazásból. Kiírjuk
+   őket, mert a bemutatón az a tisztességes, ha látszik, mi az, ami még
+   nem adat. */
+const TOC_HIANYZO = [
+  { szint:"Outcome", nev:"Pre–post önértékelés a döntési készségről",
+    miert:"Csak utólagos önértékelés van; előzetes mérés nincs a játékban." },
+  { szint:"Outcome", nev:"Rutinok használatának gyakorisága",
+    miert:"A játékon kívüli munkahelyi viselkedés — kérdőívvel mérhető." },
+  { szint:"Outcome", nev:"Fejlődési mintázat a döntési naplóban",
+    miert:"A napló csak a játékos képernyőjén él, nem tárolódik." },
+  { szint:"Hatás", nev:"Csapat bizalmi szintje kérdőív alapján",
+    miert:"Csapatszintű felmérés, a játékostól függetlenül." },
+  { szint:"Hatás", nev:"Problémamegoldási sikeresség és gyorsaság",
+    miert:"Munkahelyi teljesítményadat." },
+  { szint:"Hatás", nev:"Kevesebb döntési hiba / visszalépés",
+    miert:"Munkahelyi teljesítményadat." },
+  { szint:"Hatás", nev:"Együttműködési elégedettség",
+    miert:"Csapatszintű felmérés." }
+];
+
+function tocRajzol(a){
+  const t = a.toc || {};
+  const arany = t.befejezesiArany === null || t.befejezesiArany === undefined
+    ? "még nincs indítás"
+    : Math.round(t.befejezesiArany * 100) + "%";
+
+  tablazat($("toc-output"),
+    [{nev:"Indikátor"},{nev:"Mérés"}],
+    [
+      ["Elkészült szcenáriók és játékelemek száma",
+       `${JATEKELEMEK.palya} pálya · ${JATEKELEMEK.szituacio} szituáció · ` +
+       `${JATEKELEMEK.valasz} válaszlehetőség · ${JATEKELEMEK.dimenzio} bizalmi dimenzió`],
+      ["Résztvevők és végigjátszások száma",
+       `${szam((a.resztvevok||[]).length)} név · ${szam(a.jatszottak||0)} végigjátszás`],
+      ["Kiküldött értékelések száma",
+       szam(t.kikuldottErtekelesek || 0)],
+      ["Részvételi és befejezési arány",
+       `${szam(t.inditasok||0)} indítás → ${szam(t.befejezesek||0)} befejezés · ${arany}`]
+    ]);
+
+  /* Az öt dimenzió ugyanazon a 0–100 skálán mozog, tehát egy ábrán a helyük. */
+  const d = t.dimenziok || {};
+  const sorok = [
+    { nev:"Következetesség",              ertek:d.kovetkezetesseg },
+    { nev:"Átláthatóság és kommunikáció", ertek:d.atlathatosag },
+    { nev:"Döntési minőség",              ertek:d.minoseg },
+    { nev:"Felelősségvállalás",           ertek:d.felelosseg },
+    { nev:"Érintettek bevonása",          ertek:d.bevonas }
+  ];
+  const hely = $("toc-dimenziok");
+  if(!d.db){
+    hely.innerHTML = '<p class="ures">Még senki nem játszotta végig.</p>';
+  } else {
+    hely.innerHTML = "";
+    sorok.forEach(s=>{
+      const doboz = document.createElement("div");
+      doboz.className = "sav-tetel";
+      const fej = document.createElement("div");
+      fej.className = "sav-fej";
+      const cimke = document.createElement("div");
+      cimke.className = "sav-cimke";
+      const sz = document.createElement("span");
+      sz.textContent = s.nev;
+      cimke.appendChild(sz);
+      const ertek = document.createElement("div");
+      ertek.className = "sav-ertek";
+      ertek.textContent = tized(s.ertek || 0, 1);
+      const skala = document.createElement("span");
+      skala.textContent = "/ 100";
+      ertek.appendChild(skala);
+      fej.append(cimke, ertek);
+      const palya = document.createElement("div");
+      palya.className = "sav-palya";
+      const kitolt = document.createElement("div");
+      kitolt.className = "sav-kitolt";
+      kitolt.style.width = Math.max(0, Math.min(100, s.ertek || 0)) + "%";
+      palya.appendChild(kitolt);
+      doboz.append(fej, palya);
+      hely.appendChild(doboz);
+    });
+  }
+
+  tablazat($("toc-hianyzo"),
+    [{nev:"Szint"},{nev:"Indikátor"},{nev:"Miért nem"}],
+    TOC_HIANYZO.map(h => [h.szint, h.nev, h.miert]));
+}
+
 /* --- résztvevők névsora ---------------------------------------------------
    A nevek a látogatóktól származó szöveg, ezért kizárólag textContent-tel
    kerülnek a lapra — innerHTML-lel egy név beszúrt jelölést is jelenthetne. */
@@ -542,9 +660,11 @@ function kirajzol(a){
   $("m-atlag").textContent  = a.osszes ? tized(a.atlag, 2) + " / 5"   : "–";
   $("m-pont").textContent   = a.osszes ? tized(a.atlagPont, 1) + " / 100" : "–";
 
-  /* A névsor a kérdőívtől független: aki végigjátszotta, de a kérdőívet
-     kihagyta, itt akkor is szerepel. Ezért a korai kilépés elé kerül. */
+  /* A névsor és a hatásmodell a kérdőívtől független: aki végigjátszotta, de a
+     kérdőívet kihagyta, ezekben akkor is benne van. Ezért a korai kilépés elé
+     kerülnek. */
   nevsorRajzol($("l-resztvevok"), a.resztvevok || [], a.jatszottak || 0);
+  tocRajzol(a);
 
   if(!a.osszes){
     ["d-ertekeles","d-k1","d-k2","d-napok","t-palyak"].forEach(id=>{

@@ -247,12 +247,42 @@ ha ez a szöveg eltűnik, az ígéret hamis lesz.
 A kimutatásban a névsor ábécérendben áll, aki többször játszott, `×2` jelet kap.
 A „Névsor másolása" gomb a vágólapra teszi a listát a bemutatóhoz.
 
+### Hatásmodell (ToC) a kimutatásban
+
+A kimutatás tetején a ToC-ábra **output szintje** áll, mert az az egyetlen,
+ami az alkalmazásból végig mérhető:
+
+| Indikátor | Honnan jön |
+|---|---|
+| elkészült szcenáriók és játékelemek száma | a kész tartalom mérete — az `admin.html` `JATEKELEMEK` állandójából |
+| résztvevők és végigjátszások száma | `resztvevo` tábla |
+| kiküldött értékelések száma | `esemeny`, `ertekeles_kuldve` — az EmailJS sikeres küldése után |
+| részvételi és befejezési arány | `esemeny`, `inditas` és `befejezes` hányadosa |
+
+A befejezési arányhoz tudni kell, hányan **indultak el** — ezt a résztvevők
+számából egymagában nem lehet kiszámolni, ezért van külön indítási esemény.
+
+Az **outcome** szintről egyetlen dolog mérhető belülről: az öt bizalmi dimenzió
+átlaga a végigjátszók körében. Ebben benne van az „átláthatóság" és az
+„érintettek bevonása" is, tehát a ToC „bevonás és transzparencia megítélése"
+indikátora ezzel részben lefedett.
+
+A **hatás** szint egyetlen indikátora sem mérhető az alkalmazásból: mind
+csapatszintű vagy munkahelyi adat. Ezért van a kimutatásban egy külön kártya
+(*Amit nem innen mérünk*), ami tételesen kiírja, mi hiányzik és miért. A
+bemutatón ezt érdemes kimondani — az a tisztességes, ha látszik, mi az, ami még
+nem adat.
+
+**Ha új pálya vagy szituáció kerül a játékba**, az `admin.html` `JATEKELEMEK`
+állandóját kézzel kell utánavezetni; a többi szám magától frissül.
+
     /                     a játék
     /admin.html           a kimutatás (jelszóval)
     /api/valasz           a kérdőív beküldése (nyilvános, szigorúan ellenőrzött)
     /api/resztvevo        a név a résztvevők listájára (nyilvános, ellenőrzött)
+    /api/esemeny          indítás, végigjátszás, kiküldött értékelés (nyilvános, ellenőrzött)
     /api/belepes          admin be- és kiléptetés
-    /api/stat             összesített adatok és a névsor (csak belépve)
+    /api/stat             összesített adatok, névsor és ToC-indikátorok (csak belépve)
 
 A kimutatás jelszava egyetlen környezeti változó, a jegy pedig HttpOnly sütiben
 utazik, aláírva — a kiszolgálónak nem kell munkamenetet tárolnia. Az összesítés

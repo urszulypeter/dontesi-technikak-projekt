@@ -4012,6 +4012,7 @@ function tovabb(){
   } else {
     kiertekeles();
     resztvevotRogzit();
+    befejezestRogzit();
     kerdoivEpit();
     nezet("view-kerdoiv");
   }
@@ -4029,6 +4030,36 @@ function resztvevotRogzit(){
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({ nev })
   }).catch(h => console.error("A résztvevő nem került a listára:", h));
+}
+
+/* A hatásmodell (ToC) output-indikátorainak eseményei: indítás, végigjátszás,
+   kiküldött értékelés. A befejezési arányt a résztvevők számából egymagában
+   nem lehet kiszámolni — ahhoz tudni kell, hányan indultak el.
+
+   Egyik hívás sem várakoztat és egyik sem szól, ha nem sikerül: a mérés a mi
+   dolgunk, a játékosnak ebből semmit nem kell észrevennie. */
+function esemenyt(tipus, tovabbi){
+  if(!allapot.mod) return;
+  fetch("/api/esemeny", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(Object.assign({ tipus, palya: allapot.mod }, tovabbi || {}))
+  }).catch(h => console.error("Az esemény nem került rögzítésre (" + tipus + "):", h));
+}
+
+/* A végigjátszáshoz a végpontszám és az öt dimenzió is elmegy — ez a
+   hatásmodell outcome-oldalának egyetlen belülről mérhető indikátora. */
+function befejezestRogzit(){
+  esemenyt("befejezes", {
+    pont: foIndex(),
+    dimenziok: {
+      kovetkezetesseg: Math.round(allapot.pontok.kov),
+      atlathatosag:    Math.round(allapot.pontok.atl),
+      minoseg:         Math.round(allapot.pontok.min),
+      felelosseg:      Math.round(allapot.pontok.fel),
+      bevonas:         Math.round(allapot.pontok.bev)
+    }
+  });
 }
 
 /* ============================================================================
@@ -4412,6 +4443,7 @@ function kuldes(){
     })
     .then(function(){
       gomb.disabled = false;
+      esemenyt("ertekeles_kuldve");
       allapotUzenet("Elküldve ide: " + allapot.email + (EREDMENY_MASOLAT_CIM ? " (másolat: " + EREDMENY_MASOLAT_CIM + ")" : "") +
         ". Ha pár percen belül nem érkezik meg, nézd meg a levélszemét mappát.", "siker");
     })
@@ -4522,6 +4554,7 @@ async function jatekotIndit(){
   /* A díszletek ugyanazokból az eszközökből épülnek, mint a nyitókép, ezért a
      nyitóoldalon már elkezdődött a betöltésük. Itt legfeljebb a maradékot
      várjuk meg — a betöltőjelző addig áll. */
+  esemenyt("inditas");
   await vilagEszkozok();
   await vilagEpit(allapot.mod);
   kameraUtazas(0, true);
