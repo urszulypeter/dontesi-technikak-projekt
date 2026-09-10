@@ -33,6 +33,19 @@ export async function tablat(db){
       pont        smallint    NOT NULL CHECK (pont BETWEEN 0 AND 100),
       letrehozva  timestamptz NOT NULL DEFAULT now()
     )`;
+  /* A megadott nevek KÜLÖN táblában élnek, és nincs köztük hivatkozás a
+     válaszokra. Ez nem formaság: a kérdőív azt ígéri a kitöltőnek, hogy a
+     válasza névtelen, és ezt az ígéretet az adatszerkezetnek kell tartania,
+     nem a jó szándéknak.
+
+     Ezért van itt dátum és nem időbélyeg: azonos pillanatban beszúrt két sort
+     az időbélyegük összekötné, a napi bontás viszont nem. */
+  await db`
+    CREATE TABLE IF NOT EXISTS resztvevo (
+      id   bigserial PRIMARY KEY,
+      nev  text      NOT NULL CHECK (char_length(nev) BETWEEN 1 AND 40),
+      nap  date      NOT NULL DEFAULT current_date
+    )`;
   tablaKesz = true;
 }
 

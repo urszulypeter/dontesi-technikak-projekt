@@ -225,16 +225,34 @@ eredmény a jutalom — utána a legtöbben már nem töltenék ki. Kihagyható:
 kényszerítés rosszabb adatot ad, mint a kevesebb.
 
 **Amit tárolunk:** a három válasz, a pálya és a végső Bizalomindex. Név,
-e-mail-cím és IP nem kerül melléjük — a visszajelzés névtelen, és nem
-összekapcsolható az eredményküldéssel.
+e-mail-cím és IP nem kerül melléjük — a visszajelzés névtelen.
 
 A kérdések szövege az `index.html`-ben, a `KERDOIV` tömbben van; átírni is ott kell.
+
+### Résztvevők névsora
+
+A tíz döntés végén a játékos neve — az, amit az induló űrlapon megadott — a
+**résztvevők listájára** kerül. Ez a kérdőívtől független: aki a kérdőívet
+kihagyja, a névsorban akkor is szerepel.
+
+A nevek **külön táblában** vannak (`resztvevo`), a válaszokra mutató hivatkozás
+nélkül, és csak dátumot kapnak, nem időbélyeget. Ez nem formaság: azonos
+pillanatban beszúrt két sort az időbélyegük összekötné, és a kérdőív azt ígéri
+a kitöltőnek, hogy a válasza névtelen. Az ígéretet az adatszerkezetnek kell
+tartania, nem a jó szándéknak.
+
+Ezért mondja az induló űrlap, hogy a név a résztvevők listájára is felkerül —
+ha ez a szöveg eltűnik, az ígéret hamis lesz.
+
+A kimutatásban a névsor ábécérendben áll, aki többször játszott, `×2` jelet kap.
+A „Névsor másolása" gomb a vágólapra teszi a listát a bemutatóhoz.
 
     /                     a játék
     /admin.html           a kimutatás (jelszóval)
     /api/valasz           a kérdőív beküldése (nyilvános, szigorúan ellenőrzött)
+    /api/resztvevo        a név a résztvevők listájára (nyilvános, ellenőrzött)
     /api/belepes          admin be- és kiléptetés
-    /api/stat             összesített adatok (csak belépve)
+    /api/stat             összesített adatok és a névsor (csak belépve)
 
 A kimutatás jelszava egyetlen környezeti változó, a jegy pedig HttpOnly sütiben
 utazik, aláírva — a kiszolgálónak nem kell munkamenetet tárolnia. Az összesítés

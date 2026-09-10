@@ -11,7 +11,7 @@ export default async function handler(req, res){
     const db = adatbazis();
     await tablat(db);
 
-    const [ossz, ertekelesek, k1, k2, palyak, napok] = await Promise.all([
+    const [ossz, ertekelesek, k1, k2, palyak, napok, resztvevok] = await Promise.all([
       /* A Postgres az idézőjel nélküli aliast kisbetűsíti, ezért itt minden
          név kisbetűs és aláhúzásos — így a JS-oldal is azt látja, ami van. */
       db`SELECT count(*)::int                     AS db,
@@ -37,7 +37,17 @@ export default async function handler(req, res){
          kitöltések a következő napra csúsznának át. */
       db`SELECT to_char(date_trunc('day', letrehozva AT TIME ZONE 'Europe/Budapest'), 'YYYY-MM-DD') AS nap,
                 count(*)::int AS db
-           FROM visszajelzes GROUP BY nap ORDER BY nap`
+           FROM visszajelzes GROUP BY nap ORDER BY nap`,
+
+      /* A résztvevők névsora. Azonos néven többször is végig lehet játszani,
+         ezért névre csoportosítunk: a listán egyszer szerepel, a `db` mondja
+         meg, hányszor játszott. A rendezés kisbetűsítve történik, különben az
+         ékezetes nevek a lista végére csúsznának. */
+      db`SELECT nev, count(*)::int AS db, min(nap)::text AS elso
+           FROM resztvevo
+          GROUP BY nev
+          ORDER BY lower(nev)
+          LIMIT 1000`
     ]);
 
     res.setHeader("Cache-Control", "no-store");
@@ -45,7 +55,9 @@ export default async function handler(req, res){
       osszes:    ossz[0].db,
       atlag:     ossz[0].atlag,
       atlagPont: ossz[0].atlag_pont,
-      ertekelesek, k1, k2, palyak, napok
+      /* hányan játszottak végig — ez független a kérdőív kitöltésétől */
+      jatszottak: resztvevok.reduce((s, r) => s + r.db, 0),
+      ertekelesek, k1, k2, palyak, napok, resztvevok
     });
   }catch(h){
     console.error("A kimutatás lekérése nem sikerült:", h);

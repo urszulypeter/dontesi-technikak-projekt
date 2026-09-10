@@ -106,6 +106,13 @@ summary{cursor:pointer;font-size:.84rem;color:var(--tinta-hal);font-weight:600}
 summary::marker{color:var(--tinta-vil)}
 details table{margin-top:12px}
 
+/* --- résztvevők névsora --- */
+.nevsor{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:2px 22px}
+.nev-tetel{display:flex;align-items:baseline;gap:9px;padding:7px 0;border-bottom:1px solid var(--vonal);font-size:.94rem}
+.nev-tetel .n{overflow-wrap:anywhere}
+.nev-tetel .ismet{margin-left:auto;color:var(--tinta-vil);font-size:.8rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kartya-fej{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+
 .ures{color:var(--tinta-vil);font-size:.92rem;padding:28px 0;text-align:center}
 .tolt{opacity:.45;transition:opacity .2s}
 
@@ -196,6 +203,20 @@ details table{margin-top:12px}
         <p class="alcim">Egy válasz kérdésenként</p>
         <div id="d-k2"></div>
         <details><summary>Táblázatos nézet</summary><div id="t-k2"></div></details>
+      </div>
+    </div>
+
+    <div class="racs" style="margin-bottom:18px">
+      <div class="kartya">
+        <div class="kartya-fej">
+          <div>
+            <span class="szem">Résztvevők</span>
+            <h2>Ki játszotta végig</h2>
+            <p class="alcim" id="nevsor-alcim">A tíz döntést befejezők névsora, ábécérendben.</p>
+          </div>
+          <button class="gomb vonalas" type="button" id="nevsor-masol">Névsor másolása</button>
+        </div>
+        <div id="l-resztvevok"></div>
       </div>
     </div>
 
@@ -444,6 +465,55 @@ function tablazat(hely, fejek, sorok){
   hely.appendChild(t);
 }
 
+/* --- résztvevők névsora ---------------------------------------------------
+   A nevek a látogatóktól származó szöveg, ezért kizárólag textContent-tel
+   kerülnek a lapra — innerHTML-lel egy név beszúrt jelölést is jelenthetne. */
+let NEVSOR = [];
+function nevsorRajzol(hely, resztvevok, jatszottak){
+  NEVSOR = resztvevok;
+  const alcim = $("nevsor-alcim");
+  $("nevsor-masol").disabled = resztvevok.length === 0;
+  if(resztvevok.length === 0){
+    hely.innerHTML = '<p class="ures">Még senki nem játszotta végig.</p>';
+    alcim.textContent = "A tíz döntést befejezők névsora, ábécérendben.";
+    return;
+  }
+  alcim.textContent = resztvevok.length + " név · " + jatszottak + " végigjátszás — ábécérendben.";
+
+  const lista = document.createElement("div");
+  lista.className = "nevsor";
+  resztvevok.forEach(r=>{
+    const sor = document.createElement("div");
+    sor.className = "nev-tetel";
+    const n = document.createElement("span");
+    n.className = "n";
+    n.textContent = r.nev;
+    sor.appendChild(n);
+    if(r.db > 1){
+      const i = document.createElement("span");
+      i.className = "ismet";
+      i.textContent = "×" + r.db;
+      sor.appendChild(i);
+    }
+    lista.appendChild(sor);
+  });
+  hely.innerHTML = "";
+  hely.appendChild(lista);
+}
+
+$("nevsor-masol").addEventListener("click", async ()=>{
+  const gomb = $("nevsor-masol");
+  const szoveg = NEVSOR.map(r => r.nev).join("\n");
+  try{
+    await navigator.clipboard.writeText(szoveg);
+    gomb.textContent = "Kimásolva";
+  }catch(h){
+    console.error("A vágólapra másolás nem sikerült:", h);
+    gomb.textContent = "Nem sikerült";
+  }
+  setTimeout(()=> { gomb.textContent = "Névsor másolása"; }, 1800);
+});
+
 /* --- adatok betöltése és kirajzolása -------------------------------------- */
 const K1_SZOVEG = { A:"Igen, több dolgot másképp csinálnék", B:"Némileg elgondolkodtatott", C:"Nem változott" };
 const K2_SZOVEG = { A:"A döntési helyzetek", B:"A válasz utáni visszajelzések", C:"A végső kiértékelés" };
@@ -471,6 +541,10 @@ function kirajzol(a){
   $("m-osszes").textContent = szam(a.osszes);
   $("m-atlag").textContent  = a.osszes ? tized(a.atlag, 2) + " / 5"   : "–";
   $("m-pont").textContent   = a.osszes ? tized(a.atlagPont, 1) + " / 100" : "–";
+
+  /* A névsor a kérdőívtől független: aki végigjátszotta, de a kérdőívet
+     kihagyta, itt akkor is szerepel. Ezért a korai kilépés elé kerül. */
+  nevsorRajzol($("l-resztvevok"), a.resztvevok || [], a.jatszottak || 0);
 
   if(!a.osszes){
     ["d-ertekeles","d-k1","d-k2","d-napok","t-palyak"].forEach(id=>{

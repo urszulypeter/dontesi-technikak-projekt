@@ -542,7 +542,7 @@ textarea.riport{
     <div class="belso">
       <span class="szem">02 · Azonosítás</span>
       <h2>Készen állsz?</h2>
-      <p class="bevezeto">A nevedet a személyes értékelésben használjuk, az e-mail-címedre pedig elküldjük az eredményt.</p>
+      <p class="bevezeto">A nevedet a személyes értékelésben és a résztvevők listáján használjuk, az e-mail-címedre pedig elküldjük az eredményt.</p>
       <form class="urlap" id="start-form" novalidate>
         <div class="mezo">
           <label for="nev">Neved</label>
@@ -652,8 +652,9 @@ textarea.riport{
       <span class="szem">Megvan a tíz döntés</span>
       <h2 id="kerdoiv-cim">Három kérdés, mielőtt megnézed az eredményed</h2>
       <p class="bevezeto">
-        A válaszaid névtelenek: sem a neved, sem az e-mail-címed nem kerül hozzájuk.
-        Csak összesítve nézzük meg őket, hogy lássuk, mit ért ez a szimuláció.
+        A válaszaid névtelenek: nem kötjük őket a nevedhez vagy az e-mail-címedhez,
+        és csak összesítve nézzük meg őket. A neved ettől külön, a résztvevők
+        listáján szerepel.
       </p>
       <form class="urlap kerdoiv" id="kerdoiv-form" novalidate>
         <div id="kerdoiv-mezok"></div>
@@ -4010,9 +4011,24 @@ function tovabb(){
     jelenetJatszik(allapot.index);
   } else {
     kiertekeles();
+    resztvevotRogzit();
     kerdoivEpit();
     nezet("view-kerdoiv");
   }
+}
+
+/* A név a tíz döntés végén kerül a résztvevők listájára — akkor is, ha valaki
+   a kérdőívet kihagyja. Ezért van külön végpontja, és ezért nem a kérdőívvel
+   együtt megy. Szándékosan nem várakoztat és nem szól, ha nem sikerül: a
+   játékos ebből semmit nem venne észre, és nem is kellene. */
+function resztvevotRogzit(){
+  const nev = (allapot.nev || "").trim();
+  if(!nev) return;
+  fetch("/api/resztvevo", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ nev })
+  }).catch(h => console.error("A résztvevő nem került a listára:", h));
 }
 
 /* ============================================================================
