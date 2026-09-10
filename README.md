@@ -144,6 +144,40 @@ ember-szkenn. A keresés végigjárt forrásai és az elvetés indoka —
 személyiségi jogtól a licencfeltételekig — az `assets/LICENC.md`-ben van,
 hogy ne kelljen még egyszer végigjárni.
 
+### Az épített alakok
+
+Ha szkenn nem kerülhet valahova, az épített alaknak kell megállnia a helyét.
+A korábbi változat **6,5 fejmagas** volt; a felnőtt emberi arány **7,5**. Ez az
+egy szám okozta a bábuhatást: nagy fej, keskeny váll. Az arányok most egy
+helyen, a `TEST` táblában állnak, külön férfi és női testalkattal.
+
+Amin még múlik a látvány:
+
+- **Folytonos végtagok.** Minden ízületen ült egy külön gömb, ettől kolbászra
+  fűzött gyöngysornak látszott a kar. A kapszula vége maga is félgömb: ha a
+  sugarak egyeznek és a szakaszok átfednek, az ízület magától folytonos. Gömb
+  csak ott maradt, ahol a hajlás éles — térd és váll.
+- **Bőr és szövet domborzattérképe.** Mindkettő megkapja a vakolat
+  normáltérképét, nagyon finom léptékben. A szövetnek szemcséje lesz, a bőrnek
+  pórusa; egyetlen tökéletesen sima felület az, ami műanyagnak látszik. A
+  térkép már be van töltve a falakhoz, tehát ez ingyen van.
+- **Öltözetrészletek.** Hajtóka, gallér, öv, mandzsetta, nyakkendőcsomó. Ezek
+  törik meg a kabát egyszínű foltját.
+- **Cipő a kapszula helyett.** A lábfej sziluettje messziről is elárulja az
+  alakot.
+- **Három hajforma**, plusz hosszabb haj a női szerepekhez. Egyetlen
+  félgömb-sapka mindenkin ugyanaz a sziluett volt, és a tömegjelenetekben ez
+  tette egyformává az alakokat.
+
+Két dolog, amit **kipróbáltunk és visszavontunk:** a szemöldökív külön
+gömbhéjként egyetlen sávvá olvadt az arcon — az alak szemellenzőt viselt. A
+szemgolyó fehérje pedig ekkora távolságból két világos pontnak látszik, és
+bábuszemet ad; helyette sötét szemgödör van, benne egy apró csillanás.
+
+A ráfizetés mindezért **+2,2% háromszög** (769 841 a korábbi 752 909 helyett a
+vállalati pályán) — az új részletek apró elemek, a költségük mérhető, de nem
+érzékelhető.
+
 Két apró, de fontos fogás a felületeknél:
 
 - **A csempézés az UV-n áll be, nem a textúrán.** Így egyetlen anyagpéldány

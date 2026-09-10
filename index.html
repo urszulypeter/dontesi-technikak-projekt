@@ -1854,9 +1854,21 @@ const HAJ = [0x3b2f22, 0x5a4231, 0x241d16, 0x7a6549, 0x9a8f80];
 
 /* ============================================================================
    EMBERALAK
-   Kapszulákból és forgástestből épül: lekerekített végtagok, formált törzs,
-   arcvonások. A `lod:"egyszeru"` a háttértömeghez való, olcsóbb változat.
+   ----------------------------------------------------------------------------
+   Ide szkennelt ember nem kerülhet: ülő és egyenruhás szerepekhez nincs szabad
+   licencű, továbbadható fotogrammetriás alak (lásd assets/LICENC.md). Ezért ez
+   az alak épített — de nem kell bábunak látszania.
+
+   A korábbi változat 6,5 fejmagas volt; a felnőtt emberi arány 7,5. A fej
+   ettől volt nagy, a váll keskeny, és ez az arány árulta el messziről, hogy
+   nem ember. Az arányok most egy helyen, a TEST táblában állnak.
    ========================================================================== */
+const TEST = {
+  ferfi: { fejR:0.098, vallX:0.185, csipoR:0.150, mellR:0.181, valltav:0.520, magas:1.000 },
+  noi:   { fejR:0.094, vallX:0.162, csipoR:0.157, mellR:0.162, valltav:0.505, magas:0.955 }
+};
+const NOI_SZEREP = { uzletNoi:true };
+
 function kapszula(r, h, mat, x, y, z){
   const geo = T.CapsuleGeometry ? new T.CapsuleGeometry(r, h, 6, 12)
                                 : new T.CylinderGeometry(r, r, h + r*2, 12);
@@ -1864,20 +1876,41 @@ function kapszula(r, h, mat, x, y, z){
   m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
   return m;
 }
-/* Forgástest törzs: csípőtől vállig szűkülő, majd táguló profil. */
-function torzsGeo(m){
+
+/* Forgástest törzs: csípő, derék, mellkas, majd a váll felé szűkülő nyakvonal.
+   A derék behúzása adja a törzsnek az emberi vonalát — enélkül henger. */
+function torzsGeo(t, m){
   const p = [
-    new T.Vector2(0.005, 0.00),
-    new T.Vector2(0.150, 0.01),
-    new T.Vector2(0.146, 0.09*m),
-    new T.Vector2(0.138, 0.20*m),
-    new T.Vector2(0.163, 0.34*m),
-    new T.Vector2(0.176, 0.45*m),
-    new T.Vector2(0.168, 0.53*m),
-    new T.Vector2(0.105, 0.58*m),
-    new T.Vector2(0.005, 0.585*m)
+    new T.Vector2(0.004,          0.000),
+    new T.Vector2(t.csipoR*0.96,  0.014*m),
+    new T.Vector2(t.csipoR,       0.080*m),
+    new T.Vector2(t.csipoR*0.88,  0.200*m),   /* derék */
+    new T.Vector2(t.mellR*0.94,   0.330*m),
+    new T.Vector2(t.mellR,        0.430*m),   /* mellkas */
+    new T.Vector2(t.mellR*0.92,   0.500*m),
+    new T.Vector2(t.mellR*0.58,   0.548*m),
+    new T.Vector2(0.004,          0.558*m)
   ];
-  return new T.LatheGeometry(p, 20);
+  return new T.LatheGeometry(p, 24);
+}
+
+/* --- bőr és szövet ---------------------------------------------------------
+   Mindkettő megkapja a vakolat domborzattérképét, nagyon finom léptékben: a
+   szövetnek szemcséje lesz, a bőrnek pórusa. Egyetlen sima felület az, ami
+   műanyagnak látszik — és a térkép már úgyis be van töltve, tehát ingyen van. */
+function borAnyag(szin){
+  return tarolt("bor:"+szin, ()=> new T.MeshStandardMaterial({
+    color: szin, roughness: 0.54, metalness: 0, envMapIntensity: 0.85,
+    normalMap: heroTextura(V.eszkoz.felulet, ESZKOZ.fal.nor, T.LinearSRGBColorSpace, 7, 7),
+    normalScale: new T.Vector2(0.14, 0.14)
+  }));
+}
+function szovetAnyag(szin, ropp){
+  return tarolt("szovet:"+szin+":"+ropp, ()=> new T.MeshStandardMaterial({
+    color: szin, roughness: ropp, metalness: 0, envMapIntensity: 0.62,
+    normalMap: heroTextura(V.eszkoz.felulet, ESZKOZ.fal.nor, T.LinearSRGBColorSpace, 5, 5),
+    normalScale: new T.Vector2(0.50, 0.50)
+  }));
 }
 /* ============================================================================
    BESZKENNELT ALAKOK
@@ -1932,138 +1965,221 @@ function ember(o){
   if(szkennelt) return szkennelt;
   const r   = RUHA[o.ruha || "uzletSotet"];
   const egyszeru = o.lod === "egyszeru";
-  const bor = anyag(BOR[(o.bor||0) % BOR.length], 0.56);
-  const haj = anyag(HAJ[(o.haj||0) % HAJ.length], 0.78);
-  const kabat  = anyag(r.kabat, 0.78);
-  const nadrag = anyag(r.nadrag, 0.84);
-  const ing    = anyag(r.ing, 0.62);
-  const cipo   = anyag(r.cipo, 0.32, 0.05);
+  const katonai = (o.ruha === "katona" || o.ruha === "katonaTiszt");
+  const t = TEST[NOI_SZEREP[o.ruha] ? "noi" : "ferfi"];
+
+  const bor    = borAnyag(BOR[(o.bor||0) % BOR.length]);
+  const haj    = szovetAnyag(HAJ[(o.haj||0) % HAJ.length], 0.74);
+  const kabat  = szovetAnyag(r.kabat, 0.80);
+  const nadrag = szovetAnyag(r.nadrag, 0.86);
+  const ing    = szovetAnyag(r.ing, 0.66);
+  const cipo   = anyag(r.cipo, 0.30, 0.06);
+
   const g  = new T.Group();
   const ul = o.poz === "ul";
-  const m  = o.magas || 1.0;
-  const csipo = ul ? 0.50*m : 0.88*m;
-  const t = (o.tukor ? -1 : 1);   /* enyhe aszimmetria, hogy ne tűnjön bábunak */
+  const m  = (o.magas || 1.0) * t.magas;
+  const csipo = ul ? 0.505*m : 0.920*m;
+  const vallY = csipo + t.valltav*m;
+  const oldalt = (o.tukor ? -1 : 1);   /* enyhe aszimmetria, hogy ne tűnjön bábunak */
+  const combX = t.csipoR*0.62;
 
-  /* ---------- lábak ---------- */
+  /* Cipő: hosszúkás, orra felé elkeskenyedő. Az álló kapszula golyónak
+     látszott — a lábfej sziluettje messziről is elárulja az alakot. */
+  const cipot = (x, z, ry) => {
+    const cs = new T.Group();
+    const talp = doboz(0.088, 0.055, 0.245, cipo, 0, 0.028, 0.020);
+    const orr  = gomb(0.044, cipo, 0, 0.030, 0.128); orr.scale.set(1, 0.62, 1.05);
+    const sarok= gomb(0.044, cipo, 0, 0.036, -0.078); sarok.scale.set(1, 0.90, 0.85);
+    cs.add(talp, orr, sarok);
+    cs.position.set(x, 0, z); if(ry) cs.rotation.y = ry;
+    return cs;
+  };
+
+  /* ---------- lábak ----------
+     A korábbi változat minden ízületre külön gömböt tett, ettől kolbászra
+     fűzött gyöngysornak látszott a végtag. A kapszula vége maga is félgömb:
+     ha a sugarak egyeznek és a szakaszok átfedik egymást, az ízület magától
+     folytonos. Gömb csak ott marad, ahol a hajlás éles. */
   if(ul){
     [-1,1].forEach(oldal=>{
-      const comb = kapszula(0.082, 0.30, nadrag, oldal*0.105, csipo-0.01, 0.20);
+      const comb = kapszula(0.092, 0.24*m, nadrag, oldal*combX, csipo - 0.012, 0.175);
       comb.rotation.x = Math.PI/2; g.add(comb);
-      g.add(gomb(0.082, nadrag, oldal*0.105, csipo-0.02, 0.36));
-      g.add(kapszula(0.070, 0.30, nadrag, oldal*0.105, csipo-0.21, 0.40));
-      const c = kapszula(0.068, 0.13, cipo, oldal*0.105, 0.055, 0.47);
-      c.rotation.x = Math.PI/2; g.add(c);
+      g.add(gomb(0.088, nadrag, oldal*combX, csipo - 0.030, 0.325));   /* térd: éles hajlás */
+      g.add(kapszula(0.074, 0.26*m, nadrag, oldal*combX, csipo - 0.235, 0.365));
+      g.add(cipot(oldal*combX, 0.345, 0));
     });
   } else {
     [-1,1].forEach(oldal=>{
-      const elore = (oldal===t) ? 0.055 : -0.035;   /* egyik láb kicsit előrébb */
-      const comb = kapszula(0.086, 0.30*m, nadrag, oldal*0.098, csipo-0.20*m, elore*0.4);
-      comb.rotation.x = -elore*0.35; g.add(comb);
-      g.add(gomb(0.080, nadrag, oldal*0.098, csipo-0.40*m, elore*0.55));
-      g.add(kapszula(0.070, 0.30*m, nadrag, oldal*0.098, csipo-0.60*m, elore*0.7));
-      const c = kapszula(0.070, 0.14, cipo, oldal*0.098, 0.052, elore + 0.055);
-      c.rotation.x = Math.PI/2; g.add(c);
+      const elore = (oldal===oldalt) ? 0.048 : -0.030;   /* egyik láb kicsit előrébb */
+      const comb = kapszula(0.094, 0.24*m, nadrag, oldal*combX, csipo - 0.205*m, elore*0.4);
+      comb.rotation.x = -elore*0.30; g.add(comb);
+      g.add(kapszula(0.076, 0.26*m, nadrag, oldal*combX, csipo - 0.610*m, elore*0.7));
+      g.add(cipot(oldal*combX, elore + 0.030, oldal*0.06));
     });
   }
 
   /* ---------- törzs ---------- */
-  const torzs = new T.Mesh(torzsGeo(m), kabat);
+  const torzs = new T.Mesh(torzsGeo(t, m), kabat);
   torzs.position.set(0, csipo, 0);
-  torzs.scale.set(1, 1, 0.68);
+  torzs.scale.set(1, 1, 0.70);
   torzs.castShadow = true; torzs.receiveShadow = true;
   g.add(torzs);
 
-  const vallY = csipo + 0.50*m;
-  const ingMesh = kapszula(0.052, 0.24*m, ing, 0, csipo + 0.36*m, 0.098);
-  ingMesh.scale.set(1.18, 1, 0.35); g.add(ingMesh);
+  /* ing / blúz a kabát alatt, a nyaktól lefelé keskenyedő sávban */
+  const ingMesh = kapszula(0.050, 0.22*m, ing, 0, csipo + 0.375*m, 0.096);
+  ingMesh.scale.set(1.16, 1, 0.34); g.add(ingMesh);
+
   if(r.nyakkendo){
-    const ny = kapszula(0.019, 0.19*m, anyag(r.nyakkendo, 0.55), 0, csipo + 0.32*m, 0.114);
+    const ny = kapszula(0.018, 0.17*m, szovetAnyag(r.nyakkendo, 0.58), 0, csipo + 0.345*m, 0.112);
     ny.scale.set(1, 1, 0.5); g.add(ny);
+    /* nyakkendőcsomó: enélkül szalagnak látszik */
+    const csomo = gomb(0.026, szovetAnyag(r.nyakkendo, 0.58), 0, csipo + 0.455*m, 0.104);
+    csomo.scale.set(1, 0.85, 0.6); g.add(csomo);
   }
+
+  /* Hajtóka és gallér. Ez a két ferde lap töri meg a kabát üres felületét —
+     enélkül a törzs egyetlen egyszínű folt. */
   if(!egyszeru && r.kabat !== r.ing){
-    /* keskeny gallér a nyak két oldalán */
     [-1,1].forEach(oldal=>{
-      const l = doboz(0.030, 0.10*m, 0.018, kabat, oldal*0.052, csipo + 0.45*m, 0.096);
-      l.rotation.z = oldal*0.30; g.add(l);
+      const hajtoka = doboz(0.052, 0.20*m, 0.016, kabat, oldal*0.062, csipo + 0.385*m, 0.104);
+      hajtoka.rotation.z = oldal*0.20; hajtoka.rotation.y = -oldal*0.16; g.add(hajtoka);
+      const gallér = doboz(0.034, 0.085*m, 0.020, kabat, oldal*0.056, csipo + 0.487*m, 0.086);
+      gallér.rotation.z = oldal*0.34; g.add(gallér);
     });
   }
+  /* öv: a derék vonalát adja meg, és elválasztja a nadrágot a felsőtesttől */
+  if(!katonai){
+    const ov = new T.Mesh(new T.CylinderGeometry(t.csipoR*0.93, t.csipoR*0.93, 0.045, 20),
+                          anyag(r.cipo, 0.42, 0.10));
+    ov.position.set(0, csipo + 0.055*m, 0); ov.scale.set(1, 1, 0.72);
+    ov.castShadow = true; g.add(ov);
+  }
   if(r.mellény){
-    const v = new T.Mesh(torzsGeo(m*0.92), anyag(r.mellény, 0.92));
-    v.position.set(0, csipo + 0.04, 0); v.scale.set(1.10, 0.86, 0.80);
+    const v = new T.Mesh(torzsGeo(t, m*0.92), szovetAnyag(r.mellény, 0.94));
+    v.position.set(0, csipo + 0.045*m, 0); v.scale.set(1.09, 0.86, 0.82);
     v.castShadow = true; g.add(v);
   }
 
   /* ---------- karok ---------- */
   [-1,1].forEach(oldal=>{
-    const vx = oldal*0.170, mutat = (o.kar === "mutat" && oldal === -t);
-    g.add(gomb(0.076, kabat, vx, vallY, 0));
-    const felkarSzog = mutat ? -1.15 : (ul ? -0.42 : 0.06);
-    const fk = new T.Group(); fk.position.set(vx, vallY, 0);
-    fk.rotation.x = felkarSzog; fk.rotation.z = oldal*0.10;
-    fk.add(kapszula(0.056, 0.24*m, kabat, 0, -0.13*m, 0)); g.add(fk);
-    const konyokY = vallY - Math.cos(felkarSzog)*0.26*m;
-    const konyokZ = -Math.sin(felkarSzog)*0.26*m;
-    g.add(gomb(0.053, kabat, vx + oldal*0.024, konyokY, konyokZ));
-    const alkarSzog = mutat ? -1.55 : (ul ? -1.05 : 0.10);
-    const ak = new T.Group(); ak.position.set(vx + oldal*0.024, konyokY, konyokZ);
+    const vx = oldal*t.vallX, mutat = (o.kar === "mutat" && oldal === -oldalt);
+    /* váll: lapított gömb, ez adja a deltaizom vonalát */
+    const vall = gomb(0.072, kabat, vx*0.94, vallY - 0.012, 0);
+    vall.scale.set(1.05, 0.92, 0.95); g.add(vall);
+
+    const felkarSzog = mutat ? -1.10 : (ul ? -0.40 : 0.07);
+    const fk = new T.Group(); fk.position.set(vx, vallY - 0.015, 0);
+    fk.rotation.x = felkarSzog; fk.rotation.z = oldal*0.09;
+    fk.add(kapszula(0.056, 0.20*m, kabat, 0, -0.135*m, 0)); g.add(fk);
+
+    const konyokY = vallY - 0.015 - Math.cos(felkarSzog)*0.265*m;
+    const konyokZ = -Math.sin(felkarSzog)*0.265*m;
+    const alkarSzog = mutat ? -1.52 : (ul ? -1.02 : 0.11);
+    const ak = new T.Group(); ak.position.set(vx + oldal*0.020, konyokY, konyokZ);
     ak.rotation.x = alkarSzog;
-    ak.add(kapszula(0.047, 0.22*m, kabat, 0, -0.12*m, 0)); g.add(ak);
-    const kezY = konyokY - Math.cos(alkarSzog)*0.24*m;
-    const kezZ = konyokZ - Math.sin(alkarSzog)*0.24*m;
-    const kez = gomb(0.046, bor, vx + oldal*0.028, kezY, kezZ);
-    kez.scale.set(0.85, 1.05, 0.7); g.add(kez);
+    ak.add(kapszula(0.049, 0.19*m, kabat, 0, -0.120*m, 0));
+    /* mandzsetta: a kabátujj vége, alóla jön ki a kéz */
+    const mandzsetta = new T.Mesh(new T.CylinderGeometry(0.050, 0.048, 0.030, 14),
+                                  (r.kabat === r.ing) ? kabat : ing);
+    mandzsetta.position.set(0, -0.218*m, 0); mandzsetta.castShadow = true;
+    ak.add(mandzsetta);
+    g.add(ak);
+
+    const kezY = konyokY - Math.cos(alkarSzog)*0.255*m;
+    const kezZ = konyokZ - Math.sin(alkarSzog)*0.255*m;
+    const kez = kapszula(0.036, 0.055, bor, vx + oldal*0.024, kezY, kezZ);
+    kez.scale.set(0.92, 1, 0.62);
+    kez.rotation.x = alkarSzog; g.add(kez);
   });
 
-  /* ---------- nyak és fej ---------- */
-  g.add(kapszula(0.048, 0.06, bor, 0, vallY + 0.055, -0.005));
-  const fejY = vallY + 0.185;
-  const fej = gomb(0.113, bor, 0, fejY, 0);
-  fej.scale.set(1, 1.16, 1.05); g.add(fej);
-  const all = gomb(0.072, bor, 0, fejY - 0.062, 0.030); all.scale.set(1, 0.9, 1.02); g.add(all);
+  /* ---------- nyak és fej ----------
+     A fej nem gömb: a koponya hátrafelé hosszabb, az arc alsó harmada
+     elkeskenyedik. Ez a két forma együtt adja a fejtartás sziluettjét. */
+  const nyak = kapszula(0.046, 0.055*m, bor, 0, vallY + 0.048*m, -0.004);
+  nyak.rotation.x = -0.06; g.add(nyak);
+
+  const fejY = vallY + 0.080*m + t.fejR*1.06;
+  const koponya = gomb(t.fejR, bor, 0, fejY, -0.006);
+  koponya.scale.set(1, 1.16, 1.10); g.add(koponya);
+  /* arc alsó harmada: állkapocs, előrébb és keskenyebben */
+  const allkapocs = gomb(t.fejR*0.80, bor, 0, fejY - t.fejR*0.62, 0.020);
+  allkapocs.scale.set(0.92, 0.82, 1.02); g.add(allkapocs);
   if(!egyszeru){
     [-1,1].forEach(oldal=>{
-      const f = gomb(0.030, bor, oldal*0.112, fejY + 0.004, -0.004);
-      f.scale.set(0.42, 1.1, 0.85); g.add(f);
+      const ful = gomb(0.026, bor, oldal*t.fejR*1.02, fejY - 0.006, -0.008);
+      ful.scale.set(0.40, 1.15, 0.90); g.add(ful);
     });
   }
 
-  if(!(o.ruha === "katona" || o.ruha === "katonaTiszt")){
-    const hajGeo = new T.SphereGeometry(0.118, 20, 14, 0, Math.PI*2, 0, Math.PI*0.68);
-    const h = new T.Mesh(hajGeo, haj);
-    h.position.set(0, fejY + 0.010, 0); h.scale.set(1.02, 1.10, 1.06);
-    h.rotation.x = -0.30; h.castShadow = true; g.add(h);
+  /* ---------- haj vagy sisak ---------- */
+  if(!katonai){
+    hajat(g, haj, t, fejY, (o.haj||0) % 3, NOI_SZEREP[o.ruha]);
   } else {
-    const sisak = new T.Mesh(new T.SphereGeometry(0.126, 20, 14, 0, Math.PI*2, 0, Math.PI*0.72),
-                             anyag(0x424832, 0.72, 0.12));
-    sisak.position.set(0, fejY + 0.012, -0.004); sisak.scale.set(1.06, 1.02, 1.10);
-    sisak.rotation.x = -0.18; sisak.castShadow = true; g.add(sisak);
-    const perem = new T.Mesh(new T.TorusGeometry(0.126, 0.014, 8, 22), anyag(0x3a4029, 0.75));
-    perem.position.set(0, fejY + 0.006, -0.004); perem.rotation.x = Math.PI/2 - 0.18;
-    perem.scale.set(1.06, 1.10, 1); g.add(perem);
+    const sisak = new T.Mesh(new T.SphereGeometry(t.fejR*1.14, 20, 14, 0, Math.PI*2, 0, Math.PI*0.70),
+                             anyag(0x424832, 0.70, 0.14));
+    sisak.position.set(0, fejY + 0.012, -0.006); sisak.scale.set(1.08, 1.06, 1.14);
+    sisak.rotation.x = -0.16; sisak.castShadow = true; g.add(sisak);
+    const perem = new T.Mesh(new T.TorusGeometry(t.fejR*1.14, 0.013, 8, 22), anyag(0x3a4029, 0.74));
+    perem.position.set(0, fejY + 0.004, -0.006); perem.rotation.x = Math.PI/2 - 0.16;
+    perem.scale.set(1.08, 1.14, 1); g.add(perem);
   }
 
-  /* ---------- arcvonások ---------- */
+  /* ---------- arcvonások ----------
+     A szemgolyó fehérje ekkora távolságból két világos pontnak látszik, és
+     bábuszemet ad. Ezért a szemgödör sötét, és csak egy apró csillanás ül
+     benne — messziről ez olvasható arcnak, közelről sem zavaró. */
   if(!egyszeru){
-    const szemFeher = new T.MeshStandardMaterial({ color:0xf3efe8, roughness:0.35 });
-    const pupilla   = new T.MeshStandardMaterial({ color:0x1c1811, roughness:0.25 });
+    const szemgodor = anyag(0x3a2f28, 0.62);
+    const csillanas = anyag(0xd8d2c8, 0.30);
+    const zR = t.fejR;
     [-1,1].forEach(oldal=>{
-      const sz = gomb(0.0225, szemFeher, oldal*0.043, fejY + 0.013, 0.098);
-      sz.scale.set(1, 0.78, 0.6); g.add(sz);
-      g.add(gomb(0.0105, pupilla, oldal*0.043, fejY + 0.011, 0.112));
-      const szemoldok = doboz(0.048, 0.011, 0.012, haj, oldal*0.045, fejY + 0.049, 0.100);
-      szemoldok.rotation.z = -oldal*0.14; g.add(szemoldok);
+      const sz = gomb(zR*0.20, szemgodor, oldal*zR*0.40, fejY + zR*0.10, zR*0.86);
+      sz.scale.set(1.15, 0.62, 0.5); g.add(sz);
+      g.add(gomb(zR*0.070, csillanas, oldal*zR*0.40, fejY + zR*0.11, zR*0.96));
+      /* A szemöldök két külön ív. Ha túl széles, a kettő egybeolvad egy
+         sávvá, és az alak szemellenzőt visel — ezért keskeny és beljebb ül. */
+      const szemoldok = doboz(zR*0.30, zR*0.07, zR*0.08, haj, oldal*zR*0.40, fejY + zR*0.34, zR*0.86);
+      szemoldok.rotation.z = -oldal*0.18; g.add(szemoldok);
     });
-    const orr = new T.Mesh(new T.ConeGeometry(0.020, 0.048, 8), bor);
-    orr.position.set(0, fejY - 0.014, 0.103); orr.rotation.x = Math.PI/2 + 0.5;
+    const orr = new T.Mesh(new T.ConeGeometry(zR*0.19, zR*0.46, 8), bor);
+    orr.position.set(0, fejY - zR*0.14, zR*0.92); orr.rotation.x = Math.PI/2 + 0.48;
     orr.castShadow = true; g.add(orr);
-    g.add(doboz(0.042, 0.010, 0.012,
-      new T.MeshStandardMaterial({color:0x8d5a4c, roughness:0.55}), 0, fejY - 0.058, 0.094));
+    const szaj = doboz(zR*0.40, zR*0.085, zR*0.10, anyag(0x8d5a4c, 0.55), 0, fejY - zR*0.55, zR*0.80);
+    g.add(szaj);
   }
 
   g.position.set(o.x||0, 0, o.z||0);
   g.rotation.y = (o.ry||0);
-  g.add(sikArnyek(0, ul?0.2:0.02, 0.42));
+  g.add(sikArnyek(0, ul?0.2:0.02, 0.40));
   return g;
+}
+
+/* Három hajforma. Egyetlen félgömb-sapka mindenkinek ugyanaz a sziluett volt,
+   és a tömegjelenetekben ez tette egyformává az alakokat. */
+function hajat(g, haj, t, fejY, valtozat, noi){
+  const R = t.fejR;
+  /* A sapka a fejtetőt és a homlok felső harmadát fedi. Ha hátrébb billen,
+     kopasznak látszik az alak elölnézetből — ezért alig van megdöntve. */
+  const sapka = new T.Mesh(
+    new T.SphereGeometry(R*1.07, 20, 14, 0, Math.PI*2, 0, Math.PI*(noi ? 0.68 : 0.60)), haj);
+  sapka.position.set(0, fejY + R*0.04, -0.006);
+  sapka.scale.set(1.06, 1.16, 1.12);
+  sapka.rotation.x = -0.10;
+  sapka.castShadow = true; g.add(sapka);
+
+  if(noi || valtozat === 2){
+    /* hosszabb haj: két oldalt lefutó tömeg, a fül vonala alá */
+    [-1,1].forEach(oldal=>{
+      const tincs = kapszula(R*0.34, R*0.90, haj, oldal*R*0.86, fejY - R*0.46, -R*0.18);
+      tincs.scale.set(0.72, 1, 0.86); g.add(tincs);
+    });
+    const hatul = gomb(R*0.70, haj, 0, fejY - R*0.30, -R*0.60);
+    hatul.scale.set(1.05, 1.10, 0.80); g.add(hatul);
+  } else if(valtozat === 1){
+    /* homlokba fésült tincs */
+    const tincs = doboz(R*1.20, R*0.30, R*0.24, haj, 0, fejY + R*0.66, R*0.52);
+    tincs.rotation.x = 0.30; g.add(tincs);
+  }
 }
 
 /* --- bútor- és tárgykészlet --- */
