@@ -77,6 +77,8 @@ visszajelzés nevezi meg.
 ## Fájlszerkezet
 
     index.html            a teljes alkalmazás: HTML, CSS, JS, 3D jelenetek, kérdésadatok
+    admin.html            a visszajelzések kimutatása, admin jelszóval
+    api/                  kiszolgálófüggvények: beküldés, belépés, összesítés
     assets/hdri/          környezetfény (.hdr) — a nyitóképé és a jeleneteké is
     assets/felulet/       padló- és falanyag PBR-térképei (.webp)
     assets/modell/        modellek (.glb, meshopt-tömörítve)
@@ -214,6 +216,43 @@ Mért idő az első képig:
 | helyi kiszolgáló | 2,3 mp | 1,0 mp |
 | 9 Mbit/s | 6,8 mp | 2,4 mp |
 | 4 Mbit/s | 14,2 mp | 4,8 mp |
+
+## Visszajelzés és kimutatás
+
+A tizedik döntés után, de még az eredmény **előtt** jön egy háromkérdéses
+kérdőív: egy 1–5 értékelés és két A/B/C kérdés. Azért az eredmény előtt, mert az
+eredmény a jutalom — utána a legtöbben már nem töltenék ki. Kihagyható: a
+kényszerítés rosszabb adatot ad, mint a kevesebb.
+
+**Amit tárolunk:** a három válasz, a pálya és a végső Bizalomindex. Név,
+e-mail-cím és IP nem kerül melléjük — a visszajelzés névtelen, és nem
+összekapcsolható az eredményküldéssel.
+
+A kérdések szövege az `index.html`-ben, a `KERDOIV` tömbben van; átírni is ott kell.
+
+    /                     a játék
+    /admin.html           a kimutatás (jelszóval)
+    /api/valasz           a kérdőív beküldése (nyilvános, szigorúan ellenőrzött)
+    /api/belepes          admin be- és kiléptetés
+    /api/stat             összesített adatok (csak belépve)
+
+A kimutatás jelszava egyetlen környezeti változó, a jegy pedig HttpOnly sütiben
+utazik, aláírva — a kiszolgálónak nem kell munkamenetet tárolnia. Az összesítés
+sosem ad ki egyedi kitöltést.
+
+### Beállítás
+
+Ez az egyetlen rész, amihez adatbázis kell. Két lépés, egyszer:
+
+```bash
+vercel integration add neon      # Neon Postgres — beírja a DATABASE_URL-t
+vercel env add ADMIN_JELSZO      # a kimutatás jelszava, mindhárom környezetbe
+vercel deploy --prod --yes
+```
+
+A táblát az első beérkező válasz hozza létre, tehát külön migráció nincs.
+Amíg nincs adatbázis, a kérdőív nem hasal el némán: kiírja, hogy nem ment el, és
+az eredmény ettől függetlenül megnézhető.
 
 ## Helyi futtatás
 

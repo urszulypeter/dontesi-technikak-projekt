@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Kimutatás — Vezetői Bizalom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   VEZETŐI BIZALOM — visszajelzések kimutatása
+   Csak admin jelszóval. Az adat összesítve érkezik a /api/stat
+   végpontról; egyedi kitöltés nem hagyja el a kiszolgálót.
+   ============================================================ */
+:root{
+  --krem:#F7F4EE; --krem-2:#FBFAF7; --papir:#FFFFFF;
+  --tinta:#14231C; --tinta-hal:#4A5C53; --tinta-vil:#7E8D85;
+  --vonal:#DDD8CD; --arany:#C9A063; --zold-800:#13291F;
+  /* Egyetlen adatszín: minden diagramon egy sorozat van, tehát nincs mit
+     megkülönböztetni színnel. Az arany itt szándékosan nem adatjel — fehéren
+     2,42:1 a kontrasztja, ami jelnek kevés; keretnek és kiemelésnek marad. */
+  --jel:#24503C; --jel-halvany:#E4EBE6;
+  --display:"Playfair Display",Georgia,serif;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--krem-2);color:var(--tinta);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);font-weight:500;margin:0;line-height:1.15}
+.szem{display:block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tinta-vil)}
+
+/* --- belépés --- */
+.belepes{min-height:100vh;display:grid;place-items:center;padding:24px}
+.belepes-kartya{width:100%;max-width:380px;background:var(--papir);border:1px solid var(--vonal);padding:40px 34px}
+.belepes h1{font-size:1.6rem;margin:14px 0 8px}
+.belepes p{color:var(--tinta-hal);font-size:.92rem;margin:0 0 26px}
+label{display:block;font-size:.82rem;font-weight:600;margin-bottom:9px}
+input[type=password]{width:100%;font-family:inherit;font-size:1rem;color:var(--tinta);background:transparent;border:0;border-bottom:1px solid var(--vonal);padding:9px 0;transition:border-color .2s}
+input[type=password]:focus{outline:none;border-color:var(--jel)}
+.gomb{display:inline-flex;align-items:center;gap:9px;border:0;border-radius:2px;background:var(--zold-800);color:var(--krem);font-family:inherit;font-size:.92rem;font-weight:600;padding:13px 22px;cursor:pointer;transition:background .2s}
+.gomb:hover{background:var(--jel)}
+.gomb:disabled{opacity:.45;cursor:not-allowed}
+.gomb.vonalas{background:transparent;color:var(--tinta);border:1px solid var(--vonal)}
+.gomb.vonalas:hover{background:transparent;border-color:var(--tinta)}
+.hiba{color:#B4503C;font-size:.85rem;min-height:1.3em;margin:14px 0 0}
+:focus-visible{outline:2px solid var(--arany);outline-offset:3px}
+[hidden]{display:none !important}
+
+/* --- fejléc --- */
+.fejlec{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+        padding:34px clamp(18px,4vw,44px) 26px;border-bottom:1px solid var(--vonal);background:var(--papir)}
+.fejlec h1{font-size:clamp(1.5rem,3vw,2.1rem);margin-top:10px}
+.fejlec .eszkozok{display:flex;gap:10px;align-items:center}
+.frissitve{color:var(--tinta-vil);font-size:.8rem}
+
+main{padding:clamp(22px,4vw,44px);max-width:1220px;margin:0 auto}
+.racs{display:grid;gap:18px}
+@media(min-width:900px){ .racs.ketto{grid-template-columns:1fr 1fr} }
+
+.kartya{background:var(--papir);border:1px solid var(--vonal);padding:26px clamp(18px,2.4vw,30px)}
+.kartya h2{font-size:1.18rem;margin:12px 0 4px}
+.kartya .alcim{color:var(--tinta-hal);font-size:.86rem;margin:0 0 22px}
+
+/* --- fő szám és mutatók --- */
+.mutatok{display:grid;gap:18px;grid-template-columns:1fr;margin-bottom:18px}
+@media(min-width:760px){ .mutatok{grid-template-columns:1.4fr 1fr 1fr} }
+.fo-szam{font-size:clamp(3rem,7vw,4.2rem);font-weight:600;line-height:1;letter-spacing:-.02em;margin-top:14px}
+.mutato-ertek{font-size:2rem;font-weight:600;line-height:1;margin-top:14px}
+.mutato-lab{color:var(--tinta-vil);font-size:.84rem;margin-top:9px}
+
+/* --- oszlopdiagram ---
+   Az SVG a nézetdoboza arányát tartja, tehát szélességgel együtt nő a magassága
+   is. Korlát nélkül egy széles kártyán fél képernyő magas oszlopok lennének —
+   ezért a rajz a saját természetes méreténél nem nő tovább. */
+.diagram{width:100%;max-width:560px;display:block;overflow:visible}
+.alapvonal{stroke:var(--vonal);stroke-width:1}
+.oszlop{fill:var(--jel);transition:opacity .15s}
+.oszlop:hover{opacity:.78}
+.tengely-szoveg{fill:var(--tinta-vil);font-size:12px;font-family:var(--sans)}
+.ertek-szoveg{fill:var(--tinta);font-size:12px;font-weight:600;font-family:var(--sans)}
+.vonal-jel{fill:none;stroke:var(--jel);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.vonal-pont{fill:var(--jel);stroke:var(--papir);stroke-width:2}
+
+/* --- vízszintes sávok (A/B/C kérdések) --- */
+.sav-tetel{margin-bottom:20px}
+.sav-tetel:last-child{margin-bottom:0}
+.sav-fej{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:8px}
+.sav-cimke{display:flex;gap:11px;align-items:baseline;font-size:.94rem}
+.sav-betu{flex:0 0 auto;font-family:var(--display);color:var(--jel);border:1px solid var(--vonal);
+          width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem}
+.sav-ertek{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.sav-ertek span{color:var(--tinta-vil);font-weight:400;margin-left:7px}
+.sav-palya{height:18px;background:var(--jel-halvany);border-radius:0 2px 2px 0}
+.sav-kitolt{height:100%;background:var(--jel);border-radius:0 4px 4px 0;transition:width .5s cubic-bezier(.22,1,.36,1)}
+
+/* --- táblázat --- */
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--vonal)}
+th{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--tinta-vil);font-weight:700}
+td.szam,th.szam{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:0}
+details{margin-top:20px;border-top:1px solid var(--vonal);padding-top:14px}
+summary{cursor:pointer;font-size:.84rem;color:var(--tinta-hal);font-weight:600}
+summary::marker{color:var(--tinta-vil)}
+details table{margin-top:12px}
+
+.ures{color:var(--tinta-vil);font-size:.92rem;padding:28px 0;text-align:center}
+.tolt{opacity:.45;transition:opacity .2s}
+
+/* --- súgóbuborék --- */
+.bubi{position:fixed;pointer-events:none;z-index:50;background:var(--zold-800);color:var(--krem);
+      font-size:.8rem;line-height:1.45;padding:8px 11px;border-radius:2px;white-space:nowrap;
+      opacity:0;transition:opacity .12s;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.bubi.lat{opacity:1}
+.bubi b{font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ============ BELÉPÉS ============ -->
+<div class="belepes" id="belepes-lap">
+  <form class="belepes-kartya" id="belepes-form" novalidate>
+    <span class="szem">Vezetői Bizalom</span>
+    <h1>Kimutatás</h1>
+    <p>A visszajelzések összesítése. A belépés jelszóhoz kötött.</p>
+    <label for="jelszo">Admin jelszó</label>
+    <input type="password" id="jelszo" autocomplete="current-password" required>
+    <p class="hiba" id="belepes-hiba" role="alert" aria-live="polite"></p>
+    <button class="gomb" type="submit" id="belepes-gomb">Belépés</button>
+  </form>
+</div>
+
+<!-- ============ KIMUTATÁS ============ -->
+<div id="kimutatas" hidden>
+  <header class="fejlec">
+    <div>
+      <span class="szem">Vezetői Bizalom</span>
+      <h1>Visszajelzések</h1>
+    </div>
+    <div class="eszkozok">
+      <span class="frissitve" id="frissitve"></span>
+      <button class="gomb vonalas" type="button" id="frissit-gomb">Frissítés</button>
+      <button class="gomb vonalas" type="button" id="kilep-gomb">Kilépés</button>
+    </div>
+  </header>
+
+  <main id="tartalom">
+    <div class="mutatok">
+      <div class="kartya">
+        <span class="szem">Kitöltés</span>
+        <div class="fo-szam" id="m-osszes">0</div>
+        <div class="mutato-lab">beérkezett kérdőív</div>
+      </div>
+      <div class="kartya">
+        <span class="szem">Hasznosság</span>
+        <div class="mutato-ertek" id="m-atlag">–</div>
+        <div class="mutato-lab">átlagos értékelés (1–5)</div>
+      </div>
+      <div class="kartya">
+        <span class="szem">Eredmény</span>
+        <div class="mutato-ertek" id="m-pont">–</div>
+        <div class="mutato-lab">átlagos Bizalomindex (0–100)</div>
+      </div>
+    </div>
+
+    <div class="racs ketto" style="margin-bottom:18px">
+      <div class="kartya">
+        <span class="szem">01 kérdés</span>
+        <h2>Mennyire volt hasznos a szimuláció?</h2>
+        <p class="alcim">1 = egyáltalán nem · 5 = nagyon</p>
+        <div id="d-ertekeles"></div>
+        <details><summary>Táblázatos nézet</summary><div id="t-ertekeles"></div></details>
+      </div>
+      <div class="kartya">
+        <span class="szem">Idővonal</span>
+        <h2>Napi kitöltések</h2>
+        <p class="alcim">Budapesti idő szerint</p>
+        <div id="d-napok"></div>
+        <details><summary>Táblázatos nézet</summary><div id="t-napok"></div></details>
+      </div>
+    </div>
+
+    <div class="racs ketto" style="margin-bottom:18px">
+      <div class="kartya">
+        <span class="szem">02 kérdés</span>
+        <h2>Változott-e, ahogy a saját döntéseidre nézel?</h2>
+        <p class="alcim">Egy válasz kérdésenként</p>
+        <div id="d-k1"></div>
+        <details><summary>Táblázatos nézet</summary><div id="t-k1"></div></details>
+      </div>
+      <div class="kartya">
+        <span class="szem">03 kérdés</span>
+        <h2>Melyik rész adta a legtöbbet?</h2>
+        <p class="alcim">Egy válasz kérdésenként</p>
+        <div id="d-k2"></div>
+        <details><summary>Táblázatos nézet</summary><div id="t-k2"></div></details>
+      </div>
+    </div>
+
+    <div class="racs">
+      <div class="kartya">
+        <span class="szem">Bontás</span>
+        <h2>Pálya szerint</h2>
+        <p class="alcim">Kitöltés, átlagos értékelés és átlagos Bizalomindex. Három különböző skála, ezért táblázat — egy ábrára téve félrevezetne.</p>
+        <div id="t-palyak"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="bubi" id="bubi" role="status" aria-live="polite"></div>
+
+<script>
+const $ = s => document.getElementById(s);
+const SZ = {
+  /* Egy sorozat van minden diagramon, ezért nincs jelmagyarázat: a cím megmondja,
+     mit ábrázol. A számok az oszlopok végén ülnek, tehát az érték nincs
+     súgóbuborékba zárva — az csak kiegészít. */
+  jel:"#24503C", vonal:"#DDD8CD", papir:"#FFFFFF"
+};
+const szam  = n => Number(n).toLocaleString("hu-HU");
+const tized = (n, j) => Number(n).toLocaleString("hu-HU", { minimumFractionDigits:j, maximumFractionDigits:j });
+const PALYA_NEV = { vallalati:"Vállalati", katonai:"Katonai", politikai:"Politikai" };
+
+/* --- súgóbuborék ---------------------------------------------------------- */
+const bubi = $("bubi");
+function bubiMutat(ev, szoveg){
+  bubi.innerHTML = szoveg;
+  bubi.classList.add("lat");
+  const r = bubi.getBoundingClientRect();
+  const x = Math.min(Math.max(ev.clientX - r.width/2, 8), window.innerWidth - r.width - 8);
+  bubi.style.left = x + "px";
+  bubi.style.top  = Math.max(8, ev.clientY - r.height - 12) + "px";
+}
+function bubiRejt(){ bubi.classList.remove("lat"); }
+
+/* --- oszlopdiagram: az 1–5 értékelés megoszlása ---------------------------- */
+function oszlopDiagram(hely, adatok, cimkeNev, ertekNev){
+  const SZELES = 560, MAGAS = 240, ALJ = 34, TETO = 26, BAL = 8, JOBB = 8;
+  const rajz = MAGAS - ALJ - TETO;
+  const max = Math.max(1, ...adatok.map(a => a[ertekNev]));
+  const savSzel = (SZELES - BAL - JOBB) / adatok.length;
+  const oszlopSzel = Math.min(24, savSzel * 0.44);   /* soha nem tölti ki a sávot */
+
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", `0 0 ${SZELES} ${MAGAS}`);
+  svg.setAttribute("class", "diagram");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", cimkeNev + " megoszlása");
+
+  /* alapvonal — egyetlen hajszálvonal, nem rácsháló */
+  const alap = document.createElementNS(ns, "line");
+  alap.setAttribute("x1", BAL); alap.setAttribute("x2", SZELES - JOBB);
+  alap.setAttribute("y1", TETO + rajz); alap.setAttribute("y2", TETO + rajz);
+  alap.setAttribute("class", "alapvonal");
+  svg.appendChild(alap);
+
+  const ossz = adatok.reduce((s,a)=> s + a[ertekNev], 0) || 1;
+  adatok.forEach((a, i)=>{
+    const kx = BAL + savSzel*(i + 0.5);
+    const h  = (a[ertekNev] / max) * rajz;
+    const y  = TETO + rajz - h;
+
+    /* 4 képpont lekerekítés fent, az alapvonalnál szögletes */
+    const r = Math.min(4, h);
+    const x0 = kx - oszlopSzel/2, x1 = kx + oszlopSzel/2;
+    const ut = document.createElementNS(ns, "path");
+    ut.setAttribute("d",
+      `M${x0},${TETO+rajz} L${x0},${y+r} Q${x0},${y} ${x0+r},${y} L${x1-r},${y} Q${x1},${y} ${x1},${y+r} L${x1},${TETO+rajz} Z`);
+    ut.setAttribute("class", "oszlop");
+    svg.appendChild(ut);
+
+    /* nagyobb, láthatatlan találati felület a mutatáshoz */
+    const cel = document.createElementNS(ns, "rect");
+    cel.setAttribute("x", kx - savSzel/2); cel.setAttribute("y", TETO);
+    cel.setAttribute("width", savSzel); cel.setAttribute("height", rajz);
+    cel.setAttribute("fill", "transparent");
+    const arany = Math.round(a[ertekNev]/ossz*100);
+    cel.addEventListener("mousemove", ev => bubiMutat(ev,
+      `<b>${a[cimkeNev]}</b> — ${szam(a[ertekNev])} kitöltés · ${arany}%`));
+    cel.addEventListener("mouseleave", bubiRejt);
+    svg.appendChild(cel);
+
+    /* érték az oszlop tetején */
+    const ert = document.createElementNS(ns, "text");
+    ert.setAttribute("x", kx); ert.setAttribute("y", y - 9);
+    ert.setAttribute("text-anchor", "middle"); ert.setAttribute("class", "ertek-szoveg");
+    ert.textContent = szam(a[ertekNev]);
+    svg.appendChild(ert);
+
+    const cim = document.createElementNS(ns, "text");
+    cim.setAttribute("x", kx); cim.setAttribute("y", TETO + rajz + 21);
+    cim.setAttribute("text-anchor", "middle"); cim.setAttribute("class", "tengely-szoveg");
+    cim.textContent = a[cimkeNev];
+    svg.appendChild(cim);
+  });
+
+  hely.innerHTML = "";
+  hely.appendChild(svg);
+}
+
+/* --- vízszintes sávok: A/B/C válaszok ------------------------------------- */
+function savDiagram(hely, adatok, valaszSzovegek){
+  const ossz = adatok.reduce((s,a)=> s + a.db, 0);
+  hely.innerHTML = "";
+  ["A","B","C"].forEach(betu=>{
+    const sor = adatok.find(a => a.valasz === betu) || { valasz:betu, db:0 };
+    const arany = ossz ? (sor.db / ossz) * 100 : 0;
+
+    const doboz = document.createElement("div");
+    doboz.className = "sav-tetel";
+    const fej = document.createElement("div");
+    fej.className = "sav-fej";
+
+    const cimke = document.createElement("div");
+    cimke.className = "sav-cimke";
+    const b = document.createElement("span");
+    b.className = "sav-betu"; b.textContent = betu;
+    const sz = document.createElement("span");
+    sz.textContent = valaszSzovegek[betu];
+    cimke.append(b, sz);
+
+    const ertek = document.createElement("div");
+    ertek.className = "sav-ertek";
+    ertek.textContent = szam(sor.db);
+    const ar = document.createElement("span");
+    ar.textContent = Math.round(arany) + "%";
+    ertek.appendChild(ar);
+
+    fej.append(cimke, ertek);
+
+    const palya = document.createElement("div");
+    palya.className = "sav-palya";
+    const kitolt = document.createElement("div");
+    kitolt.className = "sav-kitolt";
+    kitolt.style.width = arany + "%";
+    palya.appendChild(kitolt);
+
+    doboz.append(fej, palya);
+    hely.appendChild(doboz);
+  });
+}
+
+/* --- vonaldiagram: napi kitöltések ---------------------------------------- */
+function vonalDiagram(hely, napok){
+  hely.innerHTML = "";
+  if(napok.length === 0){
+    hely.innerHTML = '<p class="ures">Még nincs adat.</p>';
+    return;
+  }
+  if(napok.length === 1){
+    hely.innerHTML = '<p class="ures">Egyetlen nap adata van: ' +
+      napok[0].nap + " — " + szam(napok[0].db) + " kitöltés.<br>Az idővonal a második naptól rajzolódik ki.</p>";
+    return;
+  }
+  const SZELES = 560, MAGAS = 240, ALJ = 34, TETO = 26, BAL = 14, JOBB = 34;
+  const rajz = MAGAS - ALJ - TETO, szelesseg = SZELES - BAL - JOBB;
+  const max = Math.max(1, ...napok.map(n => n.db));
+  const x = i => BAL + (napok.length === 1 ? szelesseg/2 : (i/(napok.length-1))*szelesseg);
+  const y = v => TETO + rajz - (v/max)*rajz;
+
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", `0 0 ${SZELES} ${MAGAS}`);
+  svg.setAttribute("class", "diagram");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "Napi kitöltések alakulása");
+
+  const alap = document.createElementNS(ns, "line");
+  alap.setAttribute("x1", BAL); alap.setAttribute("x2", SZELES - JOBB);
+  alap.setAttribute("y1", TETO + rajz); alap.setAttribute("y2", TETO + rajz);
+  alap.setAttribute("class", "alapvonal");
+  svg.appendChild(alap);
+
+  const ut = document.createElementNS(ns, "path");
+  ut.setAttribute("d", napok.map((n,i)=> (i ? "L" : "M") + x(i) + "," + y(n.db)).join(" "));
+  ut.setAttribute("class", "vonal-jel");
+  svg.appendChild(ut);
+
+  napok.forEach((n,i)=>{
+    const p = document.createElementNS(ns, "circle");
+    p.setAttribute("cx", x(i)); p.setAttribute("cy", y(n.db)); p.setAttribute("r", 4);
+    p.setAttribute("class", "vonal-pont");
+    svg.appendChild(p);
+    /* a találati felület jóval nagyobb, mint a pont */
+    const cel = document.createElementNS(ns, "rect");
+    cel.setAttribute("x", x(i) - szelesseg/(napok.length*2) - 6); cel.setAttribute("y", TETO);
+    cel.setAttribute("width", szelesseg/napok.length + 12); cel.setAttribute("height", rajz);
+    cel.setAttribute("fill", "transparent");
+    cel.addEventListener("mousemove", ev => bubiMutat(ev, `<b>${n.nap}</b> — ${szam(n.db)} kitöltés`));
+    cel.addEventListener("mouseleave", bubiRejt);
+    svg.appendChild(cel);
+  });
+
+  /* csak a két szélső dátum és az utolsó érték kap közvetlen feliratot */
+  const felirat = (i, anchor, dx) => {
+    const t = document.createElementNS(ns, "text");
+    t.setAttribute("x", x(i) + dx); t.setAttribute("y", TETO + rajz + 21);
+    t.setAttribute("text-anchor", anchor); t.setAttribute("class", "tengely-szoveg");
+    t.textContent = napok[i].nap.slice(5);
+    svg.appendChild(t);
+  };
+  felirat(0, "start", -4);
+  felirat(napok.length - 1, "end", 4);
+
+  const utolso = napok[napok.length - 1];
+  const ert = document.createElementNS(ns, "text");
+  ert.setAttribute("x", x(napok.length-1) + 9); ert.setAttribute("y", y(utolso.db) + 4);
+  ert.setAttribute("class", "ertek-szoveg");
+  ert.textContent = szam(utolso.db);
+  svg.appendChild(ert);
+
+  hely.appendChild(svg);
+}
+
+/* --- táblázatok ----------------------------------------------------------- */
+function tablazat(hely, fejek, sorok){
+  const t = document.createElement("table");
+  const fej = document.createElement("thead");
+  const fsor = document.createElement("tr");
+  fejek.forEach(f=>{
+    const th = document.createElement("th");
+    th.textContent = f.nev;
+    if(f.szam) th.className = "szam";
+    fsor.appendChild(th);
+  });
+  fej.appendChild(fsor); t.appendChild(fej);
+  const test = document.createElement("tbody");
+  sorok.forEach(s=>{
+    const tr = document.createElement("tr");
+    s.forEach((ertek, i)=>{
+      const td = document.createElement("td");
+      td.textContent = ertek;
+      if(fejek[i].szam) td.className = "szam";
+      tr.appendChild(td);
+    });
+    test.appendChild(tr);
+  });
+  t.appendChild(test);
+  hely.innerHTML = "";
+  hely.appendChild(t);
+}
+
+/* --- adatok betöltése és kirajzolása -------------------------------------- */
+const K1_SZOVEG = { A:"Igen, több dolgot másképp csinálnék", B:"Némileg elgondolkodtatott", C:"Nem változott" };
+const K2_SZOVEG = { A:"A döntési helyzetek", B:"A válasz utáni visszajelzések", C:"A végső kiértékelés" };
+
+async function kimutatastTolt(){
+  const tartalom = $("tartalom");
+  tartalom.classList.add("tolt");          /* az előző kép marad, csak halványabban */
+  try{
+    const v = await fetch("/api/stat", { headers:{ "Accept":"application/json" } });
+    if(v.status === 401){ belepesreVissza(); return; }
+    if(!v.ok) throw new Error("A kiszolgáló " + v.status + " hibát adott.");
+    const a = await v.json();
+    kirajzol(a);
+    $("frissitve").textContent = "Frissítve " +
+      new Date().toLocaleTimeString("hu-HU", { hour:"2-digit", minute:"2-digit" });
+  }catch(h){
+    console.error("A kimutatás nem tölthető be:", h);
+    $("frissitve").textContent = "A frissítés nem sikerült.";
+  }finally{
+    tartalom.classList.remove("tolt");
+  }
+}
+
+function kirajzol(a){
+  $("m-osszes").textContent = szam(a.osszes);
+  $("m-atlag").textContent  = a.osszes ? tized(a.atlag, 2) + " / 5"   : "–";
+  $("m-pont").textContent   = a.osszes ? tized(a.atlagPont, 1) + " / 100" : "–";
+
+  if(!a.osszes){
+    ["d-ertekeles","d-k1","d-k2","d-napok","t-palyak"].forEach(id=>{
+      $(id).innerHTML = '<p class="ures">Még nem érkezett kitöltés.</p>';
+    });
+    ["t-ertekeles","t-k1","t-k2","t-napok"].forEach(id=> $(id).innerHTML = "");
+    return;
+  }
+
+  /* 1–5 értékelés: minden fokozat szerepeljen, a nulla is */
+  const fokok = [1,2,3,4,5].map(f=>{
+    const s = a.ertekelesek.find(e => Number(e.fok) === f);
+    return { fok:String(f), db: s ? s.db : 0 };
+  });
+  oszlopDiagram($("d-ertekeles"), fokok, "fok", "db");
+  tablazat($("t-ertekeles"),
+    [{nev:"Értékelés"},{nev:"Kitöltés",szam:true},{nev:"Arány",szam:true}],
+    fokok.map(f=> [f.fok, szam(f.db), Math.round(f.db/a.osszes*100) + "%"]));
+
+  savDiagram($("d-k1"), a.k1, K1_SZOVEG);
+  tablazat($("t-k1"), [{nev:"Válasz"},{nev:"Kitöltés",szam:true}],
+    ["A","B","C"].map(b=>{
+      const s = a.k1.find(x=> x.valasz === b);
+      return [b + " — " + K1_SZOVEG[b], szam(s ? s.db : 0)];
+    }));
+
+  savDiagram($("d-k2"), a.k2, K2_SZOVEG);
+  tablazat($("t-k2"), [{nev:"Válasz"},{nev:"Kitöltés",szam:true}],
+    ["A","B","C"].map(b=>{
+      const s = a.k2.find(x=> x.valasz === b);
+      return [b + " — " + K2_SZOVEG[b], szam(s ? s.db : 0)];
+    }));
+
+  /* A pályabontás három mérőszáma három különböző skálán mozog, ezért
+     táblázat és nem diagram: két tengelyt egy ábrára tenni félrevezetne. */
+  tablazat($("t-palyak"),
+    [{nev:"Pálya"},{nev:"Kitöltés",szam:true},{nev:"Értékelés",szam:true},{nev:"Bizalomindex",szam:true}],
+    a.palyak.map(p=> [
+      PALYA_NEV[p.palya] || p.palya,
+      szam(p.db),
+      tized(p.atlag, 2),
+      tized(p.atlag_pont, 1)
+    ]));
+
+  vonalDiagram($("d-napok"), a.napok);
+  tablazat($("t-napok"), [{nev:"Nap"},{nev:"Kitöltés",szam:true}],
+    a.napok.map(n=> [n.nap, szam(n.db)]));
+}
+
+/* --- belépés -------------------------------------------------------------- */
+function kimutatasraValt(){
+  $("belepes-lap").hidden = true;
+  $("kimutatas").hidden = false;
+  kimutatastTolt();
+}
+function belepesreVissza(){
+  $("kimutatas").hidden = true;
+  $("belepes-lap").hidden = false;
+  $("jelszo").value = "";
+  $("jelszo").focus();
+}
+
+$("belepes-form").addEventListener("submit", async ev=>{
+  ev.preventDefault();
+  const gomb = $("belepes-gomb"), hiba = $("belepes-hiba");
+  hiba.textContent = ""; gomb.disabled = true;
+  try{
+    const v = await fetch("/api/belepes", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ jelszo: $("jelszo").value })
+    });
+    if(v.status === 401){ hiba.textContent = "Hibás jelszó."; return; }
+    if(!v.ok){
+      const t = await v.json().catch(()=> ({}));
+      hiba.textContent = t.hiba || "A belépés most nem sikerült.";
+      return;
+    }
+    kimutatasraValt();
+  }catch(h){
+    console.error("A belépés nem sikerült:", h);
+    hiba.textContent = "A kiszolgáló nem érhető el.";
+  }finally{
+    gomb.disabled = false;
+  }
+});
+
+$("frissit-gomb").addEventListener("click", kimutatastTolt);
+$("kilep-gomb").addEventListener("click", async ()=>{
+  await fetch("/api/belepes", { method:"DELETE" }).catch(()=>{});
+  belepesreVissza();
+});
+
+/* Ha érvényes jegy van a sütiben, ne kelljen újra bejelentkezni. */
+fetch("/api/belepes", { headers:{ "Accept":"application/json" } })
+  .then(v => v.json())
+  .then(a => { if(a && a.belepve) kimutatasraValt(); })
+  .catch(()=>{});
+</script>
+</body>
+</html>

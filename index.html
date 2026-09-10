@@ -202,6 +202,44 @@ button{font-family:inherit}
 .apro{display:flex;align-items:center;gap:9px;color:var(--tinta-vil);font-size:.85rem;margin-top:18px}
 .apro svg{width:17px;height:17px}
 
+/* --- visszajelző kérdőív -------------------------------------------------- */
+.kerdoiv{max-width:760px}
+.kerdes{border:0;padding:0;margin:0 0 42px;position:relative}
+.kerdes legend{font-family:var(--display);font-size:1.32rem;line-height:1.25;padding:0;margin-bottom:20px;max-width:44ch}
+.kerdes .sorszam{display:block;font-family:var(--sans);font-size:.74rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--zold-600);margin-bottom:10px}
+/* A valódi jelölőnégyzet a képernyőolvasóé és a billentyűzeté; a látható
+   dobozt a hozzá tartozó címke rajzolja. */
+.kerdes input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.skala{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:460px}
+.skala label{
+  display:flex;align-items:center;justify-content:center;aspect-ratio:1;
+  border:1px solid var(--vonal);background:var(--papir);border-radius:2px;
+  font-family:var(--display);font-size:1.5rem;color:var(--tinta-hal);
+  cursor:pointer;transition:border-color .18s,background .18s,color .18s;
+}
+.skala label:hover{border-color:var(--zold-600)}
+.skala input:checked + label{background:var(--zold-800);border-color:var(--zold-800);color:var(--krem)}
+.skala input:focus-visible + label{outline:2px solid var(--arany);outline-offset:3px}
+.skala-vegek{display:flex;justify-content:space-between;max-width:460px;margin-top:10px;color:var(--tinta-vil);font-size:.82rem}
+.valasz-lista{display:grid;gap:10px}
+.valasz-lista label{
+  display:flex;gap:14px;align-items:flex-start;padding:15px 18px;
+  border:1px solid var(--vonal);background:var(--papir);border-radius:2px;
+  cursor:pointer;transition:border-color .18s,background .18s;
+}
+.valasz-lista label:hover{border-color:var(--zold-600)}
+.valasz-lista input:checked + label{border-color:var(--zold-800);background:var(--krem)}
+.valasz-lista input:focus-visible + label{outline:2px solid var(--arany);outline-offset:3px}
+.valasz-lista .betu{
+  flex:0 0 auto;font-family:var(--display);font-size:.94rem;color:var(--zold-600);
+  border:1px solid var(--vonal);width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:2px;
+}
+.valasz-lista input:checked + label .betu{background:var(--zold-800);border-color:var(--zold-800);color:var(--krem)}
+@media(max-width:560px){
+  .skala{max-width:none}
+  .skala label{font-size:1.2rem}
+}
+
 .lablec-nyito{
   background:var(--zold-900);color:rgba(247,244,238,.55);padding:34px clamp(20px,5vw,64px);
   font-size:.82rem;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center;
@@ -607,7 +645,31 @@ textarea.riport{
   </div>
 </section>
 
-<!-- ============ 3. KIÉRTÉKELÉS ============ -->
+<!-- ============ 3. VISSZAJELZÉS ============ -->
+<section id="view-kerdoiv" class="rejt" aria-labelledby="kerdoiv-cim">
+  <section class="szakasz">
+    <div class="belso">
+      <span class="szem">Megvan a tíz döntés</span>
+      <h2 id="kerdoiv-cim">Három kérdés, mielőtt megnézed az eredményed</h2>
+      <p class="bevezeto">
+        A válaszaid névtelenek: sem a neved, sem az e-mail-címed nem kerül hozzájuk.
+        Csak összesítve nézzük meg őket, hogy lássuk, mit ért ez a szimuláció.
+      </p>
+      <form class="urlap kerdoiv" id="kerdoiv-form" novalidate>
+        <div id="kerdoiv-mezok"></div>
+        <div class="hiba" id="kerdoiv-hiba" role="alert" aria-live="polite"></div>
+        <div class="gombsor">
+          <button class="gomb sotet" type="submit" id="kerdoiv-kuld">
+            Küldés és eredmény <span class="nyil" aria-hidden="true">→</span>
+          </button>
+          <button class="gomb vonalas" type="button" id="kerdoiv-atugras">Kihagyom</button>
+        </div>
+      </form>
+    </div>
+  </section>
+</section>
+
+<!-- ============ 4. KIÉRTÉKELÉS ============ -->
 <section id="view-end" class="rejt" aria-labelledby="zaro-cim">
   <div class="zaro-fejlec">
     <div class="belso">
@@ -3820,9 +3882,11 @@ function pontFrissit(valtozott){
 }
 
 function nezet(melyik){
-  ["view-start","view-game","view-end"].forEach(id=> $(id).classList.toggle("rejt", id !== melyik));
+  ["view-start","view-game","view-kerdoiv","view-end"].forEach(id=> $(id).classList.toggle("rejt", id !== melyik));
   HERO.aktiv = (melyik === "view-start");
-  V.aktiv    = (melyik !== "view-start");
+  /* A játékvászon csak a játék alatt látszik; a kérdőív és a kiértékelés
+     fölött rajzolni tiszta pazarlás volna. */
+  V.aktiv    = (melyik === "view-game");
   document.body.style.overflow = (melyik === "view-game") ? "hidden" : "";
   if(melyik !== "view-game") window.scrollTo({top:0, behavior:"instant" in window ? "instant" : "auto"});
 }
@@ -3946,7 +4010,8 @@ function tovabb(){
     jelenetJatszik(allapot.index);
   } else {
     kiertekeles();
-    nezet("view-end");
+    kerdoivEpit();
+    nezet("view-kerdoiv");
   }
 }
 
@@ -4073,6 +4138,136 @@ function ajanlasokValaszt(gyenge, st){
     else ki.push({cim:"Tedd nyilvánossá a módszeredet", szoveg:"Ha strukturáltan döntesz, mutasd is meg a szerkezetet. A látható módszer másolható."});
   }
   return ki.slice(0,3);
+}
+
+/* ============================================================================
+   VISSZAJELZŐ KÉRDŐÍV
+   ----------------------------------------------------------------------------
+   A tíz döntés után jön, de még az eredmény ELŐTT: az eredmény a jutalom, utána
+   a legtöbben már nem töltenék ki. Kihagyható, mert a kényszerítés rosszabb
+   adatot ad, mint a kevesebb.
+
+   A válaszok névtelenek: sem név, sem e-mail, sem IP nem kerül melléjük — csak
+   a három válasz, a pálya és a végpontszám. A kérdések szövege itt, egy helyen
+   van; átírni is itt kell.
+   ========================================================================== */
+const KERDOIV = [
+  { id:"ertekeles", tipus:"skala",
+    kerdes:"Mennyire volt hasznos ez a szimuláció abban, hogy jobban értsd a vezetői döntéseket?",
+    bal:"1 — egyáltalán nem", jobb:"5 — nagyon" },
+  { id:"k1", tipus:"valasz",
+    kerdes:"Változott-e, ahogy a saját döntéseidre nézel?",
+    valaszok:{ A:"Igen, több dolgot másképp csinálnék",
+               B:"Némileg elgondolkodtatott",
+               C:"Nem változott" } },
+  { id:"k2", tipus:"valasz",
+    kerdes:"Melyik rész adta a legtöbbet?",
+    valaszok:{ A:"A döntési helyzetek",
+               B:"A válasz utáni visszajelzések",
+               C:"A végső kiértékelés" } }
+];
+
+function kerdoivEpit(){
+  const hely = $("kerdoiv-mezok");
+  hely.innerHTML = "";
+  $("kerdoiv-hiba").textContent = "";
+  $("kerdoiv-kuld").disabled = false;
+
+  KERDOIV.forEach((k, i)=>{
+    const csoport = document.createElement("fieldset");
+    csoport.className = "kerdes";
+
+    const cim = document.createElement("legend");
+    const sorszam = document.createElement("span");
+    sorszam.className = "sorszam";
+    sorszam.textContent = String(i+1).padStart(2,"0") + " kérdés";
+    cim.appendChild(sorszam);
+    cim.appendChild(document.createTextNode(k.kerdes));
+    csoport.appendChild(cim);
+
+    /* A valódi rádiógomb rejtve marad, de ott van: a billentyűzet és a
+       képernyőolvasó azt használja. A látható dobozt a címkéje rajzolja,
+       ezért kell közvetlenül a bemenet után állnia. */
+    const gomb = (ertek, szoveg, betus) => {
+      const azon = k.id + "-" + ertek;
+      const be = document.createElement("input");
+      be.type = "radio"; be.name = k.id; be.id = azon; be.value = ertek;
+      const cimke = document.createElement("label");
+      cimke.setAttribute("for", azon);
+      if(betus){
+        const b = document.createElement("span");
+        b.className = "betu"; b.textContent = ertek;
+        const sz = document.createElement("span");
+        sz.textContent = szoveg;
+        cimke.append(b, sz);
+      } else {
+        cimke.textContent = szoveg;
+      }
+      return [be, cimke];
+    };
+
+    if(k.tipus === "skala"){
+      const doboz = document.createElement("div");
+      doboz.className = "skala";
+      for(let v=1; v<=5; v++) doboz.append(...gomb(String(v), String(v), false));
+      csoport.appendChild(doboz);
+
+      const vegek = document.createElement("div");
+      vegek.className = "skala-vegek";
+      const bal = document.createElement("span"); bal.textContent = k.bal;
+      const jobb = document.createElement("span"); jobb.textContent = k.jobb;
+      vegek.append(bal, jobb);
+      csoport.appendChild(vegek);
+    } else {
+      const lista = document.createElement("div");
+      lista.className = "valasz-lista";
+      Object.keys(k.valaszok).forEach(betu => lista.append(...gomb(betu, k.valaszok[betu], true)));
+      csoport.appendChild(lista);
+    }
+    hely.appendChild(csoport);
+  });
+}
+
+function kerdoivValasz(id){
+  const be = document.querySelector('#kerdoiv-form input[name="' + id + '"]:checked');
+  return be ? be.value : null;
+}
+
+async function kerdoivKuldes(ev){
+  ev.preventDefault();
+  const hibaMezo = $("kerdoiv-hiba"), gomb = $("kerdoiv-kuld");
+  const valaszok = {};
+  for(const k of KERDOIV){
+    const v = kerdoivValasz(k.id);
+    if(!v){
+      hibaMezo.textContent = "Mind a három kérdésre válaszolj — vagy hagyd ki a kérdőívet.";
+      return;
+    }
+    valaszok[k.id] = v;
+  }
+  hibaMezo.textContent = "";
+  gomb.disabled = true;
+  try{
+    const valasz = await fetch("/api/valasz", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        ertekeles: Number(valaszok.ertekeles),
+        k1: valaszok.k1,
+        k2: valaszok.k2,
+        palya: allapot.mod,
+        pont: foIndex()
+      })
+    });
+    if(!valasz.ok) throw new Error("A kiszolgáló " + valasz.status + " hibát adott.");
+    nezet("view-end");
+  }catch(h){
+    console.error("A visszajelzés nem ment el:", h);
+    /* Az eredményt akkor sem tartjuk vissza, ha a mentés elhasalt: a „Kihagyom”
+       gomb továbbra is ott van, és átvisz. */
+    hibaMezo.textContent = "A válaszod most nem ment el. Próbáld újra, vagy lépj tovább az eredményhez.";
+    gomb.disabled = false;
+  }
 }
 
 function kiertekeles(){
@@ -4340,6 +4535,8 @@ document.addEventListener("DOMContentLoaded", function(){
   $("lapoz-gomb").addEventListener("click", ()=> document.getElementById("szerepkor-szakasz").scrollIntoView({behavior:"smooth"}));
   $("start-form").addEventListener("submit", startEllenoriz);
   $("tovabb-gomb").addEventListener("click", tovabb);
+  $("kerdoiv-form").addEventListener("submit", kerdoivKuldes);
+  $("kerdoiv-atugras").addEventListener("click", ()=> nezet("view-end"));
   $("atugras-gomb").addEventListener("click", kepMegall);
   $("kuld-gomb").addEventListener("click", kuldes);
   $("mailto-gomb").addEventListener("click", mailtoNyit);

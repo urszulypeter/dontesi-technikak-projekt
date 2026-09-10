@@ -1,0 +1,10 @@
+{
+  "name": "vezetoi-bizalom",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A visszajelző kérdőív és az admin kimutatás kiszolgálófüggvényei. A lap maga továbbra is build nélküli, egyetlen index.html.",
+  "type": "module",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0"
+  }
+}
