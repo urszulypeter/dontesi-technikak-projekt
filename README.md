@@ -16,8 +16,8 @@ kiértékelést kap, amit e-mailben is elküldhet.
   bútorok és három 3D-szkennelt alak, valódi napfénnyel, hosszú ablakárnyékokkal
   és filmes utómunkával (AgX színkezelés, ragyogás, vignetta, filmszemcse,
   objektív-színbontás). A források és licencek: `assets/LICENC.md`.
-- **Három pálya** ugyanazzal a tíz döntési ívvel, más környezetben:
-  vállalati középvezető, katonai ezredes, politikai középvezető.
+- **Három pálya**, mindegyik egy összefüggő, tíz részes történet, amelyben a
+  tét jelenetről jelenetre nő: politikai, vállalati és katonai vezető.
 - **3D jelenetek** Three.js-szel. Pályánként tíz díszlet, közöttük valódi
   kameramozgással; a kamera átér a helyszínre, a kép megáll, és feljön a döntés.
 - **A jelenetek ugyanazt a látványt kapják, mint a nyitókép**: ugyanaz a
@@ -46,37 +46,52 @@ Mindegyik 50 pontról indul, 0 és 100 között mozog. A Bizalomindex ezek súly
 
 ## Pontozási rendszer
 
-Minden válasz 3–5 dimenziót mozdít. Négy sáv, mindhárom pályán azonos nagyságrend:
+Minden válasz mind az öt dimenzióhoz rendel egy egész számot **−3 és +3
+között**; a játék ezt **háromszorozza** (`PONT_SZORZO`), így egy döntés egy
+dimenziót legfeljebb 9 ponttal mozdít.
 
-| Sáv | Összeg |
-|---|---|
-| mintaértékű döntés | +22 … +30 |
-| részben jó döntés | +1 … +14 |
-| gyenge döntés | −7 … −16 |
-| súlyosan romboló döntés | −18 … −28 |
+Nincs egyértelműen jó vagy rossz válasz: minden opciónak van legalább egy
+nyertes és legalább egy vesztes dimenziója — mindegyiknek megvan az ára.
 
-Ellenőrzött végeredmény: a legjobb úton 90–91 pont, a legrosszabbon 10–15 pont
-mindhárom pályán.
+Ellenőrzött végeredmény (mindig a súlyozottan legjobb, illetve legrosszabb
+válasszal):
 
-## A tíz döntési ív
+| Pálya | Legjobb út | Legrosszabb út |
+|---|---|---|
+| Politikai vezető | 81 | 30 |
+| Vállalati vezető | 84 | 31 |
+| Katonai vezető | 81 | 35 |
 
-A helyzetek hétköznapiak, a mögöttük álló döntéstechnikát a válasz utáni
-visszajelzés nevezi meg.
+## A három történet
 
-1. A feladat értelmezése — CATWOE-lista, Ockham borotvája
-2. Kit érint a döntés — érintett-térkép, érintetterőtér
-3. A valódi ok megkeresése — halszálka (Ishikawa) diagram, Pareto-elemzés
-4. Bevonás vagy tájékoztatás — Arnstein részvételi létra, állampolgári tanács
-5. Minek higgyünk — több nézőpont, elérhetőségi torzítás, hárítás, horgonyzás
-6. Honnan jönnek a javaslatok — névleges csoport módszer, brainstorming, szinektika
-7. Felkészülés a hibára — hibafa, forgatókönyv-elemzés
-8. Mi alapján válassz — Even Swap, haszonérték-elemzés
-9. Amit senki nem lát — etikai ellenőrző lista, napfény teszt, gátló racionalizálások
-10. Visszatekintés — következtetési létra, reflektív gondolkodás, baloldali oszlop
+A helyzetleírások és a válaszok szándékosan hétköznapi nyelven szólnak,
+szakszó nélkül. A döntéselméleti fogalmat — PrOACT, Simon korlátozott
+racionalitása, jól és rosszul strukturált problémák, Mintzberg vezetői
+szerepei, észlelési torzítások, Snowden–Boone-keret, érintett-térkép,
+dominancia elvek és a többi — csak a válasz utáni **kiértékelés** nevezi meg,
+egy-két mondatos magyarázattal.
+
+**Politikai vezető.** Parlamenti bizottsági elnök; a kormány negyven kis
+falusi iskolát zárna be. A táblázat · A falugyűlés · Az ajánlat · A személyes
+támadás · Három változat · A választás árnyékában · Egyetlen szavazat ·
+Hajnali ötkor kelni · A tanulmány · Levél Bükkfalváról
+
+**Vállalati vezető.** A Meridian Kft. ügyfélszolgálati igazgatója; a
+legnagyobb ügyfél három hónapot ad a javulásra. Péntekre egy terv · Egymást
+hibáztatják · „Cseréld le Rékát” · Az aznapi ígéret · A havi jelentés · Réka
+ötlete · Tízből egy rossz válasz · Három ajánlat · Negyed tizenkettő · Hétfő
+reggel
+
+**Katonai vezető.** A 3. műszaki ezred parancsnoka; árhullám közeledik
+Tiszaszög felé, tizenkét nap áll rendelkezésre. Négy óra · Kinek a gátja? ·
+Két előrejelzés · Egy gép, két szakasz · Műszaki hiba · A legelők · Hét
+kilencven · Bakos bácsi · Húsz ház · A vizsgálat
 
 ## Fájlszerkezet
 
-    index.html            a teljes alkalmazás: HTML, CSS, JS, 3D jelenetek, kérdésadatok
+    index.html            az alkalmazás: HTML, CSS, JS, 3D jelenetek
+    adatok/               a három történet kérdései (politikai, vallalati, katonai .json)
+    eszkozok/ellenorzes.py a kérdésadatok ellenőrzője
     admin.html            a visszajelzések kimutatása, admin jelszóval
     api/                  kiszolgálófüggvények: beküldés, belépés, összesítés
     assets/hdri/          környezetfény (.hdr) — a nyitóképé és a jeleneteké is
@@ -386,17 +401,48 @@ küldés gomb nem hibázik, hanem felajánlja a levelezőprogramos tartalékot.
 
 ## Kérdések szerkesztése
 
-A kérdések a `STORIK` objektumban vannak, pályánként tíz szituáció, mindegyikben
-négy válasszal. Egy válasz mezői:
+A kérdések az `adatok/` mappában vannak, pályánként egy JSON-fájlban
+(`politikai.json`, `vallalati.json`, `katonai.json`). A játék induláskor tölti
+be őket, tehát a szöveg átírásához nem kell az `index.html`-hez nyúlni.
 
-```js
-{ szoveg:"…",              // amit a játékos lát, hétköznapi nyelven
-  technika:"…",            // a technika neve; a visszajelzésben és az elemzésben jelenik meg
-  stilus:"strukturalt",    // gyors | strukturalt | bevono | ovatos | delegalo
-  hatas:{kov:2, atl:5, min:11, fel:0, bev:7},
-  vissza:"…",              // következmény a válasz után
-  naplo:"…" }              // rövid bejegyzés a döntési naplóba
+```json
+{
+  "szerep": "Politikai vezető",
+  "tortenet_szinopszisa": "…",
+  "szituaciok": [
+    { "id": 1,
+      "cim": "A táblázat",
+      "szituacio_leirasa": "…",
+      "opciok": [
+        { "jel": "A",
+          "opcio_leirasa": "…",
+          "fogalom": "PrOACT",
+          "kiertekeles": "…",
+          "pontok": { "kovetkezetesseg": 1, "atlathatosag": -2,
+                      "dontesi_minoseg": 3, "felelossegvallalas": 0,
+                      "erintettek_bevonasa": -1 } }
+      ] }
+  ]
+}
 ```
+
+- `cim` a jelenet címe a döntési rétegen és a naplóban.
+- `fogalom` a kiértékelésben megnevezett jegyzetfogalom; a visszajelzés
+  címkéje és a végső döntési mintázat ebből épül.
+- `pontok` egész számok −3 és +3 között; a játék háromszorozza őket.
+- A jelenetek helyszínnevei és díszletei az `index.html` `PALYA_META`, illetve
+  `DISZLETEK` táblájában vannak, sorrendben a tíz szituációhoz igazítva.
+
+Módosítás után futtasd az ellenőrzőt:
+
+```bash
+python3 eszkozok/ellenorzes.py
+```
+
+Ellenőrzi, hogy mindenhol tíz szituáció és négy opció van, a pontok egészek
+a megengedett tartományban, minden opciónak van nyertes és vesztes dimenziója,
+a helyzetleírásokba és válaszokba nem került szakszó, az opciók súlyozott
+hatása kellően szór, és a legjobb válasz betűjele nem mindig ugyanaz.
 
 ## Közzététel
 

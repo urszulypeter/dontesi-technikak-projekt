@@ -634,7 +634,7 @@ textarea.riport{
       </div>
       <div class="valaszok" id="valaszok" role="group" aria-label="Válaszlehetőségek"></div>
       <div class="kovetkezmeny rejt" id="kovetkezmeny" role="status" aria-live="polite">
-        <span class="cimke">Következmény</span>
+        <span class="cimke">Kiértékelés</span>
         <p id="kovetkezmeny-szoveg"></p>
         <div class="hatas-sor" id="hatas-sor"></div>
       </div>
@@ -815,978 +815,76 @@ const SZINTEK = [
   { min:80, max:100, nev:"Kiemelkedő",       szin:"var(--jo)" }
 ];
 
-const STILUSOK = {
-  gyors:       "gyors, egyszemélyi döntés",
-  strukturalt: "strukturált, elemző döntés",
-  bevono:      "bevonó, konszenzuskereső döntés",
-  ovatos:      "óvatos, halasztó döntés",
-  delegalo:    "delegáló döntés"
-};
-
 /* ============================================================================
-   3) PONTOZÁSI RENDSZER — mindhárom sztoriban azonos nagyságrend
-     mintaértékű döntés ......  kb. +22 .. +30
-     részben jó döntés .......  kb.  +1 .. +14
-     gyenge döntés ...........  kb.  -7 .. -16
-     súlyosan romboló döntés .  kb. -18 .. -28
+   3) A KÉRDÉSEK — az adatok/*.json fájlokból töltődnek be
+   ----------------------------------------------------------------------------
+   Pályánként egy JSON-fájl, tíz összefüggő, egymásra épülő szituációval (a
+   szerkezetét lásd a README-ben). A helyzetek és a válaszok laikus nyelvűek, a
+   döntéselméleti fogalom csak a válasz utáni kiértékelésben jelenik meg.
+
+   A JSON-ban a pontok kis egész számok (−3 … +3), és minden válasznak van
+   nyeresége és ára is. A játék ezeket PONT_SZORZO-val szorozza, hogy a 0–100-as
+   dimenziók láthatóan mozduljanak: így a legjobb út nagyjából 80–85, a
+   legrosszabb 30–35 pontra fut ki. A szabályokat az eszkozok/ellenorzes.py
+   ellenőrzi.
    ========================================================================== */
-const STORIK = {
 
-/* ---------------------------------------------------------------------------
-   A) VÁLLALATI KÖZÉPVEZETŐ — Meridian Kft.
-   A helyzetek hétköznapiak; a mögöttük álló döntéstechnikát a válasz utáni
-   visszajelzés nevezi meg, nem maga a kérdés.
-   ------------------------------------------------------------------------- */
-vallalati:{
-  nev:"Vállalati középvezető",
-  rovid:"Vállalat",
-  alcim:"Meridian Kft.",
-  hos:"középvezető",
-  leiras:"Egy szolgáltatócég csapatát vezeted. Romlik az ügyfélelégedettség, és rád bízták, hogy tegyél vele valamit.",
-  kulcsTechnikak:[
-    {k:"CATWOE",              cim:"CATWOE-lista"},
-    {k:"érintett-térkép",     cim:"érintett-térkép és érintetterőtér"},
-    {k:"halszálka",           cim:"halszálka (Ishikawa) diagram és Pareto-elemzés"},
-    {k:"partnerség",          cim:"érdemi részvétel a részvételi létrán"},
-    {k:"Több nézőpont",       cim:"többféle nézőpont és forrás bevonása"},
-    {k:"Névleges csoport",    cim:"névleges csoport módszer"},
-    {k:"Hibafa",              cim:"hibafa"},
-    {k:"Even Swap",           cim:"Even Swap"},
-    {k:"etikai ellenőrző",    cim:"etikai ellenőrző lista és moralitás detektorok"},
-    {k:"Következtetési létra",cim:"következtetési létra és reflektív gondolkodás"}
-  ],
-  jelenetek:["Az iroda","A tárgyaló","A felettes ajtaja","Két osztály között","Az ügyfélriport","Az asztalod","A rendszerindulás","A mérlegelés","Az éjszakai ügyelet","A csapatszoba"],
-  szituaciok:[
+const PONT_SZORZO = 3;
 
-/* 1 */ {
-  cimke:"A csapatod", tema:"a feladat értelmezése",
-  cim:"„Legyen kevesebb panasz”",
-  jelenet:"Az iroda",
-  leiras:"A főnököd egyetlen mondatban adta ki a feladatot. A csapatod már ötletelne. Azt viszont senki nem tudja pontosan, mi történik az ügyféllel, mielőtt leül panaszt írni.",
-  opciok:[
-    { szoveg:"Mielőtt bármit kitaláltok, leültök egy órára: kit érint ez, ki csinálja, mi történik most, és mi az, amit nem tudtok.",
-      technika:"CATWOE-lista", stilus:"strukturalt",
-      hatas:{kov:2, atl:5, min:11, fel:0, bev:7},
-      vissza:"Az egy óra alatt kiderült két olyan dolog, amiről a feladatban szó sem volt. Amit rosszul kérdezel, arra hiába válaszolsz jól.",
-      naplo:"Újrafogalmazta a kapott feladatot, mielőtt megoldást keresett." },
-    { szoveg:"Elfogadod úgy, ahogy jött, és megkéred a csapatot, hozzon ötleteket jövő hétre.",
-      technika:"A kapott problémameghatározás kritika nélküli átvétele", stilus:"gyors",
-      hatas:{kov:1, atl:-2, min:-8, fel:-1, bev:-4},
-      vissza:"Gyorsan haladtok, csak épp arra a kérdésre, amit más tett fel. Ha az rosszul van feltéve, a legjobb ötlet sem segít.",
-      naplo:"Változtatás nélkül vitte tovább a kapott feladatot." },
-    { szoveg:"Szerinted a baj egyszerű: kevés az ember a vonalon. Kérsz két új kollégát.",
-      technika:"A legegyszerűbb magyarázat ellenőrzés nélküli elfogadása", stilus:"gyors",
-      hatas:{kov:-1, atl:-1, min:-6, fel:-1, bev:-4},
-      vissza:"A legkézenfekvőbb magyarázat gyakran igaz, itt viszont senki nem ellenőrizte. Két új ember nem javít meg egy rossz folyamatot.",
-      naplo:"Létszámbővítéssel válaszolt a panaszokra." },
-    { szoveg:"Magadban átfogalmazod: nem a panasz a baj, hanem a hibás megrendelés. Ezt viszont nem beszéled meg senkivel.",
-      technika:"Eredménycélra épülő problémameghatározás", stilus:"ovatos",
-      hatas:{kov:2, atl:3, min:7, fel:0, bev:-1},
-      vissza:"Jó irányba indultál, csak egyedül. Amit nem közösen fogalmaztok meg, azt nem is közösen fogják megoldani.",
-      naplo:"Egyedül fogalmazta újra a problémát." }
-  ]
-},
-
-/* 2 */ {
-  cimke:"A csapatod", tema:"kit érint a döntés",
-  cim:"Kit hívjunk be a megbeszélésre?",
-  jelenet:"A tárgyaló",
-  leiras:"Két hét múlva bemutatod a megoldási irányokat. A tárgyalóban ott ül a csapatod és az értékesítés. Az ügyfelekről, a beszállítókról és a háttérterületekről csak beszéltek — ők maguk nincsenek jelen.",
-  opciok:[
-    { szoveg:"Felírjátok egy táblára, kire hat ez a döntés, és melyikük tud tenni ellene vagy érte. Kiderül, kit nem kérdeztetek meg soha.",
-      technika:"Érintett-térkép és érintetterőtér", stilus:"strukturalt",
-      hatas:{kov:2, atl:5, min:8, fel:0, bev:11},
-      vissza:"Kiderült, hogy akire a legjobban hat, annak van a legkevesebb beleszólása. Innentől tudod, kit kell külön megkeresned.",
-      naplo:"Feltérképezte, kire hat a döntés és kinek mekkora a befolyása." },
-    { szoveg:"Azzal foglalkoztok, akinek van beleszólása. A többiek úgyis elfogadják, ami lesz.",
-      technika:"A kiszolgáltatott pozíciójú érintettek kihagyása", stilus:"gyors",
-      hatas:{kov:0, atl:-2, min:-4, fel:-3, bev:-9},
-      vissza:"A hangosak elégedettek lesznek. A kockázat viszont pont azoktól fog jönni, akiket kihagytatok.",
-      naplo:"Csak a nagy befolyású érintettekkel foglalkozott." },
-    { szoveg:"Csinálsz egy listát az érintettekről, de nem nézitek meg, kinek mekkora a súlya.",
-      technika:"Részleges érintett-elemzés", stilus:"ovatos",
-      hatas:{kov:1, atl:1, min:2, fel:0, bev:3},
-      vissza:"A lista jobb a semminél. Azt viszont továbbra sem tudod, ki tud megállítani egy döntést és ki nem.",
-      naplo:"Érintettlistát készített, elemzés nélkül." },
-    { szoveg:"Nem kérdezel senkit: húsz éve ismered ezt a piacot, tudod, mit akarnak.",
-      technika:"Séma alapú döntés az érintettek mellőzésével", stilus:"gyors",
-      hatas:{kov:1, atl:-2, min:-6, fel:-1, bev:-7},
-      vissza:"A húsz év tapasztalat gyors, és pont ezért nem veszi észre, ha közben megváltozott a helyzet.",
-      naplo:"Saját tapasztalatára hagyatkozott az érintettek megkérdezése helyett." }
-  ]
-},
-
-/* 3 */ {
-  cimke:"A felettesed", tema:"a valódi ok megkeresése",
-  cim:"„Mégis mi ennek az oka?”",
-  jelenet:"A felettes ajtaja",
-  leiras:"A főnököd grafikonja három negyedéve romlik, és most rákérdez. A csapatban mindenkinek megvan a maga magyarázata, és mind meggyőzően hangzik.",
-  opciok:[
-    { szoveg:"Összeültök, és felrajzoljátok, honnan jöhet a baj: ember, folyamat, rendszer, ügyfél. Utána megnézitek, melyik kettő adja a panaszok többségét.",
-      technika:"Halszálka (Ishikawa) diagram és Pareto-elemzés", stilus:"strukturalt",
-      hatas:{kov:2, atl:6, min:11, fel:0, bev:6},
-      vissza:"Kiderült, hogy a panaszok nagy részét két ok adja. Most már azt is tudod, hol érdemes elkezdeni.",
-      naplo:"Ok-okozati elemzéssel tárta fel a romlás okait." },
-    { szoveg:"Elfogadod a leghangosabban képviselt magyarázatot, és arra intézkedsz.",
-      technika:"Az első meggyőző magyarázat elfogadása", stilus:"gyors",
-      hatas:{kov:-1, atl:-2, min:-8, fel:0, bev:-4},
-      vissza:"Az intézkedés elindult, de nem tudod, a valódi okot kezeli-e. Ha nem, fél év múlva ugyanitt lesztek, csak drágábban.",
-      naplo:"A leghangosabb magyarázat alapján intézkedett." },
-    { szoveg:"Kikéred a panaszstatisztikát, és a három leggyakoribb panasztípusra intézkedsz.",
-      technika:"Tünetkezelés adat alapján", stilus:"ovatos",
-      hatas:{kov:1, atl:2, min:3, fel:0, bev:0},
-      vissza:"A gyakoriságot látod, az okot nem. A tünetek kezelése egy darabig javítja a számokat, aztán visszaáll minden.",
-      naplo:"A leggyakoribb panasztípusokra intézkedett ok-okozati elemzés nélkül." },
-    { szoveg:"Azt mondod, hogy romlik a piac, ez nem rajtatok múlik.",
-      technika:"„Hamisan negatív” hiba: a befolyás tagadása", stilus:"gyors",
-      hatas:{kov:-2, atl:-4, min:-5, fel:-9, bev:0},
-      vissza:"Lehet, hogy a piac tényleg romlik. Azzal viszont, hogy nincs ráhatásod, azt is kimondtad, hogy nincs mit tenned.",
-      naplo:"A piacra hárította a romló számokat." }
-  ]
-},
-
-/* 4 */ {
-  cimke:"Társosztályok", tema:"bevonás vagy tájékoztatás",
-  cim:"Nekik is szólni kellene",
-  jelenet:"Két osztály között",
-  leiras:"A készülő megoldás két másik osztály napi munkáját írja át. Eddig nem hallottak róla semmit. El kell döntened, hogyan tudják meg.",
-  opciok:[
-    { szoveg:"Meghívod őket egy közös délutánra: együtt rakjátok össze a megoldást, és a rájuk tartozó kérdésekben ők döntenek.",
-      technika:"Érdemi részvétel: partnerség a részvételi létrán", stilus:"bevono",
-      hatas:{kov:2, atl:7, min:5, fel:0, bev:12},
-      vissza:"Lassabban lett kész, de a végrehajtás mögött ott áll két olyan osztály, amelyik a magáénak érzi.",
-      naplo:"Közös műhelyben, partnerként vonta be a másik két osztályt." },
-    { szoveg:"Küldesz egy körlevelet a kész döntésről.",
-      technika:"Tájékoztatás: a részvételi létra jelképes foka", stilus:"gyors",
-      hatas:{kov:1, atl:-1, min:-1, fel:0, bev:-6},
-      vissza:"A kötelezettséget letudtad, a bevonást nem. Ezt a különbséget mindenki pontosan érzi.",
-      naplo:"Körlevélben tájékoztatta a másik két osztályt a kész döntésről." },
-    { szoveg:"Tartasz nekik egy prezentációt arról, miért jó ez nekik.",
-      technika:"Terápia: kioktatás a részvételi létra alsó fokán", stilus:"gyors",
-      hatas:{kov:0, atl:-6, min:-2, fel:-3, bev:-9},
-      vissza:"Te beszéltél, ők hallgattak. A meggyőzés nem pótolja a bevonást, csak elfedi a hiányát.",
-      naplo:"Meggyőző prezentációval kezelte a másik két osztályt." },
-    { szoveg:"Megígérsz nekik plusz keretet, ha nem akadékoskodnak.",
-      technika:"Kompenzáció: a támogatás megvásárlása", stilus:"gyors",
-      hatas:{kov:-2, atl:-5, min:0, fel:-6, bev:-7},
-      vissza:"A támogatás megvan, a bizalom nincs. Ha átlátnak a szándékon, legközelebb az árat fogják kérdezni, nem az indokot.",
-      naplo:"Anyagi ígérettel szerezte meg a másik két osztály támogatását." }
-  ]
-},
-
-/* 5 */ {
-  cimke:"Adatok", tema:"minek higgyünk",
-  cim:"Az adat vagy a három telefon?",
-  jelenet:"Az ügyfélriport",
-  leiras:"Két dolog fekszik előtted. Egy vaskos adatriport, amit senki nem olvasott végig, és három nagyon emlékezetes ügyfélhívás, amit a múlt héten a saját füleddel hallottál.",
-  opciok:[
-    { szoveg:"Több irányból nézed meg: adat, néhány ügyfélhívás, és megkérdezed az ügyintézőket is. Amit egymásnak ellentmond, azt külön felírod.",
-      technika:"Több nézőpont bevonása, az ellentmondó információk megtartása", stilus:"strukturalt",
-      hatas:{kov:2, atl:6, min:10, fel:0, bev:6},
-      vissza:"Az ellentmondásokat kellemetlen nézni, de pont ott van az új információ. Amit kidobsz, azt már nem tudod megvizsgálni.",
-      naplo:"Több forrásból, több nézőpontból gyűjtött információt." },
-    { szoveg:"A három emlékezetes esetre építesz. Azok mutatják, mi történik valójában.",
-      technika:"Elérhetőségi torzítás", stilus:"gyors",
-      hatas:{kov:-1, atl:-3, min:-8, fel:0, bev:-3},
-      vissza:"Ami frissen és élénken él bennünk, azt gyakoribbnak hisszük. Három eset nem a valóság, csak az, ami eszedbe jut.",
-      naplo:"Három emlékezetes esetre alapozta a döntést." },
-    { szoveg:"Kihagyod az elemzésből azt a két táblát, ami nem illik a kialakult képbe.",
-      technika:"Hárítás: az inkonzisztens információ leértékelése", stilus:"gyors",
-      hatas:{kov:-2, atl:-8, min:-7, fel:-5, bev:0},
-      vissza:"Az oda nem illő adat a legdrágább, amit eldobhatsz: pont az mutatta volna meg, hol téves a képed.",
-      naplo:"Kihagyta az elemzésből a képbe nem illő adatokat." },
-    { szoveg:"A tavalyi felmérést veszed alapul, és mindent ahhoz mérsz.",
-      technika:"Referenciapont (horgonyzás)", stilus:"ovatos",
-      hatas:{kov:2, atl:1, min:-4, fel:0, bev:0},
-      vissza:"A kiindulópont kényelmes, csak odaköti a gondolkodásodat. Az újat kisebb súllyal veszed majd figyelembe, mint kellene.",
-      naplo:"A tavalyi felmérést használta kiinduló referenciapontként." }
-  ]
-},
-
-/* 6 */ {
-  cimke:"A csapatod", tema:"honnan jönnek a javaslatok",
-  cim:"Már megvan a megoldásod",
-  jelenet:"Az asztalod",
-  leiras:"Megvan a probléma, megvannak az okok. Most javaslatok kellenek. Neked már van egy kész ötleted, és elég biztos vagy benne.",
-  opciok:[
-    { szoveg:"Megkéred a csapatot, hogy előbb mindenki magának írja le a javaslatait. Csak azután olvassátok fel őket és vitatkoztok.",
-      technika:"Névleges csoport módszer", stilus:"bevono",
-      hatas:{kov:3, atl:4, min:9, fel:0, bev:10},
-      vissza:"Így nem a leghangosabb köré rendeződtek az ötletek. Két olyan javaslat is bekerült, ami egy szabad vitában elvérzett volna.",
-      naplo:"Előbb önálló írásban, csak utána közösen gyűjtötte a javaslatokat." },
-    { szoveg:"Előadod az ötletedet, és megkérdezed, van-e ellenvetés.",
-      technika:"A vezetői javaslat dominanciája", stilus:"gyors",
-      hatas:{kov:1, atl:-2, min:-6, fel:0, bev:-8},
-      vissza:"Ellenvetés nem lesz, mert a te ötletedről van szó. A csendet ilyenkor könnyű egyetértésnek olvasni.",
-      naplo:"Saját javaslatát terjesztette elő ötletgyűjtés helyett." },
-    { szoveg:"Ötletelést tartotok, de menet közben rögtön megmondod, melyik jó és melyik nem.",
-      technika:"Az ítélkezés felfüggesztésének megsértése", stilus:"gyors",
-      hatas:{kov:0, atl:-1, min:-5, fel:0, bev:-5},
-      vissza:"A harmadik lehűtött ötlet után a többiek már nem szólalnak meg. Az értékelést el kell választani a gyűjtéstől.",
-      naplo:"Ötletelés közben azonnal minősítette a javaslatokat." },
-    { szoveg:"Azt kéritek: hogyan oldaná meg ezt egy étterem, egy repülőtér, egy kórház? Onnan tértek vissza a saját ügyetekhez.",
-      technika:"Szinektika: analógiás gondolkodás", stilus:"strukturalt",
-      hatas:{kov:0, atl:2, min:7, fel:0, bev:5},
-      vissza:"Az analógia szokatlan irányt nyitott. A visszaút a saját helyzethez viszont még munkát igényel.",
-      naplo:"Analógiák mentén keresett megoldásokat." }
-  ]
-},
-
-/* 7 */ {
-  cimke:"Bevezetés", tema:"felkészülés a hibára",
-  cim:"Két hét múlva élesedik",
-  jelenet:"A rendszerindulás",
-  leiras:"Az új folyamat két hét múlva indul. A terv kész, a tesztek zöldek, a csapat magabiztos. Az előző hasonló bevezetésnél menet közben derültek ki a valódi bajok.",
-  opciok:[
-    { szoveg:"Leültök egy órára, és végigveszitek: ha ez elromlik, mi lesz az első jele, mi okozhatja, és ki lép.",
-      technika:"Hibafa", stilus:"strukturalt",
-      hatas:{kov:2, atl:5, min:11, fel:3, bev:6},
-      vissza:"Négy kockázatból háromra lett korai jele és felelőse. Az az óra most sokat spórolt.",
-      naplo:"Előre végigvette a bevezetés lehetséges hibáit." },
-    { szoveg:"A tesztek rendben, indultok. A felesleges aggodalmaskodás csak lassítana.",
-      technika:"Kockázatelemzés mellőzése", stilus:"gyors",
-      hatas:{kov:1, atl:0, min:-7, fel:-4, bev:-3},
-      vissza:"Ha sima az indulás, senki nem veszi észre a különbséget. Ha nem, a csapat arra fog emlékezni, hogy nem kérdezted meg őket.",
-      naplo:"Kockázatelemzés nélkül indította a bevezetést." },
-    { szoveg:"Leírtok három lehetséges kimenetet, de azt nem beszélitek meg, mi lesz, ha a rossz jön be.",
-      technika:"Forgatókönyv-elemzés lépések nélkül", stilus:"ovatos",
-      hatas:{kov:1, atl:3, min:5, fel:0, bev:2},
-      vissza:"A képek megvannak, a döntési támpont nincs. Az elemzés ereje abban lett volna, hogy mit tesztek, ha baj van.",
-      naplo:"Három forgatókönyvet írt, intézkedés nélkül." },
-    { szoveg:"Elhalasztod az indulást, amíg minden kockázat ki nem zárható.",
-      technika:"Döntés halogatása", stilus:"ovatos",
-      hatas:{kov:-7, atl:-1, min:-3, fel:-2, bev:0},
-      vissza:"Minden kockázat sosem zárható ki, így a halasztásnak nincs végpontja. A kiszámíthatóságod viszont már most sérült.",
-      naplo:"Elhalasztotta a bevezetést a kockázatok teljes kizárásáig." }
-  ]
-},
-
-/* 8 */ {
-  cimke:"A csapatod", tema:"mi alapján válassz",
-  cim:"Olcsó, gyors vagy tartós?",
-  jelenet:"A mérlegelés",
-  leiras:"Három megoldás maradt talpon. Az egyik olcsó és gyors, a másik drága, de tartós, a harmadik középen van. A csapat két hete köröz ugyanezen.",
-  opciok:[
-    { szoveg:"Kimondjátok, mennyi többletköltség ér meg mennyi minőséget. Így egyesével kiesnek a szempontok, és marad egy döntés.",
-      technika:"Even Swap: átváltások nyílt mérlegelése", stilus:"strukturalt",
-      hatas:{kov:3, atl:6, min:11, fel:0, bev:5},
-      vissza:"Az átváltás kimondásával a vita számokká vált. Most már az is látszik, mit adtatok fel és miért.",
-      naplo:"Nyílt átváltásokkal szűkítette a szempontokat." },
-    { szoveg:"A leggyorsabbat választod, a többi szempontot elengeded.",
-      technika:"Lexikografikus szabály: egyetlen szempont", stilus:"gyors",
-      hatas:{kov:2, atl:-1, min:-6, fel:-2, bev:-3},
-      vissza:"A gyorsaság megvan, a többi szempont nem tűnt el, csak áttolódott valaki máshoz.",
-      naplo:"Kizárólag a gyorsaság alapján választott." },
-    { szoveg:"Kérsz egy összehasonlító táblázatot egy kollégától, de a súlyokat egyedül te adod meg.",
-      technika:"Haszonérték-elemzés egyszemélyes súlyozással", stilus:"delegalo",
-      hatas:{kov:1, atl:2, min:6, fel:0, bev:-1},
-      vissza:"A számítás rendben lesz, de a súlyok a te értékválasztásod. A súlyozás maga is döntés.",
-      naplo:"Összehasonlító elemzést készíttetett, a súlyokat egyedül adta meg." },
-    { szoveg:"Szavaztok a csapatban, indoklás nélkül, és a többség dönt.",
-      technika:"Vélemények összegzése vita nélkül", stilus:"delegalo",
-      hatas:{kov:0, atl:-2, min:-4, fel:0, bev:3},
-      vissza:"Mindenki részt vett, és senkinek nem kellett megindokolnia semmit. A szám mögött így nem marad érv.",
-      naplo:"Indoklás nélküli szavazással döntött." }
-  ]
-},
-
-/* 9 */ {
-  cimke:"Etika", tema:"amit senki nem lát",
-  cim:"Senki nem fog rákérdezni",
-  jelenet:"Az éjszakai ügyelet",
-  leiras:"A gyorsabb megoldás úgy működne, hogy az ügyfelek adatait tovább tárolnátok a kelleténél. Jogilag szürke zóna, a határidő szorít, és tényleg nem fog rákérdezni senki.",
-  opciok:[
-    { szoveg:"Végigmész pár kérdésen: tudsz-e róla mindent, kit érint, mit szólna hozzá, akit érint, és vállalnád-e, ha kiderül.",
-      technika:"Etikai ellenőrző lista", stilus:"strukturalt",
-      hatas:{kov:4, atl:8, min:6, fel:11, bev:0},
-      vissza:"A kérdéssor nem azt mondja meg, mi a jó döntés, hanem azt, mennyire alaposan készültél rá. Itt éppen ez volt a kérdés.",
-      naplo:"Etikai kérdéssor alapján mérlegelte az adatkezelést." },
-    { szoveg:"Felteszed magadnak az egyetlen kérdést: jól éreznéd magad, ha ez holnap kikerülne? Nem. Ezért elveted.",
-      technika:"Moralitás detektor: napfény teszt", stilus:"strukturalt",
-      hatas:{kov:4, atl:6, min:3, fel:9, bev:0},
-      vissza:"Egyetlen jól feltett kérdés is elég lehet. Amit nem vállalnál a nyilvánosság előtt, azt zárt ajtók mögött sem érdemes.",
-      naplo:"A nyilvánosság próbája alapján vetette el a megoldást." },
-    { szoveg:"Belemész: senkinek nem árt, az adatokat úgysem nézi meg senki.",
-      technika:"„Senkinek sem árt” gátló racionalizálás", stilus:"gyors",
-      hatas:{kov:-3, atl:-8, min:-2, fel:-11, bev:0},
-      vissza:"Ez az érvelés az etikát a többi szempont mellé sorolja. Ami mérlegelhető, azt bármikor el is lehet vetni.",
-      naplo:"A „senkinek sem árt” érvvel fogadta el a megoldást." },
-    { szoveg:"Belemész: a cél jó, az ügyfelek gyorsabb kiszolgálást kapnak.",
-      technika:"„Jó célt szolgál” gátló racionalizálás", stilus:"gyors",
-      hatas:{kov:-2, atl:-7, min:-2, fel:-10, bev:0},
-      vissza:"A végeredmény tényleg értékes, csak az odavezető út nem lett tőle rendben. Pontosan itt kezdődik a cél szentesíti az eszközt.",
-      naplo:"A jó célra hivatkozva fogadta el a szürke zónás megoldást." }
-  ]
-},
-
-/* 10 */ {
-  cimke:"A csapatod", tema:"visszatekintés",
-  cim:"„Miért döntöttél így?”",
-  jelenet:"A csapatszoba",
-  leiras:"A megoldás elindult. A csapat visszanéz az elmúlt hetekre, és most téged kérdeznek: miért pont így döntöttél az egyes pontokon?",
-  opciok:[
-    { szoveg:"Elmondod nekik, mire figyeltél oda, mit feltételeztél, és hol tévedtél. Azt is kimondod, amit közben gondoltál, de akkor nem mondtál ki.",
-      technika:"Következtetési létra és reflektív gondolkodás", stilus:"strukturalt",
-      hatas:{kov:3, atl:9, min:6, fel:10, bev:4},
-      vissza:"Amit magadról kimondasz, az egyszerre lesz tanulható a csapatnak és ellenőrizhető a magad számára.",
-      naplo:"Végigvette és megosztotta a saját döntési folyamatát." },
-    { szoveg:"Elmondod, mi alapján döntöttél, és megkérdezed, ők mit láttak, amit te nem.",
-      technika:"Dialógus: a közlés és a feltárás egyensúlya", stilus:"bevono",
-      hatas:{kov:2, atl:8, min:4, fel:3, bev:8},
-      vissza:"Te érthetővé váltál, ők pedig elmondták, miből indultak ki. Ettől lesz a következő döntés közös.",
-      naplo:"Kölcsönös visszatekintéssel zárta le a folyamatot." },
-    { szoveg:"Elmondod, hogy jó döntések születtek, a hibák pedig a körülményekből jöttek.",
-      technika:"Énmegerősítő attribúció", stilus:"gyors",
-      hatas:{kov:-2, atl:-5, min:-4, fel:-10, bev:-3},
-      vissza:"Az önértékelésed sértetlen marad, a tanulás elmarad. A csapat közben pontosan látja, mi történt.",
-      naplo:"A hibákat a körülményeknek tulajdonította." },
-    { szoveg:"Lezárod a témát, jön a következő feladat.",
-      technika:"A reflexió elhagyása", stilus:"ovatos",
-      hatas:{kov:-1, atl:-2, min:-4, fel:-6, bev:0},
-      vissza:"A következő feladat mindig sürgősebb, mint a visszatekintés. Ezért maradnak bent a hibák a rendszerben.",
-      naplo:"Reflexió nélkül zárta le a folyamatot." }
-  ]
-}
-
-  ]
-},
-
-/* ---------------------------------------------------------------------------
-   B) KATONAI EZREDES — 3. műszaki ezred, árvízi védekezés
-   ------------------------------------------------------------------------- */
-katonai:{
-  nev:"Katonai ezredes",
-  rovid:"Katonai",
-  alcim:"3. műszaki ezred",
-  hos:"ezredes",
-  leiras:"Egy műszaki ezredet vezetsz. Árvízi védekezésre vezényeltek: állomány, törzs, elöljáró és két település között kell döntened.",
-  kulcsTechnikak:[
-    {k:"CATWOE",              cim:"CATWOE-lista"},
-    {k:"érintett-térkép",     cim:"érintett-térkép és érintetterőtér"},
-    {k:"halszálka",           cim:"halszálka (Ishikawa) diagram és Pareto-elemzés"},
-    {k:"partnerség",          cim:"érdemi részvétel a részvételi létrán"},
-    {k:"Több nézőpont",       cim:"többféle nézőpont és forrás bevonása"},
-    {k:"Névleges csoport",    cim:"névleges csoport módszer"},
-    {k:"Hibafa",              cim:"hibafa"},
-    {k:"Even Swap",           cim:"Even Swap"},
-    {k:"etikai ellenőrző",    cim:"etikai ellenőrző lista és moralitás detektorok"},
-    {k:"Következtetési létra",cim:"következtetési létra és reflektív gondolkodás"}
-  ],
-  jelenetek:["A laktanya kapuja","A törzssátor","Az elöljáró vonala","A két gátszakasz","A jelentés","A rádióasztal","A tervasztal","A régi töltés","Az állomány előtt","A gátszakadás után"],
-  szituaciok:[
-
-/* 1 */ {
-  cimke:"A parancs", tema:"a feladat értelmezése",
-  cim:"„A gátat tartani kell”",
-  jelenet:"A laktanya kapuja",
-  leiras:"Ennyi állt a vezénylési parancsban. A törzs már osztaná a homokzsákot. Arról viszont még senki nem beszélt, hogy pontosan mitől szakadhat át a gát.",
-  opciok:[
-    { szoveg:"Mielőtt bárki elindul, húsz percet szánsz rá: kikre hat ez, ki csinálja, mi történik most, mit nem tudtok — és ebből mondod ki, mi a feladat.",
-      technika:"CATWOE-lista", stilus:"strukturalt",
-      hatas:{kov:2, atl:5, min:11, fel:0, bev:7},
-      vissza:"A húsz perc alatt előjött két olyan körülmény, ami a parancsban nem szerepelt. Innentől a feladat nemcsak végrehajtható, hanem érthető is.",
-      naplo:"Végiggondolta és kimondta, mit jelent pontosan a kapott feladat." },
-    { szoveg:"Elfogadod, ahogy jött, és azonnal kiadod a végrehajtási utasításokat.",
-      technika:"A kapott problémameghatározás kritika nélküli átvétele", stilus:"gyors",
-      hatas:{kov:1, atl:-2, min:-8, fel:-1, bev:-4},
-      vissza:"A végrehajtás azonnal indul, de arra a kérdésre, amit más tett fel. Ha rosszul, minden erő rossz helyre megy.",
-      naplo:"Változtatás nélkül vette át a parancs megfogalmazását." },
-    { szoveg:"Szerinted a baj egyszerű: kevés a homokzsák. Rendelsz utánpótlást.",
-      technika:"A legegyszerűbb magyarázat ellenőrzés nélküli elfogadása", stilus:"gyors",
-      hatas:{kov:-1, atl:-1, min:-6, fel:-1, bev:-4},
-      vissza:"A legkézenfekvőbb magyarázat gyakran igaz, csak itt senki nem ellenőrizte. A töltés állapotáról továbbra sem tudsz semmit.",
-      naplo:"Homokzsák-utánpótlásra szűkítette a feladatot." },
-    { szoveg:"Magadban átfogalmazod: nem a gát a lényeg, hanem hogy ne kerüljön víz a lakott területre. Ezt viszont nem osztod meg a törzzsel.",
-      technika:"Eredménycélra épülő problémameghatározás", stilus:"ovatos",
-      hatas:{kov:2, atl:3, min:7, fel:0, bev:-1},
-      vissza:"Jó irányba indultál, csak egyedül. Amit nem közösen fogalmaztok meg, azt nem is közösen hajtják végre.",
-      naplo:"Egyedül fogalmazta újra a feladatot." }
-  ]
-},
-
-/* 2 */ {
-  cimke:"A települések", tema:"kit érint a döntés",
-  cim:"Kikről nem beszélünk?",
-  jelenet:"A törzssátor",
-  leiras:"A törzssátorban a katonai szempontok kerülnek elő. A parti falvak önkormányzata, a vízügy, a helyi gazdák és a tanyavilág csak említés szintjén jelenik meg.",
-  opciok:[
-    { szoveg:"Felírjátok, kire hat ez a védekezés, és melyikük tud tenni ellene vagy érte. Kiderül, kit nem kérdezett meg senki.",
-      technika:"Érintett-térkép és érintetterőtér", stilus:"strukturalt",
-      hatas:{kov:2, atl:5, min:8, fel:0, bev:11},
-      vissza:"Kiderült, hogy akit a legjobban érint, annak van a legkevesebb beleszólása. Innentől tudod, kihez kell külön elmenni.",
-      naplo:"Feltérképezte, kire hat a védekezés és kinek mekkora a befolyása." },
-    { szoveg:"Azzal foglalkoztok, akinek hivatalos beleszólása van. A többiek úgyis elfogadják, ami lesz.",
-      technika:"A kiszolgáltatott pozíciójú érintettek kihagyása", stilus:"gyors",
-      hatas:{kov:0, atl:-2, min:-4, fel:-3, bev:-9},
-      vissza:"A hivatalos egyeztetés rendben lesz. A baj viszont pont azoktól fog jönni, akiket kihagytatok.",
-      naplo:"Csak a hivatalos szereplőket vonta be." },
-    { szoveg:"Készíttetsz egy listát az érintettekről, de nem nézitek meg, kinek mekkora a súlya.",
-      technika:"Részleges érintett-elemzés", stilus:"ovatos",
-      hatas:{kov:1, atl:1, min:2, fel:0, bev:3},
-      vissza:"A lista jobb a semminél. Azt viszont nem tudod, ki tud megállítani egy munkát és ki nem.",
-      naplo:"Érintettlistát készíttetett elemzés nélkül." },
-    { szoveg:"Nem kérdezel senkit: húsz éve dolgozol ilyen terepen, tudod, mi kell.",
-      technika:"Séma alapú döntés az érintettek mellőzésével", stilus:"gyors",
-      hatas:{kov:1, atl:-2, min:-6, fel:-1, bev:-7},
-      vissza:"A húsz év tapasztalat gyors, és pont ezért nem veszi észre, ha ez a terep most máshogy viselkedik.",
-      naplo:"Saját terepismeretére hagyatkozott az érintettek megkérdezése helyett." }
-  ]
-},
-
-/* 3 */ {
-  cimke:"Helyzetkép", tema:"minek higgyünk",
-  cim:"A műszer vagy a rádió?",
-  jelenet:"Az elöljáró vonala",
-  leiras:"Két kép áll rendelkezésre. Egy részletes vízügyi adatsor, amit senki nem olvasott végig, és három nagyon élénk rádiójelentés az elmúlt órából.",
-  opciok:[
-    { szoveg:"Több irányból nézed: műszeres adat, helyszíni bejárás, szakaszparancsnoki jelentés. Amit egymásnak ellentmond, azt külön felírod.",
-      technika:"Több nézőpont bevonása, az ellentmondó információk megtartása", stilus:"strukturalt",
-      hatas:{kov:2, atl:6, min:10, fel:0, bev:6},
-      vissza:"Az ellentmondást kellemetlen nézni, de pont ott van az új információ. Amit kidobsz, azt már nem tudod megvizsgálni.",
-      naplo:"Több forrásból építette fel a helyzetképet." },
-    { szoveg:"A három legfrissebb rádiójelentésre építesz. Azok mutatják, mi történik odakint.",
-      technika:"Elérhetőségi torzítás", stilus:"gyors",
-      hatas:{kov:-1, atl:-3, min:-8, fel:0, bev:-3},
-      vissza:"Ami frissen és élénken él bennünk, azt gyakoribbnak hisszük. Három jelentés még nem helyzetkép.",
-      naplo:"Három friss rádiójelentésre alapozta a döntést." },
-    { szoveg:"Kihagyod az adatsorból azt a két mérési pontot, ami nem illik a képbe.",
-      technika:"Hárítás: az inkonzisztens információ leértékelése", stilus:"gyors",
-      hatas:{kov:-2, atl:-8, min:-7, fel:-5, bev:0},
-      vissza:"Az oda nem illő mérés a legdrágább, amit eldobhatsz: pont az mutatta volna meg, hol téves a képed.",
-      naplo:"Kihagyta a képbe nem illő mérési pontokat." },
-    { szoveg:"A tavalyi árvíz szintjét veszed alapul, és mindent ahhoz mérsz.",
-      technika:"Referenciapont (horgonyzás)", stilus:"ovatos",
-      hatas:{kov:2, atl:1, min:-4, fel:0, bev:0},
-      vissza:"A kiindulópont kényelmes, csak odaköti a gondolkodásodat. Az új adatot kisebb súllyal veszed majd figyelembe, mint kellene.",
-      naplo:"A tavalyi árvízszintet használta referenciapontként." }
-  ]
-},
-
-/* 4 */ {
-  cimke:"Erőforrás", tema:"mi alapján válassz",
-  cim:"Egy gép, két gátszakasz",
-  jelenet:"A két gátszakasz",
-  leiras:"Egyetlen nagy gép van bevethető állapotban. Az egyik szakasz gyorsabban megerősíthető, a másiknál több embert véd a töltés. A törzs órák óta köröz ezen.",
-  opciok:[
-    { szoveg:"Kimondjátok, hány megvédett ház ér meg mennyi többletidőt. Így egyesével kiesnek a szempontok, és marad egy döntés.",
-      technika:"Even Swap: átváltások nyílt mérlegelése", stilus:"strukturalt",
-      hatas:{kov:3, atl:6, min:11, fel:0, bev:5},
-      vissza:"Az átváltás kimondásával a vita számokká vált. Most már az is látszik, mit adtatok fel és miért.",
-      naplo:"Nyílt átváltásokkal döntött a gép bevetéséről." },
-    { szoveg:"A gyorsabban megerősíthető szakaszt választod, a többi szempontot elengeded.",
-      technika:"Lexikografikus szabály: egyetlen szempont", stilus:"gyors",
-      hatas:{kov:2, atl:-1, min:-6, fel:-2, bev:-3},
-      vissza:"A gyorsaság megvan, a többi szempont nem tűnt el, csak áttolódott máshoz.",
-      naplo:"Kizárólag a gyorsaság alapján választott szakaszt." },
-    { szoveg:"Kérsz egy összehasonlítást a törzstől, de a súlyokat egyedül te adod meg.",
-      technika:"Haszonérték-elemzés egyszemélyes súlyozással", stilus:"delegalo",
-      hatas:{kov:1, atl:2, min:6, fel:0, bev:-1},
-      vissza:"A számítás rendben lesz, a súlyok viszont a te értékválasztásod. A súlyozás maga is döntés.",
-      naplo:"Összehasonlítást készíttetett, a súlyokat egyedül adta meg." },
-    { szoveg:"Felezed a gép idejét a két szakasz között, hogy egyik parancsnok se sérelmezze.",
-      technika:"Konfliktuskerülő kompromisszum", stilus:"ovatos",
-      hatas:{kov:-2, atl:0, min:-5, fel:-2, bev:2},
-      vissza:"Éjjel senki nem tiltakozik, reggelre két félkész szakasz lesz. A látszatméltányosság itt kettős csalódás.",
-      naplo:"Felezte a gép idejét a két szakasz között." }
-  ]
-},
-
-/* 5 */ {
-  cimke:"Etika", tema:"ami a papírra kerül",
-  cim:"„Technikai fennakadás”",
-  jelenet:"A jelentés",
-  leiras:"Éjszaka megsérült egy katona, mert kimaradt egy biztonsági lépés. A napi jelentésbe ennyi került: technikai fennakadás. A sérülés könnyű, és nem fog rákérdezni senki.",
-  opciok:[
-    { szoveg:"Végigmész pár kérdésen: tudsz-e róla mindent, kit érint, mit szólna hozzá, akit érint, és vállalnád-e, ha kiderül.",
-      technika:"Etikai ellenőrző lista", stilus:"strukturalt",
-      hatas:{kov:4, atl:8, min:6, fel:11, bev:0},
-      vissza:"A kérdéssor nem azt mondja meg, mi a jó döntés, hanem azt, mennyire alaposan készültél rá. Itt éppen ez volt a kérdés.",
-      naplo:"Etikai kérdéssor alapján javíttatta ki a jelentést." },
-    { szoveg:"Felteszed magadnak az egyetlen kérdést: jól éreznéd magad, ha a valódi ok holnap kiderülne? Nem. Kijavíttatod.",
-      technika:"Moralitás detektor: napfény teszt", stilus:"strukturalt",
-      hatas:{kov:4, atl:6, min:3, fel:9, bev:0},
-      vissza:"Egyetlen jól feltett kérdés is elég lehet. Amit nem vállalnál nyilvánosan, azt papíron sem érdemes.",
-      naplo:"A nyilvánosság próbája alapján javíttatta ki a jelentést." },
-    { szoveg:"Hagyod így: a sérülés könnyű volt, senkinek nem árt, ha nem kerül külön a jelentésbe.",
-      technika:"„Senkinek sem árt” gátló racionalizálás", stilus:"gyors",
-      hatas:{kov:-3, atl:-8, min:-2, fel:-11, bev:0},
-      vissza:"Ez az érvelés az etikát a többi szempont mellé sorolja. Ami mérlegelhető, azt bármikor el is lehet vetni.",
-      naplo:"A „senkinek sem árt” érvvel hagyta a pontatlan jelentést." },
-    { szoveg:"Hagyod így: a védekezés fontosabb, mint egy adminisztratív pontosítás.",
-      technika:"„Jó célt szolgál” gátló racionalizálás", stilus:"gyors",
-      hatas:{kov:-2, atl:-7, min:-2, fel:-10, bev:0},
-      vissza:"A cél tényleg fontos, csak az odavezető út nem lett tőle rendben. Pontosan itt kezdődik a cél szentesíti az eszközt.",
-      naplo:"A védekezés fontosságára hivatkozva hagyta a pontatlan jelentést." }
-  ]
-},
-
-/* 6 */ {
-  cimke:"A lakosság", tema:"bevonás vagy tájékoztatás",
-  cim:"Hol lesz lezárás?",
-  jelenet:"A rádióasztal",
-  leiras:"A védekezés két falut érint közvetlenül: hol lesz útlezárás, kit kell kitelepíteni, hol állnak a gépek. A polgármesterek és a helyi önkéntesek eddig nem vettek részt a tervezésben.",
-  opciok:[
-    { szoveg:"Behívod a polgármestereket és az önkéntesek vezetőjét: együtt rakjátok össze a tervet, és a rájuk tartozó kérdésekben ők döntenek.",
-      technika:"Érdemi részvétel: partnerség a részvételi létrán", stilus:"bevono",
-      hatas:{kov:2, atl:7, min:5, fel:0, bev:12},
-      vissza:"Lassabban lett kész a terv, viszont a helyismeretük két rossz útvonaltól mentett meg.",
-      naplo:"Közös egyeztetésen, partnerként vonta be a településeket." },
-    { szoveg:"Hangosbemondón tájékoztatod a lakosságot a kész döntésről.",
-      technika:"Tájékoztatás: a részvételi létra jelképes foka", stilus:"gyors",
-      hatas:{kov:1, atl:-1, min:-1, fel:0, bev:-6},
-      vissza:"A kötelezettséget letudtad, a bevonást nem. Ezt a különbséget mindenki pontosan érzi.",
-      naplo:"Hangosbemondós tájékoztatással zárta le a lakossági részvételt." },
-    { szoveg:"Fórumot tartasz, ahol elmagyarázod nekik, miért jó ez így, és miért téves, amit gondolnak.",
-      technika:"Terápia: kioktatás a részvételi létra alsó fokán", stilus:"gyors",
-      hatas:{kov:0, atl:-6, min:-2, fel:-3, bev:-9},
-      vissza:"Te beszéltél, ők hallgattak. A meggyőzés nem pótolja a bevonást, csak elfedi a hiányát.",
-      naplo:"Meggyőző fórummal kezelte az érintetteket." },
-    { szoveg:"Kártalanítást ígérsz a leghangosabb gazdáknak, hogy ne akadályozzák a munkát.",
-      technika:"Kompenzáció: a támogatás megvásárlása", stilus:"gyors",
-      hatas:{kov:-2, atl:-5, min:0, fel:-6, bev:-7},
-      vissza:"Az együttműködés megvan, a bizalom nincs. Ha átlátnak a szándékon, legközelebb az árat kérdezik, nem az indokot.",
-      naplo:"Kártalanítás ígéretével szerezte meg a gazdák együttműködését." }
-  ]
-},
-
-/* 7 */ {
-  cimke:"A törzs", tema:"honnan jönnek a javaslatok",
-  cim:"Már megvan az elképzelésed",
-  jelenet:"A tervasztal",
-  leiras:"Megvan a helyzetkép, megvannak az okok. Most védekezési változatok kellenek. Neked már van egy kész elképzelésed, és elég biztos vagy benne.",
-  opciok:[
-    { szoveg:"Megkéred a törzset, hogy előbb mindenki magának írja le a javaslatait. Csak azután olvassátok fel és vitatkoztok.",
-      technika:"Névleges csoport módszer", stilus:"bevono",
-      hatas:{kov:3, atl:4, min:9, fel:0, bev:10},
-      vissza:"Így nem a rangidős érvei köré rendeződtek az ötletek. Két olyan változat is bekerült, ami szabad vitában elvérzett volna.",
-      naplo:"Előbb önálló írásban, csak utána közösen gyűjtötte a változatokat." },
-    { szoveg:"Előadod az elképzelésedet, és megkérdezed, van-e ellenvetés.",
-      technika:"A parancsnoki javaslat dominanciája", stilus:"gyors",
-      hatas:{kov:1, atl:-2, min:-6, fel:0, bev:-8},
-      vissza:"Ellenvetés nem lesz, mert a te elképzelésed, és te vagy a parancsnok. A csendet könnyű egyetértésnek olvasni.",
-      naplo:"Saját elképzelését terjesztette elő ötletgyűjtés helyett." },
-    { szoveg:"Ötletelést tartotok, de menet közben rögtön megmondod, melyik javaslat jó és melyik nem.",
-      technika:"Az ítélkezés felfüggesztésének megsértése", stilus:"gyors",
-      hatas:{kov:0, atl:-1, min:-5, fel:0, bev:-5},
-      vissza:"A harmadik lehűtött javaslat után a többiek már nem szólalnak meg. Az értékelést el kell választani a gyűjtéstől.",
-      naplo:"Ötletelés közben azonnal minősítette a javaslatokat." },
-    { szoveg:"Azt kéritek: hogyan oldaná meg ezt egy tűzoltóság, egy nagy építkezés, egy logisztikai központ? Onnan tértek vissza a terephez.",
-      technika:"Szinektika: analógiás gondolkodás", stilus:"strukturalt",
-      hatas:{kov:0, atl:2, min:7, fel:0, bev:5},
-      vissza:"Az analógia szokatlan irányt nyitott. A visszaút a konkrét terephez viszont még munkát igényel.",
-      naplo:"Analógiák mentén keresett megoldásokat." }
-  ]
-},
-
-/* 8 */ {
-  cimke:"Művelet", tema:"felkészülés a hibára",
-  cim:"Holnap hajnalban indul",
-  jelenet:"A régi töltés",
-  leiras:"Négyszáz fő és harminc jármű indul a nagy gátmegerősítésre. A terv kész, a törzs magabiztos. Az előző hasonló műveletnél menet közben derültek ki a valódi bajok.",
-  opciok:[
-    { szoveg:"Leültök egy órára, és végigveszitek: ha ez elromlik, mi lesz az első jele, mi okozhatja, és ki lép.",
-      technika:"Hibafa", stilus:"strukturalt",
-      hatas:{kov:2, atl:5, min:11, fel:3, bev:6},
-      vissza:"Négy kockázatból háromra lett korai jele és felelőse. Ez az óra sok embert megspórolt.",
-      naplo:"Előre végigvette a művelet lehetséges hibáit." },
-    { szoveg:"A felmérés rendben, indultok. A felesleges aggodalmaskodás csak lassítana.",
-      technika:"Kockázatelemzés mellőzése", stilus:"gyors",
-      hatas:{kov:1, atl:0, min:-7, fel:-4, bev:-3},
-      vissza:"Ha sima a végrehajtás, senki nem veszi észre a különbséget. Ha nem, a törzs arra fog emlékezni, hogy nem kérdezted meg őket.",
-      naplo:"Kockázatelemzés nélkül indította a műveletet." },
-    { szoveg:"Leírtok három lehetséges kimenetet, de azt nem beszélitek meg, mi lesz, ha a rossz jön be.",
-      technika:"Forgatókönyv-elemzés lépések nélkül", stilus:"ovatos",
-      hatas:{kov:1, atl:3, min:5, fel:0, bev:2},
-      vissza:"A képek megvannak, a döntési támpont nincs. Az elemzés ereje abban lett volna, hogy mit tesztek, ha baj van.",
-      naplo:"Három forgatókönyvet írt, intézkedés nélkül." },
-    { szoveg:"Elhalasztod az indulást, amíg minden kockázat ki nem zárható.",
-      technika:"Döntés halogatása", stilus:"ovatos",
-      hatas:{kov:-7, atl:-1, min:-3, fel:-2, bev:0},
-      vissza:"Minden kockázat sosem zárható ki, így a halasztásnak nincs végpontja — a víz viszont nem áll meg.",
-      naplo:"Elhalasztotta a műveletet a kockázatok teljes kizárásáig." }
-  ]
-},
-
-/* 9 */ {
-  cimke:"Az állomány", tema:"a valódi ok megkeresése",
-  cim:"Miért csúszik minden?",
-  jelenet:"Az állomány előtt",
-  leiras:"A feladatok rendre késve indulnak, és az állomány fáradt. Mindenkinek megvan a maga magyarázata: a technika, az időjárás, a váltásrend, a jelentési fegyelem.",
-  opciok:[
-    { szoveg:"Összeültök, és felrajzoljátok, honnan jöhet a csúszás: ember, technika, szervezés, külső körülmény. Utána megnézitek, melyik kettő adja a többségét.",
-      technika:"Halszálka (Ishikawa) diagram és Pareto-elemzés", stilus:"strukturalt",
-      hatas:{kov:2, atl:6, min:11, fel:0, bev:6},
-      vissza:"Kiderült, hogy a csúszások nagy részét két ok adja, és mindkettő a váltásrendhez tartozik. Most már tudod, hol kezdd.",
-      naplo:"Ok-okozati elemzéssel tárta fel a csúszások okait." },
-    { szoveg:"Elfogadod a leghangosabban képviselt magyarázatot, és arra intézkedsz.",
-      technika:"Az első meggyőző magyarázat elfogadása", stilus:"gyors",
-      hatas:{kov:-1, atl:-2, min:-8, fel:0, bev:-4},
-      vissza:"Az intézkedés elindult, de nem tudod, a valódi okot kezeli-e. Ha nem, egy hét múlva ugyanitt lesztek, csak fáradtabban.",
-      naplo:"A leghangosabb magyarázat alapján intézkedett." },
-    { szoveg:"Bekéred a késési kimutatást, és a három leggyakoribb esetre intézkedsz.",
-      technika:"Tünetkezelés adat alapján", stilus:"ovatos",
-      hatas:{kov:1, atl:2, min:3, fel:0, bev:0},
-      vissza:"A gyakoriságot látod, az okot nem. A tünetkezelés egy darabig javítja a számokat, aztán visszaáll minden.",
-      naplo:"A leggyakoribb késési esetekre intézkedett elemzés nélkül." },
-    { szoveg:"Kimondod az állomány előtt, hogy ez az időjárás miatt van, nincs mit tenni.",
-      technika:"„Hamisan negatív” hiba: a befolyás tagadása", stilus:"gyors",
-      hatas:{kov:-2, atl:-4, min:-5, fel:-9, bev:0},
-      vissza:"Lehet, hogy az időjárás tényleg számít. Azzal viszont, hogy nincs ráhatásod, azt is kimondtad, hogy nincs mit tenned.",
-      naplo:"Az időjárásra hárította a csúszásokat." }
-  ]
-},
-
-/* 10 */ {
-  cimke:"A törzs", tema:"visszatekintés",
-  cim:"„Miért döntött így, ezredes úr?”",
-  jelenet:"A gátszakadás után",
-  leiras:"A védekezés véget ért, a gát egy szakaszon átszakadt. Az értékelő megbeszélésen a törzs egyenesen rákérdez a döntéseidre.",
-  opciok:[
-    { szoveg:"Elmondod, mire figyeltél oda, mit feltételeztél, és hol tévedtél. Azt is kimondod, amit közben gondoltál, de akkor nem mondtál ki.",
-      technika:"Következtetési létra és reflektív gondolkodás", stilus:"strukturalt",
-      hatas:{kov:3, atl:9, min:6, fel:10, bev:4},
-      vissza:"Amit magadról kimondasz, az egyszerre lesz tanulható a törzsnek és ellenőrizhető a magad számára.",
-      naplo:"Végigvette és megosztotta a saját döntési folyamatát." },
-    { szoveg:"Elmondod, mi alapján döntöttél, és megkérdezed, ők mit láttak, amit te nem.",
-      technika:"Dialógus: a közlés és a feltárás egyensúlya", stilus:"bevono",
-      hatas:{kov:2, atl:8, min:4, fel:3, bev:8},
-      vissza:"Te érthetővé váltál, ők pedig elmondták, miből indultak ki. Ettől lesz a következő bevetés közös.",
-      naplo:"Kölcsönös visszatekintéssel zárta le az értékelést." },
-    { szoveg:"Elmondod, hogy a döntések jók voltak, a szakadást a körülmények okozták.",
-      technika:"Énmegerősítő attribúció", stilus:"gyors",
-      hatas:{kov:-2, atl:-5, min:-4, fel:-10, bev:-3},
-      vissza:"Az önértékelésed sértetlen marad, a tanulás elmarad. A törzs közben pontosan látja, mi történt.",
-      naplo:"A körülményeknek tulajdonította a gátszakadást." },
-    { szoveg:"Lezárod a témát: a feladat véget ért, jön a következő vezénylés.",
-      technika:"A reflexió elhagyása", stilus:"ovatos",
-      hatas:{kov:-1, atl:-2, min:-4, fel:-6, bev:0},
-      vissza:"A következő feladat mindig sürgősebb, mint a visszatekintés. Ezért maradnak bent a hibák a rendszerben.",
-      naplo:"Reflexió nélkül zárta le a védekezést." }
-  ]
-}
-
-  ]
-},
-
-/* ---------------------------------------------------------------------------
-   C) POLITIKAI KÖZÉPVEZETŐ — bizottsági elnök, digitális oktatási törvény
-   ------------------------------------------------------------------------- */
-politikai:{
-  nev:"Politikai középvezető",
-  rovid:"Politikai",
-  alcim:"Országgyűlési bizottság",
-  hos:"bizottsági elnök",
-  leiras:"Egy bizottság elnöke vagy. Egy digitális oktatási törvényt viszel végig érintettek, szakértők és a nyilvánosság között.",
-  kulcsTechnikak:[
-    {k:"CATWOE",              cim:"CATWOE-lista"},
-    {k:"Állampolgári tanács", cim:"állampolgári tanács (érdemi részvétel)"},
-    {k:"Érintetterőtér",      cim:"érintetterőtér-elemzés és érintetti párbeszéd"},
-    {k:"halszálka",           cim:"halszálka (Ishikawa) diagram és Pareto-elemzés"},
-    {k:"Hat gondolkodó kalap",cim:"hat gondolkodó kalap"},
-    {k:"Névleges csoport",    cim:"névleges csoport módszer"},
-    {k:"Even Swap",           cim:"Even Swap"},
-    {k:"Forgatókönyv",        cim:"forgatókönyv-elemzés"},
-    {k:"etikai ellenőrző",    cim:"etikai ellenőrző lista és moralitás detektorok"},
-    {k:"Vizsgálódó",          cim:"vizsgálódó döntéshozatal"},
-    {k:"Következtetési létra",cim:"következtetési létra és reflektív gondolkodás"}
-  ],
-  jelenetek:["A bizottsági iroda","A társadalmi vita","A lobbista","A bizottsági ülés","A célok ütközése","A hosszú táv","A szavazás","A tüntetés","A plenáris ülés","A csendes szoba"],
-  szituaciok:[
-
-/* 1 */ {
-  cimke:"A tervezet", tema:"a feladat értelmezése",
-  cim:"„Vissza kell szorítani”",
-  jelenet:"A bizottsági iroda",
-  leiras:"A tervezet első mondata szerint az iskolai digitális eszközhasználatot vissza kell szorítani. A tanárok, az informatikai cégek és a szülők mást és mást akarnak. A bizottság már a paragrafusokat írná.",
-  opciok:[
-    { szoveg:"Mielőtt bárki szöveget ír, végigveszitek: kire hat ez, ki hajtja végre, mi történik most az iskolákban, és mi az, amit nem tudtok.",
-      technika:"CATWOE-lista", stilus:"strukturalt",
-      hatas:{kov:2, atl:5, min:11, fel:0, bev:7},
-      vissza:"Kiderült, hogy három szereplő három különböző problémáról beszél. Amit rosszul kérdezel, arra hiába válaszolsz jól.",
-      naplo:"Újrafogalmazta a tervezet alapkérdését, mielőtt szöveget írtak volna." },
-    { szoveg:"Elfogadod a megfogalmazást, ahogy jött, és rögtön a paragrafusok kidolgozásába kezdtek.",
-      technika:"A kapott problémameghatározás kritika nélküli átvétele", stilus:"gyors",
-      hatas:{kov:1, atl:-2, min:-8, fel:-1, bev:-4},
-      vissza:"A szöveg gyorsan halad, csak épp arra a kérdésre válaszol, amit más tett fel. Az minden paragrafust magával visz.",
-      naplo:"Változtatás nélkül vette át a tervezet megfogalmazását." },
-    { szoveg:"Szerinted a baj egyszerű: sok a telefon az iskolában. Betiltjátok.",
-      technika:"A legegyszerűbb magyarázat ellenőrzés nélküli elfogadása", stilus:"gyors",
-      hatas:{kov:-1, atl:-1, min:-6, fel:-1, bev:-4},
-      vissza:"A legkézenfekvőbb magyarázat gyakran igaz, itt viszont senki nem ellenőrizte. Egy tiltás nem old meg egy tanulási problémát.",
-      naplo:"Tiltásra szűkítette a szabályozási kérdést." },
-    { szoveg:"Magadban átfogalmazod: nem az eszköz a baj, hanem a figyelem és az eredmény. Ezt viszont nem beszéled meg a bizottsággal.",
-      technika:"Eredménycélra épülő problémameghatározás", stilus:"ovatos",
-      hatas:{kov:2, atl:3, min:7, fel:0, bev:-1},
-      vissza:"Jó irányba indultál, csak egyedül. Amit nem közösen fogalmaztok meg, azt nem is közösen fogják megvédeni.",
-      naplo:"Egyedül fogalmazta újra a problémát." }
-  ]
-},
-
-/* 2 */ {
-  cimke:"A nyilvánosság", tema:"bevonás vagy tájékoztatás",
-  cim:"Mit kezdjünk a társadalmi vitával?",
-  jelenet:"A társadalmi vita",
-  leiras:"A törvény emberek mindennapjait érinti. A társadalmi egyeztetés formája rád van bízva. A határidő szoros, a téma érzékeny.",
-  opciok:[
-    { szoveg:"Összehívsz húsz hétköznapi embert három napra: kiegyensúlyozott anyagot és szakértőket kapnak, aztán ők mondják meg, mit javasolnak.",
-      technika:"Állampolgári tanács: érdemi részvétel", stilus:"bevono",
-      hatas:{kov:2, atl:7, min:5, fel:0, bev:12},
-      vissza:"Olyan szempontok jöttek elő, amit sem a szakma, sem a politika nem látott. A törvény mögé társadalmi felhatalmazás került.",
-      naplo:"Laikus testülettel dolgoztatta ki a javaslatot." },
-    { szoveg:"Kiadsz egy sajtóközleményt, érdemi vitára nem nyitsz lehetőséget.",
-      technika:"Tájékoztatás: a részvételi létra jelképes foka", stilus:"gyors",
-      hatas:{kov:1, atl:-1, min:-1, fel:0, bev:-6},
-      vissza:"A kötelezettséget letudtad, a bevonást nem. Ezt a különbséget mindenki pontosan érzi.",
-      naplo:"Sajtóközleménnyel zárta le a társadalmi egyeztetést." },
-    { szoveg:"Kampányt indítasz, ami elmagyarázza az embereknek, miért téves, amit gondolnak.",
-      technika:"Terápia: kioktatás a részvételi létra alsó fokán", stilus:"gyors",
-      hatas:{kov:0, atl:-6, min:-2, fel:-3, bev:-9},
-      vissza:"Aki eddig bizonytalan volt, most szemben áll. A látszatrészvétel gyorsabban rombol, mint a nyílt elutasítás.",
-      naplo:"Meggyőző kampányt indított a lakossági kifogások ellen." },
-    { szoveg:"A leghangosabb kritikus szervezeteknek támogatást ígérsz, hogy elhalkuljanak.",
-      technika:"Kompenzáció: a támogatás megvásárlása", stilus:"gyors",
-      hatas:{kov:-2, atl:-5, min:0, fel:-6, bev:-7},
-      vissza:"A kritikus hangok elhalkulnak, a bizalom velük együtt. Ha ez kiderül, minden korábbi döntésed gyanússá válik.",
-      naplo:"Támogatás ígéretével csendesítette le a kritikus szervezeteket." }
-  ]
-},
-
-/* 3 */ {
-  cimke:"Etika", tema:"az ajánlat",
-  cim:"„Ingyen adjuk a rendszert”",
-  jelenet:"A lobbista",
-  leiras:"Egy nagy szoftvercég felajánlja, hogy ingyen adja a rendszert, ha a bizottság számukra kedvező adatkezelési szabályt hoz. A megtakarítás jelentős, és senki nem fog rákérdezni.",
-  opciok:[
-    { szoveg:"Végigmész pár kérdésen: tudsz-e róla mindent, kit érint, mit szólna hozzá, akit érint, és vállalnád-e, ha kiderül.",
-      technika:"Etikai ellenőrző lista", stilus:"strukturalt",
-      hatas:{kov:4, atl:8, min:6, fel:11, bev:0},
-      vissza:"A kérdéssor nem azt mondja meg, mi a jó döntés, hanem azt, mennyire alaposan készültél rá. Itt éppen ez volt a kérdés.",
-      naplo:"Etikai kérdéssor alapján mérlegelte az ajánlatot." },
-    { szoveg:"Felteszed magadnak az egyetlen kérdést: jól éreznéd magad, ha ez az alku holnap címlapra kerülne? Nem. Elutasítod.",
-      technika:"Moralitás detektor: napfény teszt", stilus:"strukturalt",
-      hatas:{kov:4, atl:6, min:3, fel:9, bev:0},
-      vissza:"Az elutasítás pénzbe kerül, a döntés viszont bármikor kiállja a nyilvánosság próbáját.",
-      naplo:"A nyilvánosság próbája alapján utasította el az ajánlatot." },
-    { szoveg:"Elfogadod: senkinek nem árt, az állam meg spórol vele.",
-      technika:"„Senkinek sem árt” gátló racionalizálás", stilus:"gyors",
-      hatas:{kov:-3, atl:-8, min:-2, fel:-11, bev:0},
-      vissza:"Ez az érvelés az etikát a többi szempont mellé sorolja. Ami mérlegelhető, azt bármikor el is lehet vetni.",
-      naplo:"A „senkinek sem árt” érvvel fogadta el az ajánlatot." },
-    { szoveg:"Elfogadod: a cél jó, minden iskola korszerű rendszert kap.",
-      technika:"„Jó célt szolgál” gátló racionalizálás", stilus:"gyors",
-      hatas:{kov:-2, atl:-7, min:-2, fel:-10, bev:0},
-      vissza:"A végeredmény tényleg értékes, csak az odavezető út nem lett tőle rendben. Pontosan itt kezdődik a cél szentesíti az eszközt.",
-      naplo:"A jó célra hivatkozva fogadta el az ajánlatot." }
-  ]
-},
-
-/* 4 */ {
-  cimke:"A bizottság", tema:"honnan jönnek a javaslatok",
-  cim:"Hárman viszik a szót",
-  jelenet:"A bizottsági ülés",
-  leiras:"Szabályozási változatok kellenek. Az ülésen három erős személyiség viszi a szót, a többiek ritkán szólalnak meg. Neked már van egy kész elképzelésed.",
-  opciok:[
-    { szoveg:"Megkéred a tagokat, hogy előbb mindenki magának írja le a javaslatait. Csak azután olvassátok fel és vitatkoztok.",
-      technika:"Névleges csoport módszer", stilus:"bevono",
-      hatas:{kov:3, atl:4, min:9, fel:0, bev:10},
-      vissza:"Így nem a három hangos tag köré rendeződtek az ötletek. Két olyan javaslat is bekerült, ami szabad vitában elvérzett volna.",
-      naplo:"Előbb önálló írásban, csak utána közösen gyűjtötte a javaslatokat." },
-    { szoveg:"Előadod a saját elképzelésedet, és megkérdezed, van-e ellenvetés.",
-      technika:"Az elnöki javaslat dominanciája", stilus:"gyors",
-      hatas:{kov:1, atl:-2, min:-6, fel:0, bev:-8},
-      vissza:"Ellenvetés nem lesz, mert a te javaslatod, és te vezeted az ülést. A csendet könnyű egyetértésnek olvasni.",
-      naplo:"Saját javaslatát terjesztette elő ötletgyűjtés helyett." },
-    { szoveg:"Ötletelést tartotok, de menet közben rögtön megmondod, melyik javaslat jó és melyik nem.",
-      technika:"Az ítélkezés felfüggesztésének megsértése", stilus:"gyors",
-      hatas:{kov:0, atl:-1, min:-5, fel:0, bev:-5},
-      vissza:"A harmadik lehűtött javaslat után a csendesebb tagok már nem szólalnak meg.",
-      naplo:"Ötletelés közben azonnal minősítette a javaslatokat." },
-    { szoveg:"Azt kéritek: hogyan oldják meg ezt a közlekedésben, az egészségügyben, a médiában? Onnan tértek vissza a saját ügyetekhez.",
-      technika:"Szinektika: analógiás gondolkodás", stilus:"strukturalt",
-      hatas:{kov:0, atl:2, min:7, fel:0, bev:5},
-      vissza:"Az analógia szokatlan irányt nyitott. A visszaút a konkrét szabályozáshoz viszont még munkát igényel.",
-      naplo:"Analógiák mentén keresett szabályozási megoldásokat." }
-  ]
-},
-
-/* 5 */ {
-  cimke:"A tervezet", tema:"mi alapján válassz",
-  cim:"Biztonságos vagy tanévkezdésre kész?",
-  jelenet:"A célok ütközése",
-  leiras:"A két cél ütközik. A rendszer legyen nagyon biztonságos, ami drága és lassú, de készüljön el a tanév kezdetére, ami olcsóbb és gyorsabb megoldást kívánna.",
-  opciok:[
-    { szoveg:"Kimondjátok, mennyi csúszás ér meg mennyi biztonságot. Így egyesével kiesnek a szempontok, és marad egy döntés.",
-      technika:"Even Swap: átváltások nyílt mérlegelése", stilus:"strukturalt",
-      hatas:{kov:3, atl:6, min:11, fel:0, bev:5},
-      vissza:"Az átváltás kimondásával a vita számokká vált. Most már az is látszik, mit adtatok fel és miért.",
-      naplo:"Nyílt átváltásokkal súlyozta a biztonságot és a gyorsaságot." },
-    { szoveg:"A leggyorsabb megoldást választod, a biztonságot másodlagos célként elengeded.",
-      technika:"Lexikografikus szabály: egyetlen szempont", stilus:"gyors",
-      hatas:{kov:2, atl:-1, min:-6, fel:-2, bev:-3},
-      vissza:"A tanévkezdés megvan, a biztonsági kockázat viszont a bevezetés utánra tolódott.",
-      naplo:"Kizárólag a gyorsaság szempontja szerint döntött." },
-    { szoveg:"Kérsz egy összehasonlítást a titkárságtól, de a súlyokat egyedül te adod meg.",
-      technika:"Haszonérték-elemzés egyszemélyes súlyozással", stilus:"delegalo",
-      hatas:{kov:1, atl:2, min:6, fel:0, bev:-1},
-      vissza:"A számítás rendben lesz, a súlyok viszont a te értékválasztásod. A súlyozás maga is döntés.",
-      naplo:"Összehasonlítást készíttetett, a súlyokat egyedül adta meg." },
-    { szoveg:"Tovább elemeztetitek a szempontokat, döntés viszont nem születik.",
-      technika:"Túlelemzés, a döntés elmaradása", stilus:"ovatos",
-      hatas:{kov:-7, atl:-2, min:-3, fel:-2, bev:1},
-      vissza:"Az elemzés kifogástalan, döntés nincs. A halogatás is döntés, csak nem te hozod meg, hanem az idő.",
-      naplo:"Végtelen elemzésbe fordult, döntés nélkül." }
-  ]
-},
-
-/* 6 */ {
-  cimke:"Időtáv", tema:"rövid vagy hosszú táv",
-  cim:"Öt év vagy a jövő évi választás?",
-  jelenet:"A hosszú táv",
-  leiras:"A javaslat öt év múlva hoz eredményt. Jövőre viszont választás lesz, és a bevezetés most népszerűtlen. Ami hosszú távon jó, az rövid távon rosszabbnak látszik.",
-  opciok:[
-    { szoveg:"Felvállalod, hogy ez nehéz ügy, és leírtok három lehetséges jövőt: mi lesz, ha minden a terv szerint megy, mi lesz, ha jobban, és mi lesz, ha rosszabbul. Mindegyikhez lépéseket is rendeltek.",
-      technika:"Forgatókönyv-elemzés nehéz problémára", stilus:"strukturalt",
-      hatas:{kov:3, atl:7, min:10, fel:3, bev:5},
-      vissza:"A népszerűtlenség megmarad, a hitelesség viszont nő. Aki nyíltan felvállalja a hosszú távú árat, azt hosszú távon is komolyan veszik.",
-      naplo:"Több lehetséges jövőt végiggondolva vállalta fel a reformot." },
-    { szoveg:"Kiveszed a fájdalmas részeket, és a választásig egy jól kommunikálható, könnyű törvényt csinálsz belőle.",
-      technika:"A nehéz probléma egyszerűvé alakítása", stilus:"gyors",
-      hatas:{kov:-6, atl:-7, min:-5, fel:-4, bev:0},
-      vissza:"A törvény átmegy, és nem old meg semmit. Aki a tartalmat várta, most megtanulta, hogy nálad a naptár erősebb az ügynél.",
-      naplo:"Rövid távra szabta a tervezetet, a nehéz részek kivételével." },
-    { szoveg:"A fiókba teszed a tervezetet a választások utánig.",
-      technika:"Döntés halogatása", stilus:"ovatos",
-      hatas:{kov:-7, atl:-2, min:-5, fel:-4, bev:0},
-      vissza:"A fiókban semmi nem javul, csak az idő fogy. A halogatás a kiszámíthatóságot viszi el, ami a legnehezebben építhető vissza.",
-      naplo:"A választásokig fiókba tette a tervezetet." },
-    { szoveg:"Engedsz a pártvezetés nyomásának, és hagyod, hogy kivegyék a hosszú távú részeket.",
-      technika:"Passzív alkalmazkodás a nyomáshoz", stilus:"ovatos",
-      hatas:{kov:-4, atl:-2, min:-2, fel:-5, bev:-1},
-      vissza:"A konfliktust elkerülted, a tartalmat nem védted meg. Látják, hogy a szakmai álláspontod addig tart, amíg nyomás nem éri.",
-      naplo:"Engedett a pártvezetés nyomásának." }
-  ]
-},
-
-/* 7 */ {
-  cimke:"A bizottság", tema:"hogyan folyjon a vita",
-  cim:"Mindenki a sajátját védi",
-  jelenet:"A szavazás",
-  leiras:"A végső változat előtt még egy vita van hátra. Minden frakció a saját javaslatát propagálja, és a szavazás a küszöbön áll.",
-  opciok:[
-    { szoveg:"Kimondod, hogy most nem meggyőzni kell, hanem tesztelni: minden javaslat gyenge pontját közösen keresitek meg, a kisebbségi véleményt külön is kikéred.",
-      technika:"Vizsgálódó döntéshozatal", stilus:"bevono",
-      hatas:{kov:3, atl:7, min:9, fel:0, bev:9},
-      vissza:"A verseny helyett közös munka lett, és két valós hiba is kiderült. A vita minősége itt egyenesen a döntés minőségét emelte.",
-      naplo:"Tesztelő, nem meggyőző keretben vezette a vitát." },
-    { szoveg:"Hagyod, hogy mindenki a saját javaslatának ügyvédjeként lépjen fel, aztán a többség dönt.",
-      technika:"Pártfogó döntéshozatal", stilus:"gyors",
-      hatas:{kov:1, atl:-3, min:-6, fel:0, bev:-7},
-      vissza:"Ha a cél a meggyőzés, mindenki bagatellizálja a saját javaslata gyengéit. A végén nyertesek és vesztesek lesznek.",
-      naplo:"Meggyőzésre épülő vitát vezetett." },
-    { szoveg:"Kört osztasz: most mindenki csak a tényeket mondja, aztán mindenki csak a kockázatot, aztán mindenki csak a lehetőséget.",
-      technika:"Hat gondolkodó kalap", stilus:"strukturalt",
-      hatas:{kov:2, atl:5, min:7, fel:0, bev:7},
-      vissza:"A párhuzamos gondolkodás kivette a vitából a pozícióharcot: a kritika már nem személyes támadásként érkezett.",
-      naplo:"Szerepkörökre bontva strukturálta a vitát." },
-    { szoveg:"Lezárod a vitát, és a többségeddel megszavaztatod a saját változatodat.",
-      technika:"A kisebbségi vélemény elnyomása", stilus:"gyors",
-      hatas:{kov:-1, atl:-8, min:-4, fel:-2, bev:-10},
-      vissza:"A szavazás lezárult, a kritika nem tűnt el, csak kikerült a teremből. A végrehajtásnál pontosan innen jön majd az ellenállás.",
-      naplo:"Többségi erőből, a vita lezárásával szavaztatott." }
-  ]
-},
-
-/* 8 */ {
-  cimke:"A nyilvánosság", tema:"kit érint a döntés",
-  cim:"Tüntetnek az épület előtt",
-  jelenet:"A tüntetés",
-  leiras:"Egy kiszivárgott feljegyzés miatt civilek tüntetnek az épület előtt. A sajtó ott van, a bizottság tanácstalan, és mindenki tőled vár választ.",
-  opciok:[
-    { szoveg:"Megnézed, kik ők valójában: nagyon érinti őket az ügy, beleszólásuk viszont alig van. Lemész, és leülsz velük beszélni.",
-      technika:"Érintetterőtér-elemzés és érintetti párbeszéd", stilus:"bevono",
-      hatas:{kov:2, atl:8, min:8, fel:2, bev:10},
-      vissza:"A tüntetésből egyeztetés lett, és kiderült, hogy a kifogás egy valós hiányosságra mutatott. A nyílt reakció többet ért minden közleménynél.",
-      naplo:"Párbeszédet kezdeményezett a tüntetőkkel." },
-    { szoveg:"A médiában agresszív kisebbségként mutatod be őket, hogy a bizottság jó színben tűnjön fel.",
-      technika:"A kritikus érintettek lejáratása", stilus:"gyors",
-      hatas:{kov:-2, atl:-8, min:-2, fel:-6, bev:-7},
-      vissza:"A napi sajtóban működhet, de a felvételek megmaradnak. A lejáratás a saját hitelességedből fizeti ki a rövid távú előnyt.",
-      naplo:"A médiában lejáratta a tüntető szervezetet." },
-    { szoveg:"Biztonsági szolgálattal távolíttatod el őket a kamerák elől.",
-      technika:"A nyilvánosság kizárása", stilus:"gyors",
-      hatas:{kov:-3, atl:-10, min:-2, fel:-7, bev:-7},
-      vissza:"A kép eltűnik a kamerák elől, a kérdés nem. Az elhallgatás mindig nagyobb hírt csinál, mint az eredeti ügy.",
-      naplo:"Biztonsági szolgálattal távolíttatta el a tüntetőket." },
-    { szoveg:"Kiadsz egy közleményt, hogy minden észrevételt megvizsgáltok, és nem lépsz tovább.",
-      technika:"Formális válasz érdemi lépés nélkül", stilus:"ovatos",
-      hatas:{kov:-1, atl:-2, min:-2, fel:-3, bev:-4},
-      vissza:"A közlemény megjelent, a párbeszéd nem indult el. A megválaszolatlan visszajelzés többet ront, mintha meg sem kérdezted volna őket.",
-      naplo:"Közleménnyel válaszolt a tüntetésre, érdemi lépés nélkül." }
-  ]
-},
-
-/* 9 */ {
-  cimke:"Plenáris ülés", tema:"a valódi ok megkeresése",
-  cim:"„Mitől lesz ettől jobb?”",
-  jelenet:"A plenáris ülés",
-  leiras:"A záróvitában ezt kérdezik tőled. Az ellenzék számokkal érvel, a bizottság mögötted ül, a sajtó közvetít.",
-  opciok:[
-    { szoveg:"Megmutatod, honnan jön a probléma nagy része, és hogy a tervezet pontosan melyik ágon avatkozik be.",
-      technika:"Halszálka (Ishikawa) diagram és Pareto-elemzés a vitában", stilus:"strukturalt",
-      hatas:{kov:2, atl:8, min:10, fel:1, bev:4},
-      vissza:"Az érvelés így nem véleményről szólt, hanem az okok szerkezetéről. A kritika nem elnémult, hanem megválaszolva lett.",
-      naplo:"Az okok szerkezetével támasztotta alá a tervezetet." },
-    { szoveg:"Nem foglalkozol a számszerű kritikákkal, és a törvény céljairól beszélsz.",
-      technika:"Hárítás: a kritika figyelmen kívül hagyása", stilus:"gyors",
-      hatas:{kov:-2, atl:-6, min:-6, fel:-3, bev:-2},
-      vissza:"A meg nem válaszolt szám a jegyzőkönyvben marad, és minden későbbi vitában előkerül.",
-      naplo:"Figyelmen kívül hagyta a számszerű kritikákat." },
-    { szoveg:"Három emlékezetes iskolai történettel érvelsz, amit a sajtóból mindenki ismer.",
-      technika:"Elérhetőségi torzításra épített érvelés", stilus:"gyors",
-      hatas:{kov:-1, atl:-3, min:-7, fel:-2, bev:-1},
-      vissza:"A történetek megmaradnak, a bizonyíték nem. A könnyen felidézhető eseteket hajlamosak vagyunk gyakoribbnak hinni.",
-      naplo:"Emlékezetes egyedi esetekkel érvelt." },
-    { szoveg:"Elismered, hogy az okokat nem elemeztétek végig, és további vizsgálatot ígérsz.",
-      technika:"Az elemzés hiányának beismerése", stilus:"ovatos",
-      hatas:{kov:0, atl:4, min:1, fel:5, bev:2},
-      vissza:"Az őszinteség sokat ér, a tervezet viszont már a szavazás előtt áll. A vizsgálatot a döntés előtt kellett volna elvégezni.",
-      naplo:"Elismerte az elemzés hiányát, vizsgálatot ígért." }
-  ]
-},
-
-/* 10 */ {
-  cimke:"Önreflexió", tema:"visszatekintés",
-  cim:"Egyedül a szavazás után",
-  jelenet:"A csendes szoba",
-  leiras:"A törvényt elfogadták. Egy csendes szobában végigveszed a saját szerepedet és a döntéseidet az elmúlt hetekből.",
-  opciok:[
-    { szoveg:"Végigveszed, mire figyeltél oda, mit feltételeztél, és hol tévedtél. Leírod azt is, amit közben gondoltál, de nem mondtál ki.",
-      technika:"Következtetési létra és reflektív gondolkodás", stilus:"strukturalt",
-      hatas:{kov:3, atl:9, min:6, fel:10, bev:4},
-      vissza:"A saját vakfoltok kimondása a legolcsóbb tanulás, és a következő törvénynél már döntési minőségben térül meg.",
-      naplo:"Végigvette a saját döntési folyamatát és vakfoltjait." },
-    { szoveg:"Leírod a legfontosabb vitát két oszlopban: mi hangzott el, és mit gondoltál közben, amit nem mondtál ki.",
-      technika:"Baloldali oszlop módszer", stilus:"strukturalt",
-      hatas:{kov:2, atl:6, min:5, fel:8, bev:3},
-      vissza:"A ki nem mondott gondolatok leírása mutatta meg, milyen feltételezésekkel mentél bele a vitába.",
-      naplo:"Írásban elemezte a saját szerepét a vitában." },
-    { szoveg:"Arra jutsz, hogy a siker a te érdemed, a hibák pedig az ellenzéken múltak.",
-      technika:"Énmegerősítő attribúció", stilus:"gyors",
-      hatas:{kov:-2, atl:-5, min:-4, fel:-10, bev:-3},
-      vissza:"Az önértékelésed sértetlen marad, a tanulás elmarad. A környezeted közben pontosan látja, mi történt.",
-      naplo:"A sikert magának, a hibákat másoknak tulajdonította." },
-    { szoveg:"Lezárod a témát, és a következő kampány anyagaira fókuszálsz.",
-      technika:"A reflexió elhagyása", stilus:"ovatos",
-      hatas:{kov:-1, atl:-2, min:-4, fel:-6, bev:0},
-      vissza:"A következő feladat mindig sürgősebb, mint a visszatekintés. Ezért maradnak bent a hibák a rendszerben.",
-      naplo:"Reflexió nélkül lépett tovább." }
-  ]
-}
-
-  ]
-}
-
+/* A JSON ékezet nélküli kulcsai és a játék belső dimenzióazonosítói. */
+const PONTKULCS = {
+  kovetkezetesseg:"kov", atlathatosag:"atl", dontesi_minoseg:"min",
+  felelossegvallalas:"fel", erintettek_bevonasa:"bev"
 };
+
+/* Ami nem a kérdésadatbázis része: a nyitóoldali sorrend, a fejléc szövegei és
+   a 3D díszletek helyszínnevei. A helyszínek sorrendje megegyezik a DISZLETEK
+   tömbjével, a történetek pedig ezekre a helyszínekre íródtak. */
+const PALYA_META = {
+  vallalati:{ rovid:"Vállalat", alcim:"Meridian Kft.", hos:"ügyfélszolgálati igazgató",
+    jelenetek:["Az iroda","A tárgyaló","A vezérigazgató ajtaja","Két osztály között","A havi jelentés",
+               "Az asztalod","A szerverterem","A tárgyalóasztal","Az éjszakai ügyelet","A csapatszoba"] },
+  katonai:{ rovid:"Katonai", alcim:"3. műszaki ezred", hos:"ezredes",
+    jelenetek:["A laktanya kapuja","A törzssátor","Az elöljáró vonala","A két gátszakasz","A napló",
+               "A rádióasztal","A tervasztal","A régi töltés","Az állomány előtt","A gátszakadás után"] },
+  politikai:{ rovid:"Politikai", alcim:"Országgyűlési bizottság", hos:"bizottsági elnök",
+    jelenetek:["A bizottsági iroda","A falugyűlés","A parlament folyosója","A bizottsági ülés","A tárgyalóasztal",
+               "A vidéki út","A szavazás előtti este","A tüntetés","A plenáris ülés","A csendes iroda"] }
+};
+
+let STORIK = {};
+
+/* A JSON-szerkezetet a játék belső formájára alakítja. */
+function palyatAtalakit(kulcs, j){
+  const meta = PALYA_META[kulcs];
+  if(!j || !Array.isArray(j.szituaciok) || j.szituaciok.length !== meta.jelenetek.length)
+    throw new Error("Hibás kérdésfájl: adatok/" + kulcs + ".json");
+  return {
+    nev: j.szerep, rovid: meta.rovid, alcim: meta.alcim, hos: meta.hos,
+    leiras: j.tortenet_szinopszisa,
+    szituaciok: j.szituaciok.map((sz, i) => ({
+      id: sz.id, cim: sz.cim, jelenet: meta.jelenetek[i], leiras: sz.szituacio_leirasa,
+      opciok: sz.opciok.map(o => {
+        const hatas = {};
+        Object.keys(PONTKULCS).forEach(k => { hatas[PONTKULCS[k]] = (o.pontok[k] || 0) * PONT_SZORZO; });
+        return { jel:o.jel, szoveg:o.opcio_leirasa, fogalom:o.fogalom, kiertekeles:o.kiertekeles,
+                 pontok:o.pontok, hatas };
+      })
+    }))
+  };
+}
+
+async function adatokBetoltese(){
+  const kulcsok = Object.keys(PALYA_META);
+  const nyers = await Promise.all(kulcsok.map(k =>
+    fetch("adatok/" + k + ".json", { cache:"no-cache" }).then(v => {
+      if(!v.ok) throw new Error("Nem tölthető be: adatok/" + k + ".json");
+      return v.json();
+    })));
+  const uj = {};
+  kulcsok.forEach((k, i) => { uj[k] = palyatAtalakit(k, nyers[i]); });
+  STORIK = uj;
+}
 
 /* ============================================================================
    4) 3D MOTOR — Three.js
@@ -4057,7 +3155,7 @@ function dontestMutat(){
   lent.style.visibility = "visible";
   lent.style.animation = "none"; void lent.offsetWidth; lent.style.animation = "kovBe .55s cubic-bezier(.22,1,.36,1)";
 
-  $("dontes-cimke").textContent = sz.cimke + " · " + sz.tema;
+  $("dontes-cimke").textContent = sztori().nev + " · " + sz.jelenet;
   $("dontes-cim").textContent = sz.cim;
   $("dontes-leiras").textContent = sz.leiras;
 
@@ -4089,8 +3187,8 @@ function valasztas(idx, gomb){
     allapot.pontok[k] = korlat(allapot.pontok[k] + op.hatas[k], 0, 100);
   });
   allapot.naplo.push({
-    sorszam: allapot.index + 1, cim: sz.cim, cimke: sz.cimke, tema: sz.tema,
-    dontes: op.naplo, technika: op.technika, stilus: op.stilus, hatas: op.hatas,
+    sorszam: allapot.index + 1, cim: sz.cim,
+    dontes: op.szoveg, fogalom: op.fogalom, hatas: op.hatas,
     ido: new Date().toLocaleTimeString("hu-HU", {hour:"2-digit", minute:"2-digit"})
   });
 
@@ -4098,10 +3196,10 @@ function valasztas(idx, gomb){
   gomb.classList.add("valasztott");
   $("hud-lent").classList.add("valaszolt");
 
-  $("kovetkezmeny-szoveg").textContent = op.vissza;
+  $("kovetkezmeny-szoveg").textContent = op.kiertekeles;
   const hs = $("hatas-sor"); hs.innerHTML = "";
   const tech = document.createElement("span");
-  tech.className = "pelyhek"; tech.textContent = op.technika; hs.appendChild(tech);
+  tech.className = "pelyhek"; tech.textContent = op.fogalom; hs.appendChild(tech);
   Object.keys(op.hatas).forEach(k=>{
     const v = op.hatas[k]; if(!v) return;
     const c = document.createElement("span");
@@ -4207,24 +3305,24 @@ const GYENGE_SZOVEG = {
 /* Az ajánlások a kurzus technikáira épülnek, a két leggyengébb dimenzióra szabva. */
 const AJANLASOK = {
   kov:[
-    { cim:"A kritériumokat előbb rögzítsd, mint a döntést", szoveg:"Írd le a szempontokat és a súlyukat, mielőtt választanál. Így a döntésed később is levezethető, és nem a napi nyomás írja felül." },
-    { cim:"Adj dátumot a halasztásnak", szoveg:"Ha most nem tudsz dönteni, mondd meg, mikor fogsz és mi hiányzik hozzá. A dátum nélküli halogatás is döntés, csak nem te hozod meg." }
+    { cim:"Csak azt ígérd meg, ami a te kezedben van", szoveg:"James March hamisan pozitív hibának nevezi, ha olyan kontrollban hiszünk, amely nincs meg. Mielőtt ígérsz, kérdezd meg magadtól: tényleg rajtam múlik?" },
+    { cim:"A kivételből csinálj szabályt", szoveg:"Ha valakinek engedményt teszel, mondd ki, milyen szempont alapján, és alkalmazd mindenkire, aki ugyanabban a helyzetben van. Így a döntésed kiszámítható marad." }
   ],
   atl:[
-    { cim:"A döntés indoka is kerüljön papírra", szoveg:"Három sor minden döntéshez: mi a döntés, mi az indoka, és mi volt az elvetett alternatíva." },
-    { cim:"Zárd le a bekért véleményeket", szoveg:"Ha megkérdezel valakit, mondd is el, mi lett a válaszából. A megválaszolatlan visszajelzés többet ront, mintha meg sem kérdezted volna." }
+    { cim:"A rossz hírt te mondd el elsőként", szoveg:"Mintzberg szóvivő szerepe szerint a vezető tájékoztatja a kívülállókat. Ha a kellemetlen hír tőled érkezik, megoldással együtt, a jó híreidnek is jobban hisznek." },
+    { cim:"Futtasd le a napfény tesztet", szoveg:"Kényes döntés előtt kérdezd meg magadtól: jól érezném magam, ha ez minden részletével holnap nyilvánosságra kerülne?" }
   ],
   min:[
-    { cim:"Kérdezz rá a problémameghatározásra", szoveg:"Mielőtt megoldást keresel, vedd fel a CATWOE-listát, vagy fogalmazd újra a kérdést az elvárt eredmény felől." },
-    { cim:"Az okokat halszálkával tárd fel", szoveg:"Intézkedés előtt rajzold fel az ok-okozati diagramot, és Pareto-elemzéssel nézd meg, melyik kevés ok adja a problémák többségét." }
+    { cim:"Előbb a kérdés, aztán a válasz", szoveg:"A PrOACT-modell első lépése a probléma pontos megfogalmazása és a célok összeírása. Ha a kész megoldással érkezik valaki, kérdezd meg: pontosan mit akarunk elérni?" },
+    { cim:"Húzd ki, ami mindenben rosszabb", szoveg:"A dominancia elve szerint ha egy lehetőség semmiben nem jobb egy másiknál, elvethető. Így a vita a valódi versenyzőkre szűkül." }
   ],
   fel:[
-    { cim:"Futtasd le a napfény tesztet", szoveg:"Kényes döntés előtt kérdezd meg magadtól: jól érezném magam, ha ez a döntés holnap napvilágra kerülne?" },
-    { cim:"Mássz le a következtetési létrán", szoveg:"Döntés után írd le, milyen adatot választottál ki és mit feltételeztél. A saját vakfolt feltárása a legolcsóbb tanulás." }
+    { cim:"A kudarcban keresd a saját részedet is", szoveg:"Az énmegerősítő attribúció a sikert nekünk, a kudarcot a körülményeknek tulajdonítja. Minden rossz kimenetelnél nevezz meg legalább egy saját döntést, amely hozzájárult." },
+    { cim:"Ne add ki a kezedből a döntést", szoveg:"A döntés elhárítása kényelmes, de a felelősség attól még a tiéd marad. Kérj tanácsot bárkitől, a döntést viszont te mondd ki." }
   ],
   bev:[
-    { cim:"Rajzold fel az érintetterőteret", szoveg:"Döntés előtt nézd meg, kire hat ez leginkább és kinek mekkora a befolyása. A kiszolgáltatott pozíciójúakat külön kell megszólítani." },
-    { cim:"Az ötleteket előbb önállóan gyűjtsd", szoveg:"Névleges csoport módszerrel mindenki leírja a javaslatát, mielőtt vitáznátok. Így nem a leghangosabb köré rendeződnek az ötletek." }
+    { cim:"Rajzold fel, kit érint a döntés", szoveg:"Az érintett-térkép azokat is láthatóvá teszi, akik nincsenek a teremben. Minden nagyobb döntés előtt kérdezd meg: kire hat ez, és megkérdeztem-e?" },
+    { cim:"Mielőtt ítélsz, nézd meg a helyzetet", szoveg:"Az alapvető attribúciós hiba miatt mások viselkedését a jellemükkel magyarázzuk. Ha valaki ellenkezik, először azt kérdezd meg, milyen helyzetből beszél." }
   ]
 };
 
@@ -4236,11 +3334,6 @@ function dimenzioDontesek(dimId, pozitiv){
     .sort((a,b)=> pozitiv ? b.hatas[dimId]-a.hatas[dimId] : a.hatas[dimId]-b.hatas[dimId]);
 }
 function rangsor(){ return DIMENZIOK.slice().sort((a,b)=> allapot.pontok[b.id] - allapot.pontok[a.id]); }
-function stilusStat(){
-  const db = {}; Object.keys(STILUSOK).forEach(k=> db[k]=0);
-  allapot.naplo.forEach(b=> db[b.stilus] = (db[b.stilus]||0)+1 );
-  return { db, fo:Object.keys(db).sort((a,b)=> db[b]-db[a])[0] };
-}
 function dimTetel(d, hely){
   const v = Math.round(allapot.pontok[d.id]);
   const poz = v >= 60;
@@ -4279,27 +3372,27 @@ function radarRajz(){
   return s + '</svg>';
 }
 
-function mintazatMondat(st){
-  const hasznalt=[], hianyzo=[];
-  sztori().kulcsTechnikak.forEach(x=>{
-    const van = allapot.naplo.some(b=> b.technika.toLowerCase().indexOf(x.k.toLowerCase()) >= 0);
-    (van?hasznalt:hianyzo).push(x.cim);
+/* A tíz döntés mögötti fogalmak: amelyik választás összességében erősítette a
+   bizalmat, az erősségként, amelyik rontotta, az csapdaként jelenik meg. */
+function mintazatMondat(){
+  const erosseg = [], csapda = [];
+  allapot.naplo.forEach(b => {
+    const netto = DIMENZIOK.reduce((ossz, d) => ossz + d.suly * (b.hatas[d.id] || 0), 0);
+    (netto >= 0 ? erosseg : csapda).push(b.fogalom);
   });
-  let s = "A tíz döntésedből <b>" + st.db[st.fo] + "</b> volt " + STILUSOK[st.fo] + ". ";
-  s += hasznalt.length ? "Támaszkodtál ezekre: <b>" + hasznalt.slice(0,4).join(", ") + "</b>. " : "A tanult technikák közül egyet sem hívtál segítségül. ";
-  s += hianyzo.length ? "Kimaradt: " + hianyzo.slice(0,4).join(", ") + "." : "Minden fő technikát alkalmaztál legalább egyszer.";
+  const egyedi = t => Array.from(new Set(t));
+  let s = "Minden döntésed mögött egy döntéselméleti jelenség áll. ";
+  s += erosseg.length ? "A bizalmat erősítő döntéseidben ezek jelentek meg: <b>" + egyedi(erosseg).join(", ") + "</b>. " : "";
+  s += csapda.length ? "A bizalmat rontókban ezek: " + egyedi(csapda).join(", ") + "."
+                     : "Egyik döntésed sem rontotta összességében a bizalmat.";
   return s;
 }
-function ajanlasokValaszt(gyenge, st){
+function ajanlasokValaszt(gyenge){
   const ki = [];
   (AJANLASOK[gyenge[0].id]||[]).slice(0,2).forEach(a=> ki.push(a));
   (AJANLASOK[gyenge[1].id]||[]).slice(0,1).forEach(a=> ki.push(a));
-  if(ki.length < 3){
-    if(st.fo === "gyors") ki.push({cim:"Válts pártfogóból vizsgálódóba", szoveg:"Ne a saját javaslatodat védd, hanem teszteld: kérd meg a többieket, hogy cáfolják."});
-    else if(st.fo === "ovatos") ki.push({cim:"A halasztás helyett szűkíts", szoveg:"Ha nem tudsz dönteni, ejts ki egy kritériumot Even Swap-pal, és dönts a maradékról."});
-    else if(st.fo === "delegalo") ki.push({cim:"A delegálás mellé adj keretet", szoveg:"Amit átadsz, ahhoz mondd ki a döntési határt és a visszajelzés módját."});
-    else ki.push({cim:"Tedd nyilvánossá a módszeredet", szoveg:"Ha strukturáltan döntesz, mutasd is meg a szerkezetet. A látható módszer másolható."});
-  }
+  if(ki.length < 3)
+    ki.push({cim:"Minden döntésnél nevezd meg az árát", szoveg:"Mielőtt döntesz, mondd ki, mit adsz fel érte. Ha az ár látható, a döntésed akkor is védhető marad, ha később vitatják."});
   return ki.slice(0,3);
 }
 
@@ -4435,7 +3528,7 @@ async function kerdoivKuldes(ev){
 
 function kiertekeles(){
   const vegso = foIndex(), sz = szintObj(vegso), r = rangsor();
-  const eros = r.slice(0,2), gyenge = r.slice(-2).reverse(), st = stilusStat();
+  const eros = r.slice(0,2), gyenge = r.slice(-2).reverse();
 
   $("vegso-pont").innerHTML = vegso + '<small>/100</small>';
   const vsz = $("vegso-szint"); vsz.textContent = sz.nev;
@@ -4466,10 +3559,10 @@ function kiertekeles(){
     dl.appendChild(el);
   });
 
-  $("mintazat").innerHTML = mintazatMondat(st);
+  $("mintazat").innerHTML = mintazatMondat();
 
   const aD = $("ajanlasok"); aD.innerHTML = "";
-  ajanlasokValaszt(gyenge, st).forEach((a,i)=>{
+  ajanlasokValaszt(gyenge).forEach((a,i)=>{
     const el = document.createElement("div"); el.className = "tetel";
     el.innerHTML = '<span class="sz">'+String(i+1).padStart(2,"0")+'</span><div><b>'+a.cim+'</b><p>'+a.szoveg+'</p></div>';
     aD.appendChild(el);
@@ -4482,12 +3575,12 @@ function kiertekeles(){
     vn.appendChild(li);
   });
 
-  $("riport-szoveg").value = riportSzoveg(vegso, sz, eros, gyenge, st);
+  $("riport-szoveg").value = riportSzoveg(vegso, sz, eros, gyenge);
   $("email-info").textContent = "Címzett: " + allapot.email + (EREDMENY_MASOLAT_CIM ? " (másolat: " + EREDMENY_MASOLAT_CIM + ")" : "") + ".";
   $("kuld-allapot").textContent = ""; $("kuld-allapot").className = "allapot";
 }
 
-function riportSzoveg(vegso, sz, eros, gyenge, st){
+function riportSzoveg(vegso, sz, eros, gyenge){
   const S = [];
   S.push("VEZETOI BIZALOM — DÖNTÉSI SZIMULÁCIÓ · KIÉRTÉKELÉS");
   S.push("======================================================");
@@ -4509,13 +3602,13 @@ function riportSzoveg(vegso, sz, eros, gyenge, st){
   gyenge.forEach(d=>{ const t = dimTetel(d,"gyenge"); S.push("  • " + d.nev + " (" + t.v + "): " + t.szoveg); });
   S.push("");
   S.push("DÖNTÉSI MINTÁZAT");
-  S.push("  " + mintazatMondat(st).replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim());
+  S.push("  " + mintazatMondat().replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim());
   S.push("");
   S.push("MIT CSINÁLJ MÁSKÉPP");
-  ajanlasokValaszt(gyenge, st).forEach((a,i)=> S.push("  " + (i+1) + ". " + a.cim + " — " + a.szoveg));
+  ajanlasokValaszt(gyenge).forEach((a,i)=> S.push("  " + (i+1) + ". " + a.cim + " — " + a.szoveg));
   S.push("");
   S.push("DÖNTÉSI NAPLÓ");
-  allapot.naplo.forEach(b=> S.push("  " + b.sorszam + ". " + b.cim + " — " + b.dontes + "  [" + b.technika + "]"));
+  allapot.naplo.forEach(b=> S.push("  " + b.sorszam + ". " + b.cim + " — " + b.dontes + "  [" + b.fogalom + "]"));
   S.push("");
   S.push("A történet fiktív. A kiértékelés fejlesztő célú, nem minősítés.");
   return S.join("\n");
@@ -4684,13 +3777,18 @@ async function jatekotIndit(){
 }
 
 document.addEventListener("DOMContentLoaded", function(){
-  modKartyakEpit();
   try{
-    const n = localStorage.getItem("vb_nev"), e = localStorage.getItem("vb_email"), m = localStorage.getItem("vb_mod");
+    const n = localStorage.getItem("vb_nev"), e = localStorage.getItem("vb_email");
     if(n) $("nev").value = n;
     if(e) $("email").value = e;
-    if(m && STORIK[m]) modValaszt(m);
   }catch(e){}
+  adatokBetoltese().then(() => {
+    modKartyakEpit();
+    try{ const m = localStorage.getItem("vb_mod"); if(m && STORIK[m]) modValaszt(m); }catch(e){}
+  }).catch(h => {
+    console.error("A kérdések nem tölthetők be:", h);
+    $("mod-hiba").textContent = "A kérdések betöltése nem sikerült. Frissítsd az oldalt, vagy próbáld újra később.";
+  });
 
   vilagInit();
   heroInit().catch(h => console.error("A nyitókép nem tudott betölteni:", h));

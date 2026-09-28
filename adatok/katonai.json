@@ -1,0 +1,596 @@
+{
+  "szerep": "Katonai vezető",
+  "tortenet_szinopszisa": "A 3. műszaki ezred parancsnoka vagy. Rekordmagas árhullám közeledik a Tiszán, és az ezredet egy háromezres folyóparti város, Tiszaszög és a környező tanyák védelmére vezénylik. Tizenkét nap áll rendelkezésre: az állomány fáradt, a gépek kevesek, a helyiek félnek, és minden döntésed emberek otthonáról szól.",
+  "szituaciok": [
+    {
+      "id": 1,
+      "cim": "Négy óra",
+      "szituacio_leirasa": "Éjjel egykor riasztás: az ezrednek négy órán belül el kell indulnia Tiszaszögre, ahol hat nap múlva tetőzik az árhullám. Az állomány fele hétvégi eltávozáson van, a laktanya kapujánál a teherautók már járatják a motort. A parancs szerint indulni kell — a kérdés az, hogyan.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Előreküldesz egy tízfős felderítő csapatot egy mérnökkel, te pedig négy óra múlva jössz a többiekkel. Mire megérkezel, már tudod, mi vár rátok.",
+          "fogalom": "Simon: a megértés szakasza",
+          "kiertekeles": "Herbert Simon szerint a döntés első lépése a megértés: a helyzetről szóló tudás összegyűjtése, még a tervezés előtt. A felderítők miatt nem vakon érkezel, és az első óráid terve a valóságra épül. Cserébe eltértél a parancstól, amely az ezred együttes indulásáról szólt, és a kis csapat egy darabig magára marad.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 3,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 0
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Felhívod az elöljárót, és kéred, hogy tolják ki az indulást, amíg összeszeded az embereket. Így rendezetten mehettek, de órákat veszítetek.",
+          "fogalom": "A döntés halogatása",
+          "kiertekeles": "A jegyzet a döntés halogatásának nevezi, amikor a problémát tovább toljuk, és kivárjuk, amíg a helyzet kikényszeríti a lépést. Őszintén jelezted a gondot, és az embereidre is gondoltál. A víz viszont nem vár, és az elöljáró azt látja, hogy az első órában egy parancs megváltoztatásán dolgozol, nem a végrehajtásán.",
+          "pontok": {
+            "kovetkezetesseg": -2,
+            "atlathatosag": 2,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 1
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "A jelenlévőkkel négy órán belül elindulsz, a többieket egyenesen a helyszínre rendeled. Az első két napban fél létszámmal dolgoztok, de ott vagytok.",
+          "fogalom": "Mintzberg zavarelhárító szerepe",
+          "kiertekeles": "Mintzberg zavarelhárító szerepében a vezető gyorsan lép, amikor valami megzavarja a működést. Időben a helyszínen lenni itt valódi érték, és a parancsot is betartottad. Az ár az, hogy fél létszámmal a jelenlévők az első napokban túlterhelődnek, és a kimerültség később visszaüthet.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 0,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 2,
+            "erintettek_bevonasa": -2
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Visszarendelsz mindenkit, és csak teljes létszámmal indultok, nyolc óra múlva. A szabályzat szerint így kell kivonulni, és így senki nem marad magára.",
+          "fogalom": "Programozott döntés",
+          "kiertekeles": "Simon programozott döntésnek nevezi azt, amelyre kész rutin vagy szabály van. A kivonulási rend ilyen rutin, és sok helyzetben éppen ez ad biztonságot. Egy rendkívüli árhullámnál viszont a szabály szerinti nyolc óra olyan idő, amely a helyszínen hiányozni fog.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "cim": "Kinek a gátja?",
+      "szituacio_leirasa": "Megérkeztetek. A törzssátorban a térkép fölé hajol Kiss polgármester, Varga, a vízügyi mérnök és a gazdák képviselője. Varga szerint minden erőt a városi gátra kell összpontosítani. A gazdák szerint ha a tanyák feletti töltés átszakad, elvész a termés és negyven család megélhetése. Mindenki tőled várja, hová küldöd az embereket.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Fele-fele arányban osztod el az erőket a városi és a tanyasi töltés között, hogy senki ne mondhassa, hogy cserben hagytad.",
+          "fogalom": "Korlátozott racionalitás, kielégítő döntés",
+          "kiertekeles": "Simon szerint a valóságban nem az optimális, hanem az első elfogadható megoldást szoktuk választani. A fele-fele elosztás mindenkinek elfogadható, és a vitát azonnal lezárja. Csakhogy a víz nem egyenlően fenyeget, és ha egyik helyen sem lesz elég ember, mindkét töltés gyengébb marad a kelleténél.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": 0,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "A polgármesterre bízod a döntést: ő ismeri a helyieket és a helyzetet, döntse el ő, hová menjenek a katonák.",
+          "fogalom": "A döntés elhárítása",
+          "kiertekeles": "A jegyzet a döntéshozói magatartások között írja le a döntés elhárítását, amikor a vezető másra hagyja, amit neki kellene eldöntenie. A polgármester valóban ismeri a várost, és a helyiek jobban elfogadják a szavát. De az ezred a te felelősséged, és ha rosszul alakul, senki nem fogja a polgármestert kérdezni.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 0,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -3,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Mielőtt bárhová küldesz valakit, felírjátok, kik mind érintettek — városiak, tanyasiak, gazdák, a kórház, a katonák —, kinek mi forog kockán, és kinek mekkora a beleszólása. Ez egy óra, amíg a víz emelkedik.",
+          "fogalom": "Érintett-térkép",
+          "kiertekeles": "Az érintett-térkép megmutatja, kikre hat egy döntés, azokat is beleértve, akik nem ülnek az asztalnál — itt például a kórházat vagy a tanyán élő időseket. Ettől lesz látható, kinek a hangja hiányzik a sátorból. Egy óra ilyenkor sok, és a sátor előtt várakozó katonák nem értik, miért nem indulnak még.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Vargára hallgatsz: ő a szakember, ő ismeri a gátakat. A városi töltésre összpontosítotok, a gazdák csalódottan mennek haza.",
+          "fogalom": "Szakértői döntéshozatal",
+          "kiertekeles": "A jegyzet csoportos döntési modelljei között szerepel a szakértői döntés: a csoport azt hagyja dönteni, aki a kérdésben a legjáratosabb. A gátakról Varga tud a legtöbbet, ez erős érv. A modell hátránya, hogy nincs benne párbeszéd, és a döntés súlya — negyven család megélhetése — egy mérnöki szempontra szűkül.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": -2,
+            "erintettek_bevonasa": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "cim": "Két előrejelzés",
+      "szituacio_leirasa": "A dandárparancsnokság minden reggel hatkor egyetlen számot kér: mekkora lesz a tetőzés. Csakhogy két előrejelzés van. Az egyik hét méter húsz centit mond, a másik hét méter kilencvenet — a városi gát hét méter hatvanig biztos. A rádión várják a jelentésedet.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Mindkét számot jelented, és mindkettőhöz leírod, mit csinálsz, ha az jön be. A parancsnokság bosszús, mert egyetlen számot kért.",
+          "fogalom": "Snowden–Boone: összetett helyzet",
+          "kiertekeles": "Snowden és Boone összetett helyzetnek nevezik, amikor az ok-okozati viszonyok felderíthetők, de nem azonnal láthatók, és több helyes válasz is létezhet — ilyenkor szakértői mérlegelésre van szükség. Két előrejelzés éppen ilyen helyzet, és te nem tettél úgy, mintha csak egy lenne. A pontos kép bosszantja azokat, akik egyszerű választ vártak.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 3,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 0
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Megkéred a törzsfőnököt, hogy jöjjön ki, és nézze meg a helyszínt a saját szemével, mielőtt a számokról döntenek. Ezzel a parancsnokságon nem szerzel barátokat.",
+          "fogalom": "Mintzberg kapcsolattartó szerepe",
+          "kiertekeles": "Mintzberg kapcsolattartó szerepében a vezető olyan emberekkel tart kapcsolatot, akik maguk is információs központok. Ha a törzsfőnök látja a töltést, a számok mögött a valóságot is érti. A kérés viszont a szolgálati utat kerüli meg, és van, aki ezt okoskodásnak fogja venni.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 0,
+            "erintettek_bevonasa": 1
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Az alacsonyabb számot jelented: ha a magasabbat mondod, a parancsnokság máshonnan vonhat el erőt, és a városban is nagyobb lesz a pánik.",
+          "fogalom": "Szelektív hárítás",
+          "kiertekeles": "A szelektív hárítás az, amikor a kellemetlen, félelmetes információt nem engedjük be, mert zavarja a képet, amelyet fenn akarunk tartani. Az indokaid valódiak: a pánik tényleg veszélyes. De ha a magasabb szám jön be, a parancsnokság olyan helyzetre készült, amely nem létezik.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": -3,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 1
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "A magasabb számot jelented, hogy biztosan kapj még két gépet és egy századot. Ha nem jön be, legfeljebb túlbiztosítottátok.",
+          "fogalom": "Mintzberg tárgyaló szerepe",
+          "kiertekeles": "Mintzberg tárgyaló szerepében a vezető erőforrásokat szerez a szervezetének egyezkedés útján. A magasabb számmal jó eséllyel megkapod az erősítést, amelyre szükséged lehet. Ha viszont kiderül, hogy a jelentésedet a céljaidhoz igazítottad, legközelebb a pontos számaidnak sem fognak hinni.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": -2,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "cim": "Egy gép, két szakasz",
+      "szituacio_leirasa": "A harmadik napon két helyen is gyengül a töltés: a városi gátnál egy rövidebb, a tanyák felett egy hosszabb szakaszon. Egyetlen nagy teljesítményű markolótok van. A két szakaszparancsnok egyszerre hív a rádión, és mindkettő a gépet kéri.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "A városé az elsőbbség: emberek előbb, mint a termés. Ezt szabályként mondod ki, és mindkét parancsnok tudja, mihez tartsa magát.",
+          "fogalom": "Jól és rosszul strukturált döntés",
+          "kiertekeles": "Simon szerint a jól strukturált döntésnél világos, mi a probléma, a rosszul strukturáltnál viszont nem. Egy egyszerű szabállyal jól strukturálttá tetted a helyzetet, és ez gyors, kiszámítható parancsokat ad. A szabály azonban elrejti, hogy a tanyáknál is emberek élnek, és ha ott szakad át a gát, a „csak termés” nem lesz igaz.",
+          "pontok": {
+            "kovetkezetesseg": 3,
+            "atlathatosag": 2,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -2
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "A gép felváltva dolgozik a két helyen: délelőtt az egyik, délután a másik szakaszon.",
+          "fogalom": "Inkrementalizmus (átevickélés)",
+          "kiertekeles": "Az inkrementalizmus nagy döntések helyett kis, fokozatos lépéseket jelent, amelyek közben a helyzet alakulásához lehet igazodni. A váltás egyik szakaszt sem hagyja magára, és a legkönnyebben megtehető lépés. Csakhogy az átállás idő, és könnyen lehet, hogy estére mindkét szakasz félkész marad.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": 1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": 0,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Felírjátok, melyik szakasz mögött hány ház, hány ember és mennyi termés van, és mennyi idő a javítás. Először megnézitek, van-e olyan lehetőség, amelyik mindenben rosszabb egy másiknál. Ez húsz perc a rádió mellett.",
+          "fogalom": "Dominancia elve",
+          "kiertekeles": "A dominancia elve szerint ha egy lehetőség semmiben nem jobb egy másiknál, és legalább egy szempontból rosszabb, azt nyugodtan elvethetjük, mielőtt nehezebb mérlegelésbe kezdenénk. Ha az egyik szakasz minden szempontból kevésbé sürgős, a döntés magától megszületik. Ha nem, legalább tudod, min múlik — de húsz percig mindkét szakasz vár.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 3,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 0
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Bérelsz egy második gépet egy helyi vállalkozótól a saját keretedből, amihez nincs engedélyed. Utólag kell majd elszámolnod vele.",
+          "fogalom": "Mintzberg vállalkozó szerepe",
+          "kiertekeles": "Mintzberg vállalkozó szerepében a vezető maga kezdeményez változást, és felkutatja a lehetőségeket. A második géppel kilépsz a „vagy-vagy” helyzetből, és mindkét szakasz megkapja, amit kér. Ennek ára a szabálysértés: ha a dandár nem fogadja el az elszámolást, a döntés a te nevedhez kötődik.",
+          "pontok": {
+            "kovetkezetesseg": -2,
+            "atlathatosag": 0,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 3,
+            "erintettek_bevonasa": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "cim": "Műszaki hiba",
+      "szituacio_leirasa": "Az ötödik éjjel megsérül egy katona: húsz órája volt talpon, és elesett a gép mellett. Takács százados a naplóba ennyit írt: baleset, műszaki hiba. A dandár reggel hatkor olvassa a jelentést. Ha kiderül a kimerültség, vizsgálat indul, és pihenőt kell elrendelni — pont most, amikor minden kéz kell.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Kijavíttatod a naplót: kimerültség miatt történt. És azonnal kötelező pihenőt vezetsz be, még ha kevesebben is maradnak a gátnál.",
+          "fogalom": "Moralitás detektor: napfény teszt",
+          "kiertekeles": "A napfény teszt egyetlen kérdés: jól érezném magam, ha ez a döntés minden részletével együtt nyilvánosságra kerülne? Egy elhallgatott kimerültségi baleset ezt nem állná ki, főleg ha később valaki súlyosabban sérül. A pontos napló és a pihenő a helyes lépés, de a gátnál most kevesebb kéz marad.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 3,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": 3,
+            "erintettek_bevonasa": 0
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "A bejegyzés marad: most minden ember kell, egy vizsgálat most megbénítaná a védekezést. A kérdést a víz levonulása után rendezed.",
+          "fogalom": "Diszkontálás",
+          "kiertekeles": "A diszkontálás az a hajlamunk, hogy ami közel van, azt felértékeljük, ami távolabb, azt leértékeljük. A következő két nap védekezése most mindennél fontosabbnak látszik, a hamis bejegyzés következményei pedig távolinak. Csakhogy a kimerültség attól még ott van, és a következő baleset már nem biztos, hogy ilyen könnyű lesz.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -3,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": -2,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Megkérdezed a századparancsnokokat és néhány katonát, mit gondolnak, és velük együtt döntitek el, hogyan legyen a pihenő és mi kerüljön a jelentésbe.",
+          "fogalom": "Részvételi létra",
+          "kiertekeles": "A részvételi létra azt mutatja, mennyire valódi a bevonás: puszta tájékoztatás, meghallgatás vagy tényleges beleszólás a döntésbe. Az állomány most beleszólhat abba, ami a saját biztonságáról szól, és ezt komolyan fogják venni. A jelentés tartalma viszont a te parancsnoki felelősséged, és ezt nem lehet szavazásra bocsátani.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": -2,
+            "erintettek_bevonasa": 3
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "A bejegyzés marad, de csendben bevezetsz egy pihenőrendet. A katonák kipihentebbek lesznek, és senkinek nem esik bántódása.",
+          "fogalom": "Gátló racionalizálás: „senkinek sem árt”",
+          "kiertekeles": "A gátló racionalizálások olyan érvek, amelyekkel egy kétes lépést magunk előtt elfogadhatóvá teszünk. A „senkinek sem árt” szerint ha nincs közvetlen károsult, a döntés rendben van. A pihenőrend valóban véd, de a hamis napló megmarad, és ha kiderül, a jó szándék már nem fog számítani.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": -2,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 0,
+            "erintettek_bevonasa": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "cim": "A legelők",
+      "szituacio_leirasa": "A hatodik napon a felvízi falu két vezetője ül le veled a rádióasztalhoz. Ha átengeditek a vizet a legelőikre, a városi gát megmenekülhet. Beleegyeznek — de csak akkor, ha írásban garantálod a kártérítést. Ezt nem a te hatásköröd megígérni, a minisztériumi döntés pedig napokig tarthat.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Megígéred a kártérítést, és aláírod a papírt. A víz még ma éjjel a legelőkre mehet, a garanciát majd utólag elintézed.",
+          "fogalom": "Hamisan pozitív hiba",
+          "kiertekeles": "James March hamisan pozitív hibának nevezi, amikor a döntéshozó olyan kontrollban hisz, amely a valóságban nincs meg. A kártérítés nem a te kezedben van, mégis úgy írtad alá, mintha az lenne. A város ma éjjel biztonságosabb, de ha a minisztérium nem fizet, a falu soha többé nem fog hinni egy katonai aláírásnak.",
+          "pontok": {
+            "kovetkezetesseg": -2,
+            "atlathatosag": -1,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Életvédelmi helyzetre hivatkozva elrendeled a víz átengedését a falu beleegyezése nélkül. A törvény erre lehetőséget ad, de a falu bizalma elveszik.",
+          "fogalom": "Autokratikus döntés",
+          "kiertekeles": "Az autokratikus döntésnél a vezető egyedül dönt, az érintettek közreműködése nélkül. A jegyzet szerint ez válsághelyzetben, időhiányban indokolt lehet, és most valóban emberéletek a tét. A falu viszont nem partner, hanem elszenvedője lett a döntésnek, és ezt a következő árvíznél is fel fogja idézni.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 0,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 2,
+            "erintettek_bevonasa": -3
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Nem teszel semmit, amíg a minisztériumtól meg nem jön az írásos felhatalmazás. A szabályok szerint jársz el, de közben a víz tovább emelkedik.",
+          "fogalom": "Passzív alkalmazkodás",
+          "kiertekeles": "A jegyzet a döntéshozói magatartások között írja le a passzív alkalmazkodást: korlátozott hit abban, hogy befolyásolni tudjuk a dolgokat, és a meglévő szabályok, struktúrák elfogadása. Szabályosan jársz el, ezt senki nem vetheti a szemedre. Közben viszont éppen a legjobb lehetőség csúszik ki a kezedből.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": -2,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Őszintén elmondod, mit tudsz megígérni és mit nem, és a kérésüket azonnal továbbítod a minisztériumnak. Lehet, hogy így nemet mondanak, és elveszítitek a legjobb esélyt.",
+          "fogalom": "Mintzberg szóvivő szerepe",
+          "kiertekeles": "Mintzberg szóvivő szerepében a vezető a kívülállóknak pontosan elmondja, mit tesz a szervezete és mit nem. Az őszinte „ezt nem ígérhetem meg” hitelesebb minden garanciánál, és a falu is tudja, mire számíthat. Ennek ára, hogy a megállapodás elcsúszhat, és a víz közben nem vár.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 3,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "cim": "Hét kilencven",
+      "szituacio_leirasa": "A hetedik este új előrejelzés érkezik: hajnalra hét méter kilencven. A tervasztalon három lehetőség fekszik: egész éjjel magasítjátok a városi gátat homokzsákkal; kitelepítitek a város alsó részét; vagy mindent a felvízi tározásra tesztek. A tisztjeid mind mást javasolnak, és kevés az idő.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "A kitelepítést rendeled el: ha az emberek biztonságban vannak, a házakat még meg lehet védeni vagy újjáépíteni. A pánik és a kifosztástól való félelem viszont a te számládra megy.",
+          "fogalom": "PrOACT-modell: a célok",
+          "kiertekeles": "A PrOACT-modell második lépése a célok tisztázása: mit akarunk mindenképp elérni, és mit akarunk elkerülni? Te kimondtad, hogy az emberélet minden más cél előtt áll, és ehhez igazítottad a döntést. Ez világos rangsor, de ára is van: elhagyott házak, dühös lakók, és egy éjszaka, amelyet a város sokáig nem felejt.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 3,
+            "erintettek_bevonasa": -2
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Mindhárom tervet egyszerre indítod el, szétosztva az embereket. Így egyik lehetőségről sem mondasz le, de mindegyikre kevesebb erő jut.",
+          "fogalom": "Mintzberg erőforrás-elosztó szerepe",
+          "kiertekeles": "Mintzberg erőforrás-elosztó szerepében a vezető dönti el, hová kerül az ember és az eszköz, és ezzel alapvetően meghatározza, mire képesek az egységek. Mindhárom tervre adni valamennyit biztonságosnak tűnik, és senki nem érzi mellőzöttnek magát. Könnyen lehet viszont, hogy hajnalra egyik terv sem kap annyi erőt, amennyi a sikerhez kellett volna.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": 1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 1
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Megkéred a tiszteket, hogy tíz percig mindenki egyedül írja le, mit tart jónak és miért, és csak utána beszélitek meg. Tíz perc éjjel sok idő.",
+          "fogalom": "Névleges csoport módszer",
+          "kiertekeles": "A névleges csoport módszerben a tagok először egymástól függetlenül gondolkodnak, és csak utána osztják meg az ötleteiket. Így nem a rangidős vagy a leghangosabb érvei köré rendeződik a vita, és a csendesebb tisztek is megszólalnak. Az ára a tíz perc, ami ebben a helyzetben valódi áldozat.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 0,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "A tapasztalatodra hagyatkozol: a homokzsákos magasítás eddig minden árvíznél bevált, és ezt ismerik a katonák is.",
+          "fogalom": "Sémák",
+          "kiertekeles": "A jegyzet szerint a sémák a korábbi tapasztalatokból épülő gondolkodási minták, amelyek segítenek gyorsan dönteni, de makaccsá is válhatnak. A homokzsák bevált séma, és a katonák ismerik a feladatot. Csakhogy ez az árhullám magasabb minden eddiginél, és a séma éppen azt nem mutatja meg, miben más ez az éjszaka.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 0,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "cim": "Bakos bácsi",
+      "szituacio_leirasa": "Hajnali kettőkor Bakos Feri bácsi, a nyugdíjas gátőr kivezet a régi töltéshez. A töltés tövében tiszta víz szivárog. Varga mérnök szerint ez csak esővíz, nincs vele teendő. Az öreg ragaszkodik hozzá: 1970-ben pontosan így kezdődött a szakadás. Emberből és homokzsákból is kevés van.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Vargára hallgatsz: ő a mérnök, az öreg csak aggódik. Megköszönöd a figyelmességét, és hazaküldöd.",
+          "fogalom": "Ezredes-hatás",
+          "kiertekeles": "Az ezredes-hatás az a hajlamunk, hogy a magasabb beosztású vagy nagyobb tekintélyű ember szavát hitelesebbnek tartsuk. Varga szakember, és gyakran igaza van — de a beosztása önmagában nem bizonyíték. Az erőid a városi gátnál maradnak, egy lehetséges figyelmeztetés viszont válasz nélkül maradt.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 0,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": -2
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Mintát vetetsz a vízből, figyelőőrt állítasz, és fél óra múlva döntesz: ha a víz zavaros lesz, azonnal mentek. Fél óra ilyenkor hosszú idő.",
+          "fogalom": "Az információhiány kiegészítése",
+          "kiertekeles": "A jegyzet szerint ha hiányzik egy információ, hajlamosak vagyunk feltevésekkel vagy pletykákkal kitölteni a hézagot. Te nem Vargának vagy Bakos bácsinak adtál igazat, hanem ténnyel pótoltad a hiányzó darabot: ha a szivárgó víz zavaros, a töltés belseje mosódik. Ez a legjobb információ, amit szerezhetsz, de fél órát tart, és addig te tartod a kockázatot.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 3,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 1
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Bakos bácsira hallgatsz: odaküldesz egy szakaszt homokzsákkal, Varga ellenkezése ellenére. A városi gát ezzel gyengébb lesz.",
+          "fogalom": "Sztereotipizálás",
+          "kiertekeles": "A sztereotipizálás az, amikor valakit a csoport alapján ítélünk meg, ahová tartozik — például egy nyugdíjast „aggódó öregnek”. Te nem estél ebbe a csapdába: Bakos bácsi ötven év tapasztalatát adatnak tekintetted. Ennek ára, hogy a mérnököt felülbírálod, és egy erősen fenyegetett gátról vonsz el embert.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 2,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Kiküldöd Bakos bácsit és Varga mérnököt is a töltésre, hogy nézzék meg együtt, és egyezzenek meg. Te a városi gátnál maradsz.",
+          "fogalom": "Problémakerülő magatartás",
+          "kiertekeles": "A jegyzet háromféle vezetői stratégiát különít el: a problémakeresőt, a problémamegoldót és a problémakerülőt. A két ember közös helyszíni bejárása jó ötlet, és talán meg is egyeznek. A döntés súlya viszont nem az övék: ha nem jutnak dűlőre, a vitájuk alatt a töltés nem vár.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 0,
+            "felelossegvallalas": -3,
+            "erintettek_bevonasa": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "cim": "Húsz ház",
+      "szituacio_leirasa": "Hajnali fél ötkor a régi töltés egy szakaszon átszakad. A víz a mezőkre és a város szélére ömlik: senki nem hal meg, de húsz ház víz alá kerül. Reggel az állomány sorakozik. Kimerültek, megrendültek, és már terjed a hír, hogy a parancsnokság hibázott. A városi gát még tart, a munka folytatódik.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "A víz erejét hangsúlyozod: ezt senki nem akadályozhatta volna meg, mindenki a legjobbat adta. Ez megnyugtatja a katonákat.",
+          "fogalom": "Énmegerősítő attribúció",
+          "kiertekeles": "Az énmegerősítő attribúció az a hajlamunk, hogy a kudarcot a körülményeknek, a sikert saját magunknak tulajdonítsuk. A megnyugtatás most valóban kell, és a víz ereje valóban óriási volt. De ha a döntések szerepe ki sem mondódik, az állomány a pletykából fogja megtudni, amit tőled nem hallott.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -2,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -3,
+            "erintettek_bevonasa": 1
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Nem tartasz beszédet: mindenki azonnal vissza a gátra, most nincs idő magyarázkodni. A szóbeszéd közben tovább terjed.",
+          "fogalom": "Snowden–Boone: kaotikus helyzet",
+          "kiertekeles": "Snowden és Boone szerint kaotikus helyzetben nincs idő elemezni: először cselekedni kell, hogy a helyzet stabilizálódjon, és csak utána érdemes keresni az okokat. A városi gát tartása valóban ilyen feladat. Csakhogy a hallgatás is üzenet, és a kimerült emberek fejében a pletyka tölti ki az űrt.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -2,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 0,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Előbb a századparancsnokoktól kérdezed meg, mit hallanak az emberektől, és csak utána szólsz az állományhoz. Addig mindenki vár.",
+          "fogalom": "Mintzberg információgyűjtő szerepe",
+          "kiertekeles": "Mintzberg információgyűjtő szerepében a vezető a belső információáramlás központja. Ha tudod, mit beszélnek az emberek, pontosan azokra a kérdésekre válaszolhatsz, amelyek bennük vannak. Az ára a várakozás egy olyan reggelen, amikor minden perc a gáté.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 0,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Kiállsz eléjük, és elmondod, mi történt, mi volt benne a te döntésed, és mi a következő huszonnégy óra feladata.",
+          "fogalom": "Mintzberg vezető szerepe",
+          "kiertekeles": "Mintzberg vezető szerepe a vezető és a beosztottai közötti viszonyról szól, és ez hatja át az egész vezetői munkát. Ha a nehéz pillanatban is kiállsz, és vállalod a saját részedet, az állomány tudja, hogy a parancsnokának szavára lehet építeni. A beismerés viszont a dandárnál ellened is fordítható, és egy darabig megingathatja a parancsnoki lánc önbizalmát.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 3,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 3,
+            "erintettek_bevonasa": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "cim": "A vizsgálat",
+      "szituacio_leirasa": "A tizenkettedik napon a víz levonul. A dandár vizsgálóbizottsága a te értékelésedet kéri: mi történt, és ki miért felel. A naplóbejegyzés, a régi töltés és a gép körüli döntések mind benne lesznek. Amit leírsz, emberek pályáját döntheti el — a sajátodat is.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Takács századost megnevezed a napló miatt, a saját döntéseidet viszont nem részletezed. Az ő hibája egyértelmű és bizonyítható.",
+          "fogalom": "Alapvető attribúciós hiba",
+          "kiertekeles": "Az alapvető attribúciós hiba az a hajlamunk, hogy mások hibáját a jellemükkel, a sajátunkat a körülményekkel magyarázzuk. Takács hibája valódi, de ő is ugyanabban a kimerítő helyzetben dolgozott, mint mindenki. Ha csak őt nevezed meg, a jelentés igaz lesz — és mégis egyoldalú.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -1,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -3,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Mindent leírsz, a saját hibáidat is, névvel és döntéssel együtt. A jelentés így hiteles, de a karriered is benne van.",
+          "fogalom": "Reflektív gondolkodás és a következtetési létra",
+          "kiertekeles": "A következtetési létra azt mutatja be, milyen gyorsan jutunk a tényekből feltevésekhez és döntésekhez; a reflektív gondolkodás ezen a létrán való tudatos lemászás. Ha a saját feltevéseidet is végigveszed, a jelentés tanulsággá válik, nem vádirattá. Ennek ára a saját pályád kockázata, és az, hogy a feletteseid ezt nem mindig fogják értékelni.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 3,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 3,
+            "erintettek_bevonasa": 0
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "A jelentést a tisztjeiddel közösen írjátok meg, és a polgármestert, a gazdákat és Bakos bácsit is meghallgatjátok. Így teljesebb lesz a kép, de a felelősség is szétterül.",
+          "fogalom": "Csoportos döntéshozatal",
+          "kiertekeles": "A jegyzet szerint a csoportos döntések során megoszlik a felelősség, a valóban bevont résztvevők pedig elkötelezettebbé válnak. A közös jelentés több nézőpontot hoz, és a helyiek is úgy érzik, számított, amit átéltek. Az ára, hogy a te parancsnoki felelősséged elmosódhat a sok hang között.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 3
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "A rendszer hibáit írod le — kevés gép, pontatlan előrejelzés, ellentmondó utasítások —, személyeket nem nevezel meg. Ez igaz is, és senki pályája nem törik meg.",
+          "fogalom": "Hamisan negatív hiba",
+          "kiertekeles": "James March hamisan negatív hibának nevezi, amikor a döntéshozó azt feltételezi, hogy a dolgok menetére nem volt befolyása, pedig lehetett volna. A rendszerhibák valósak, és jó, hogy leírod őket. Ha viszont csak ezeket látod, a jelentésből kimarad, hol lehetett volna másként dönteni, és a következő árvíznél ugyanazok a döntések születnek.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -2,
+            "erintettek_bevonasa": 1
+          }
+        }
+      ]
+    }
+  ]
+}

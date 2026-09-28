@@ -1,0 +1,596 @@
+{
+  "szerep": "Vállalati vezető",
+  "tortenet_szinopszisa": "A Meridian Kft. ügyfélszolgálati igazgatója vagy. A cég legnagyobb ügyfele, egy országos patikalánc, három hónapot adott: ha addig nem javul a kiszolgálás, felmondja a szerződést, amely a bevétel negyedét hozza. A csapatod fáradt, az osztályok egymást hibáztatják, a vezérigazgató pedig eredményt vár.",
+  "szituaciok": [
+    {
+      "id": 1,
+      "cim": "Péntekre egy terv",
+      "szituacio_leirasa": "Hétfő reggel levelet kapsz a vezérigazgatótól: a patikalánc felmondással fenyeget, pénteken tervet kér tőled. Réka, a patikalánccal foglalkozó csapat vezetője már délelőtt bejön egy kész ötlettel: vegyetek fel tíz ideiglenes munkatársat, és péntekre a terv is kész. A csapat kimerült, a vezérigazgató türelmetlen.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Elfogadod Réka ötletét: tíz ideiglenes munkatárs, péntekre kész a terv. Gyors, érthető, és a csapat is megkönnyebbül.",
+          "fogalom": "Programozott és nem programozott döntés",
+          "kiertekeles": "Simon programozott döntésnek nevezi azt, amelyre kész rutin van, nem programozottnak azt, amelyre nincs előírt és követhető út. A „több ember kell” bevett válasz egy olyan helyzetre, amelyet még senki nem értett meg igazán. Gyorsan cselekszel, és a csapat hálás, de ha a baj nem a létszámban van, tíz új ember csak több hibát fog termelni.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": 0,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Pénteken egy nagy átalakítási tervet teszel le: új rendszer, új folyamatok, új csapatbeosztás, mindent egyszerre. A vezérigazgató lenyűgözve lesz, de a csapat nem tudja, hogyan bírja majd.",
+          "fogalom": "Snowden–Boone: egyszerű és komplex helyzet",
+          "kiertekeles": "Snowden és Boone szerint egyszerű helyzetben ismert a helyes válasz, komplex helyzetben viszont az okok és hatások csak menet közben derülnek ki, ezért óvatosan, kis lépésekben kell haladni. A nagy terv úgy kezeli a helyzetet, mintha már tudnád a választ. Felülről erősnek látszol, alulról viszont egy kimerült csapatra teszel még egy terhet.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -3
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Még aznap felhívod a patikalánc beszerzési vezetőjét, és megkérdezed, mi zavarja őket leginkább. Tudod, hogy a vezérigazgató nem szereti, ha az ő tudta nélkül tárgyalsz az ügyféllel.",
+          "fogalom": "Mintzberg kapcsolattartó szerepe",
+          "kiertekeles": "Mintzberg kapcsolattartó szerepében a vezető kapcsolatot tart a szervezeten kívüliekkel, és ezen keresztül olyan információhoz jut, amely bentről nem látszik. Az ügyfél szavaiból pontosabb képet kapsz, mint bármilyen belső riportból. A hívás viszont a vezérigazgató feje fölött történt, és ezt ő is így fogja látni.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": -1,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 2,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Csütörtökig nem írsz tervet: előbb leülsz Rékával és a két legtapasztaltabb ügyintézővel, és leírjátok, mi pontosan a baj, mit akar a patikalánc, és mit nem szeretnétek feláldozni. A vezérigazgató így csak az utolsó pillanatban kap anyagot.",
+          "fogalom": "PrOACT-modell",
+          "kiertekeles": "Ez a PrOACT-modell eleje: a probléma pontos meghatározása és a célok összegyűjtése, mielőtt bármilyen megoldásról döntenénk. Réka ötlete már egy kész válasz volt, te viszont előbb azt tisztáztad, mi a kérdés. Ennek ára a feszes határidő és egy vezérigazgató, aki addig nem lát semmit.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 3,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "cim": "Egymást hibáztatják",
+      "szituacio_leirasa": "Szerdán összehívod az érintett vezetőket. Gábor, az értékesítési igazgató szerint a baj az, hogy az üzemeltetés lassú. Anita, az üzemeltetés vezetője szerint az értékesítés lehetetlen határidőket ígér. A raktár és az informatika képviselője hallgat. Egy órád van, és a végén mindenki azt várja, hogy te mondd meg, hol a hiba.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "A táblára felírjátok, kiket érint a patikalánc kiszolgálása — értékesítés, üzemeltetés, raktár, informatika, a patikusok, sőt a betegek is —, és mindegyiknél azt, mennyi múlik rajtuk és mekkora a beleszólásuk. Az óra végére még nincs döntés.",
+          "fogalom": "Érintett-térkép",
+          "kiertekeles": "Az érintett-térkép azt mutatja meg, kik mind érintettek egy döntésben, beleértve azokat is, akik nincsenek a teremben, például a patikusokat és a betegeket. Ettől a vita a hibáztatásról átkerült arra, kinek mi a dolga. Az ára, hogy az óra végén még nincs döntés, és Gábor ezt időhúzásnak fogja látni.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 3
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Megkérsz minden területet, hogy péntekig írja le, szerinte mi a baj, és ezeket összesíted. Mindenki szót kap, de tudod, hogy öt különböző választ fogsz kapni.",
+          "fogalom": "Szelektív észlelés",
+          "kiertekeles": "A szelektív észlelés az, amikor mindenki abból a szemszögből látja a problémát, ahonnan jön: a jegyzet példájában a marketinges a reklámban, a pénzügyes a pénzügyekben látja a bajt. Minden terület a saját válaszát fogja hozni, és ezeket egymás mellé tenni már önmagában tanulságos. A kép viszont széttöredezett marad, és a döntés terhe továbbra is rajtad lesz.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Nem engeded tovább a vitát: a múlt heti tájékoztatón azt hallottad, hogy a raktár késik, ezért kimondod, hogy a gond ott van, és oda küldesz erősítést. Legalább történik valami.",
+          "fogalom": "Elsőségi hatás",
+          "kiertekeles": "Az elsőségi hatás azt jelenti, hogy a legelső információ köré szervezzük a később kapottakat: az első benyomás határozza meg az egész képet. A raktárról hallott első hír lett a kiindulópontod, és az egész vitát ehhez igazítottad. Ez gyors és határozott lépés, de ha az első hír félrevezetett, most rossz helyre küldesz embert.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": -1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": 2,
+            "erintettek_bevonasa": -2
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Gábornak adsz igazat: az üzemeltetésről mindenki tudja, hogy lassú és merev, az értékesítés pedig hozza a pénzt. Anita elsápad, de a vita gyorsan lezárul.",
+          "fogalom": "Sztereotipizálás",
+          "kiertekeles": "A sztereotipizálás az, amikor valakit az alapján ítélünk meg, ahogyan azt a csoportot látjuk, amelyhez tartozik. Az „üzemeltetés lassú” kép kényelmes és gyors, és néha igaz is. Itt viszont eldöntötted a kérdést anélkül, hogy megnézted volna, tényleg ott van-e a baj — és Anita csapata ezt nem fogja elfelejteni.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "cim": "„Cseréld le Rékát”",
+      "szituacio_leirasa": "A vezérigazgató behív az irodájába. A tulajdonosok nyugtalanok, és szerinte a gond Réka: ő vezeti a patikalánc-csapatot, nála csúsznak a dolgok. Azt mondja, cseréld le. Te tudod, hogy Réka csapatához tavasz óta harminc százalékkal több ügy érkezik, ugyanannyi emberrel.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Leváltod Rékát, és egy tapasztaltabb kollégát teszel a helyére. A tulajdonosok látják, hogy történik valami, és a vezérigazgató is megnyugszik.",
+          "fogalom": "Alapvető attribúciós hiba",
+          "kiertekeles": "Az alapvető attribúciós hiba az a hajlamunk, hogy mások kudarcát a személyükkel magyarázzuk, és alábecsüljük a helyzet hatását. Réka csapatának harminc százalékkal több munkája lett, a döntés mégis őt nevezte meg okként. A leváltás gyors jel a tulajdonosoknak, de ha a terhelés marad, az új vezető ugyanígy fog elbukni.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": -2
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Kiállsz Réka mellett, és megmutatod a vezérigazgatónak a számokat: a csapata terhelése harminc százalékkal nőtt. Tudod, hogy ha a helyzet nem javul, innentől te is a célkeresztbe kerülsz.",
+          "fogalom": "Mintzberg vezető szerepe",
+          "kiertekeles": "Mintzberg vezető szerepe a vezető és a beosztottai közötti viszonyról szól, és ez hatja át az egész vezetői munkát. Azzal, hogy nyomás alatt is kiálltál Réka mellett, a csapat azt látja, hogy számíthat rád. Ezzel viszont a saját hitelességedet is odatetted mellé: ha a számok nem javulnak, a kérdés már rólad fog szólni.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 3,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Rékát a helyén hagyod, de mellé teszel egy „segítőt”, aki valójában az ő munkáját figyeli. Így a vezérigazgató is elégedett, és Rékát sem kell leváltani.",
+          "fogalom": "Önbeteljesítő jóslat",
+          "kiertekeles": "Az önbeteljesítő jóslat — más néven Pygmalion-hatás — azt jelenti, hogy amit valakiről elvárunk, az a viselkedésünkön keresztül valóra is válik. Ha Réka érzi, hogy gyengének tartják, nagy eséllyel bizonytalanabbul és rosszabbul fog dolgozni. A kompromisszum mindenkit megnyugtat egy időre, de éppen azt a teljesítményt rontja, amelyet javítani akartál.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -2,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": 0,
+            "erintettek_bevonasa": 1
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Azt mondod a vezérigazgatónak, hogy két hét múlva adatokkal jössz vissza, és addig semmihez nem nyúlsz. Ő ezt nem szívesen hallja, de beleegyezik.",
+          "fogalom": "Simon: a megértés szakasza",
+          "kiertekeles": "Herbert Simon szerint a döntés három lépésből áll: megértés, tervezés, választás. A megértés a helyzetről szóló tudás összegyűjtését és rendezését jelenti, még a lehetőségek kidolgozása előtt. Két hetet nyertél arra, hogy tények alapján dönts Rékáról, de a vezérigazgató türelme véges, és a csapat addig bizonytalanságban dolgozik.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "cim": "Az aznapi ígéret",
+      "szituacio_leirasa": "Kiderül, hogy a hibák jó része abból fakad, hogy az értékesítés aznapi szállítást ígér a patikáknak, amit az üzemeltetés nem tud tartani. Csakhogy az értékesítők prémiuma éppen ezektől a megrendelésektől függ. Anita szabályt akar, Gábor azzal fenyeget, hogy a vezérigazgatóhoz megy.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Úgy döntesz, ez a két osztályvezető ügye: egyezzenek meg ők, te nem szólsz bele. Így senki nem mondhatja, hogy elfogult vagy.",
+          "fogalom": "A döntés elhárítása",
+          "kiertekeles": "A jegyzet a döntéshozói magatartások között írja le a döntés elhárítását: a vezető másokra hagyja a döntést, és a formális megoldást részesíti előnyben. Kívülről semlegesnek tűnsz, de a két osztályvezető között éppen az hiányzik, aki el tudná dönteni a vitát. A konfliktus valószínűleg a vezérigazgató asztalán köt ki — nélküled.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 0,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -3,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Közös megbeszélést tartasz az értékesítőkkel és az üzemeltetőkkel, ahol ők maguk rakják össze, mit lehet megígérni és mit nem. A szabály az övék lesz, de legalább két hétig tart.",
+          "fogalom": "Részvételi létra",
+          "kiertekeles": "A részvételi létra azt mutatja, mennyire valódi a bevonás: puszta tájékoztatás, meghallgatás vagy tényleges döntési jog. Te a létra felső fokán jártál, a szabályt az érintettek maguk alakítják ki. Ettől jobban be is tartják majd, de két hétig a régi gyakorlat fut tovább, és a patikalánc közben nem vár.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 3
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Megtartjátok az aznapi ígéretet, de az üzemeltetés kap három új embert, akiket az értékesítési prémiumkeretből fizettek. A szállítás tartható lesz, Gábor viszont dühös, mert az ő csapata fizeti a számlát.",
+          "fogalom": "Mintzberg erőforrás-elosztó szerepe",
+          "kiertekeles": "Mintzberg erőforrás-elosztó szerepében a vezető dönti el, hová kerül a pénz és az ember, és ezzel alapvetően befolyásolja az egységek teljesítményét. Átcsoportosítással olyan megoldást találtál, amely az ügyfélnek jó. Csakhogy a terhet egy olyan csapatra tetted, amely nem kérte, és ez a két osztály viszonyát hosszú távon megmérgezheti.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 2,
+            "erintettek_bevonasa": -2
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Te húzod meg a határt: holnaptól nincs aznapi ígéret, kivétel nélkül. A hibák azonnal csökkennek, az értékesítők viszont a prémiumukat féltik.",
+          "fogalom": "Mintzberg zavarelhárító szerepe",
+          "kiertekeles": "Mintzberg zavarelhárító szerepében a vezető gyorsan lép, amikor valami akadozik a működésben. A határozott szabály azonnal megállítja a hibák egyik forrását. Mivel viszont az érintettek nélkül született, az értékesítők a maguk módján fogják kerülgetni, és a prémiumuk kérdése megoldatlan marad.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 2,
+            "erintettek_bevonasa": -3
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "cim": "A havi jelentés",
+      "szituacio_leirasa": "Elkészül az első havi jelentés a patikaláncnak. Két mutató javult, egy — a panaszok lezárásának ideje — viszont romlott. Közben kapsz egy lelkes levelet egy szegedi patikustól, aki szerint soha nem volt ilyen jó a kiszolgálás. A jelentés holnap reggel megy ki.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Még egy hétig nem küldöd el, hátha addigra a harmadik mutató is javul. Tudod, hogy a patikalánc a pontos határidőket is figyeli.",
+          "fogalom": "A döntés halogatása",
+          "kiertekeles": "A jegyzet a döntés halogatásának nevezi, amikor menekülünk a probléma elől, és kivárjuk, hogy a helyzet magától rendeződjön. Egy hét múlva talán jobb számokat küldhetsz. Addig viszont épp azt a megbízhatóságot sérted, amelyért a patikalánc harcol: hogy időben kapja meg, amit ígértek neki.",
+          "pontok": {
+            "kovetkezetesseg": -3,
+            "atlathatosag": -1,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 0
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "A számokat a tavaszi mélyponthoz hasonlítod, amikor minden mutató a legrosszabb volt. Így mindhárom javulásnak látszik, és semmi sem hamis benne.",
+          "fogalom": "Kontraszt-hatás",
+          "kiertekeles": "A kontraszt-hatás azt jelenti, hogy semmit nem ítélünk meg önmagában: mindig ahhoz mérjük, amivel előtte találkoztunk. Ha a tavaszi mélyponthoz viszonyítasz, minden javulásnak látszik. Egyik szám sem hamis, a kép mégis félrevezető, és ezt egy tapasztalt beszerzési vezető előbb-utóbb észre fogja venni.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -2,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 0
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "A jelentés elejére a romló mutatót teszed, mellé pedig azt, mit csináltok vele. Tudod, hogy a patikalánc ettől idegesebb lesz, pont most, amikor kezd megnyugodni.",
+          "fogalom": "Mintzberg szóvivő szerepe",
+          "kiertekeles": "Mintzberg szóvivő szerepében a vezető a kívülállókat — ügyfeleket, partnereket — tájékoztatja a teljesítményről és a tervekről. Ha a rossz hírt te mondod el elsőként, megoldással együtt, a jó híreidnek is jobban hisznek majd. Most viszont egy olyan ügyfelet nyugtalanítasz, aki éppen kezdett megbékélni.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 3,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 2,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "A jelentés elejére a szegedi patikus levelét teszed. Ez valódi visszajelzés, és jó hangulatot teremt a többi számhoz.",
+          "fogalom": "Halo-effektus",
+          "kiertekeles": "A halo-effektus azt jelenti, hogy egyetlen kiemelkedő jellemző alapján alakul ki az általános benyomás. Egy lelkes levél az elején az egész jelentést jobb fénybe helyezi, még a romló mutatót is. A levél igaz, de nem reprezentatív, és ha az ügyfél később rájön, hogyan volt összerakva a jelentés, a következőnek már nem fog hinni.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -3,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "cim": "Réka ötlete",
+      "szituacio_leirasa": "Réka új ötlettel jön: egy automatikus csevegőprogram, amely a patikák kérdéseinek negyven százalékára maga válaszolna. Az informatika szerint hat hét a bevezetés — a határidőig hét hét van hátra. A biztosabb, de drágább út a nyitvatartás meghosszabbítása túlórával. A pénz mindkettőre nem elég.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Mindkettőt elindítod teljes erővel: a csevegőprogramot is, a túlórát is. A pénzt majd valahogy előteremted, a határidő fontosabb.",
+          "fogalom": "Hamisan pozitív hiba",
+          "kiertekeles": "James March hamisan pozitív hibának nevezi, amikor a döntéshozó olyan kontrollban hisz, amely a valóságban nincs meg. A „majd valahogy előteremtem” éppen ilyen hit. Rövid távon mindkét úton haladsz, de ha a pénz nem lesz meg, mindkettő félbemarad, és a csapat kétszer annyi munkával ér el feleannyit.",
+          "pontok": {
+            "kovetkezetesseg": -2,
+            "atlathatosag": -1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": 2,
+            "erintettek_bevonasa": 1
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Rábólintasz Réka ötletére: ő ismeri a legjobban a patikák kérdéseit, és ő is fogja végigvinni. Te a háttérből támogatod.",
+          "fogalom": "Szakértői döntéshozatal",
+          "kiertekeles": "A jegyzet csoportos döntési modelljei között szerepel a szakértői döntés: a csoport azt a tagját hagyja dönteni, aki a kérdésben a legjáratosabb. Réka tényleg ismeri a patikákat, és a bizalmad erőt ad neki. A modell hátránya, hogy nincs mellette ellenőrzés, és ha a program csúszik, egyetlen ember döntésén áll vagy bukik az egész.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 0,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": 3
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Leírsz három lehetőséget — a csevegőprogramot, a hosszabb nyitvatartást és a kettő kisebb változatát —, és mindegyiknél végiggondolod, mi történik, ha csúszik. Ez két nap, és Réka türelmetlen.",
+          "fogalom": "Simon: a tervezés szakasza",
+          "kiertekeles": "Herbert Simon második döntési lépése a tervezés: a lehetséges cselekvési utak összegyűjtése és a várható következmények kiértékelése. Azzal, hogy a „mi van, ha csúszik” kérdést minden lehetőségnél feltetted, a kockázat láthatóvá vált. Két napot vesztesz, és Réka úgy érezheti, nem bízol benne.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 3,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "A biztosat választod: hosszabb nyitvatartás, túlórával. Tudod, hogy ez működni fog, csak a csapat még jobban elfárad.",
+          "fogalom": "Korlátozott racionalitás, kielégítő döntés",
+          "kiertekeles": "Simon szerint a valóságban nem az optimális, hanem az első elfogadható megoldást választjuk, mert az idő és az információ is korlátozott. A túlóra biztosan elég lesz a határidőig, és ez jogos szempont. A költséget viszont egy már kimerült csapat fizeti meg, és a határidő után semmi nem marad, ami tartósan javítaná a helyzetet.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 1,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -2
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "cim": "Tízből egy rossz válasz",
+      "szituacio_leirasa": "A hatodik héten a csevegőprogram elkészül. A tesztek szerint minden tizedik kérdésre rossz választ ad — például téves nyitvatartást mond egy patikáról. Ha most nem indul el, a határidőig már nem fog. A szerverteremben az informatikusok rád néznek.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Nem indítjátok el, amíg a hibaarány egy százalék alá nem megy. Egy rossz nyitvatartási adat egy betegnek komoly gondot okozhat, még ha így lekésitek is a határidőt.",
+          "fogalom": "Jól és rosszul strukturált döntés",
+          "kiertekeles": "Simon szerint a jól strukturált döntésnél világos, mi a probléma, a rosszul strukturáltnál viszont ez sem egyértelmű. Egy egyszázalékos küszöbbel jól strukturált, műszaki kérdéssé alakítottad az indítást. Csakhogy a valódi kérdés az, mit tart fontosabbnak az ügyfél: a pontos határidőt vagy a hibátlanságot — és ezt nem kérdezted meg tőle.",
+          "pontok": {
+            "kovetkezetesseg": -2,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 2,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Csak tíz patikában indítjátok el, próbaképp. A patikalánc egésze így nem látja az eredményt a határidőre, de a hibák kis körben maradnak.",
+          "fogalom": "Inkrementalizmus (átevickélés)",
+          "kiertekeles": "Az inkrementalizmus a nagy, egyszeri lépések helyett kis, fokozatos korrekciókat jelent, amelyekből menet közben tanulni lehet. A próbaüzem kicsiben mutatja meg, mi működik és mi nem. A határidőre viszont nem lesz látványos eredmény, és a patikalánc ezt könnyen óvatoskodásnak láthatja.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 1,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 0,
+            "erintettek_bevonasa": 1
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Mindenhol elindítjátok, a hibákat menet közben javítjátok. A határidő tartható, és a patikalánc végre valami nagyot lát.",
+          "fogalom": "Diszkontálás",
+          "kiertekeles": "A diszkontálás az a hajlamunk, hogy a közeli dolgokat felértékeljük, a távolabbiakat leértékeljük. A határidő itt van előtted, a rossz válaszok okozta bosszúság viszont csak később, szétszórva jelentkezik. A határidőt tartod, de ha a hibák összeadódnak, éppen a megbízhatóságot sérted, amiért az egész munka indult.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": -1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": -1,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Elindítjátok, de minden válasz alatt ott a gomb: „Kérem, hívjon vissza egy munkatárs.” Így a hibás válaszok egy része is ember elé kerül, csak kicsit később.",
+          "fogalom": "Snowden–Boone: komplex helyzet",
+          "kiertekeles": "Snowden és Boone szerint komplex helyzetben nincs előre biztos válasz: olyan lépéseket kell tenni, amelyekből tanulni lehet, és amelyek kudarca nem végzetes. A visszahívás gomb ilyen biztonsági háló: a program élesben tanul, a hibáit pedig ember fogja meg. Ennek ára, hogy néhány rossz válasz így is eljut a patikákhoz, és a csapatra plusz munka hárul.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "cim": "Három ajánlat",
+      "szituacio_leirasa": "A tizedik héten a patikalánc visszaír: maradnának, de két lehetőséget kínálnak — hároméves szerződés tizenöt százalék árengedménnyel, vagy egyéves szerződés a mostani áron, szigorú kötbérrel. Gábor közben két kisebb ügyfelet is felhozott, akik együtt pótolhatnák a patikaláncot, ha elengednétek. Holnapig kell válaszolni. A tárgyalóban ott ül veled a pénzügyi igazgató és Gábor.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Holnap reggel a csapatodat is megkérdezed: nekik kell majd teljesíteniük, akármelyik mellett döntötök. Tudod, hogy a hír így kiszivároghat a tárgyalás előtt.",
+          "fogalom": "Konzultatív döntéshozatal",
+          "kiertekeles": "A jegyzet csoportos döntési modelljei közül a konzultatív döntésnél a vezető meghallgatja a csoport véleményét, de a döntést ő hozza meg. A csapat tudja, mit bír el, és ha megkérdezed, a végrehajtásban is jobban kitart melletted. Az ára az idő, és az, hogy egy érzékeny tárgyalási pozíció több ember kezébe kerül.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 3
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "A hároméves szerződést választod: az elmúlt hónapok után a biztonság a legfontosabb, még ha kevesebb is a haszon.",
+          "fogalom": "Utólagossági hatás",
+          "kiertekeles": "Az utólagossági hatás azt jelenti, hogy a legfrissebb, legélénkebb élmény köré szervezzük a megítélést. A majdnem elveszített ügyfél emléke olyan erős, hogy minden mást a biztonság mögé soroltál. Ez érthető és védhető, de három évre olcsóbban kötöd le a cég legnagyobb bevételét, és a csapatnak ugyanazt kell nyújtania kevesebb pénzért.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 1,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -2
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Egymás mellé teszitek a három lehetőséget bevétel, kockázat, a csapat terhelése és a hosszú távú kapcsolat szerint, és először megnézitek, van-e olyan, amelyik mindenben rosszabb valamelyik másiknál. Ez éjfélig tart.",
+          "fogalom": "Dominancia elve",
+          "kiertekeles": "A dominancia elve szerint ha egy lehetőség semmiben nem jobb egy másiknál, és legalább egy szempontból rosszabb, kihúzhatjuk, mielőtt a nehéz mérlegelésbe kezdenénk. Ez leszűkíti a döntést a valódi versenyzőkre. Maga a választás — mennyi kockázatot ér meg a nagyobb haszon — így is a tiéd marad, és az éjszaka is rámegy.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 3,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "A pénzügyi igazgatóra bízod a döntést: ő látja a legjobban a számokat, és a tulajdonosok is az ő szavára hallgatnak.",
+          "fogalom": "Ezredes-hatás",
+          "kiertekeles": "Az ezredes-hatás az a hajlamunk, hogy a magas beosztású vagy nagy tekintélyű emberek szavát hitelesebbnek tartjuk. A pénzügyi igazgató tényleg jól látja a számokat, de a csapat terhelését és az ügyfélkapcsolatot nem ő ismeri a legjobban. A döntés szakszerű lesz, a felelősség viszont kicsúszik a kezedből.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": 0,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": -3,
+            "erintettek_bevonasa": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "cim": "Negyed tizenkettő",
+      "szituacio_leirasa": "Az aláírás előtti éjjel negyed tizenkettőkor felhív az ügyeletes informatikus. A csevegőprogram egy beállítási hiba miatt három órán át mások számára is láthatóvá tette kétezer patikai vásárló adatait, köztük gyógyszerneveket. A hibát már kijavították, kívülről senki nem tud róla. Az aláírás reggel tízkor lesz, és a cég bevételének negyede múlik rajta.",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Még éjjel felhívod a vezérigazgatót, reggel pedig — az aláírás előtt — elmondjátok a patikaláncnak. Tudod, hogy ezzel a szerződés is elveszhet.",
+          "fogalom": "Moralitás detektor: napfény teszt",
+          "kiertekeles": "A napfény teszt egyetlen kérdés: jól érezném magam, ha ez a döntés minden részletével együtt nyilvánosságra kerülne? Ha az ügyfél utólag tudja meg, hogy az aláíráskor már ismerted a hibát, azt nem fogod tudni megmagyarázni. Az őszinteség ára lehet a szerződés — és vele az állások egy része.",
+          "pontok": {
+            "kovetkezetesseg": 2,
+            "atlathatosag": 3,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 3,
+            "erintettek_bevonasa": -2
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Reggelig nem szólsz senkinek: egyedül, az informatikussal kivizsgáljátok, pontosan kiket érintett a hiba, és csak utána döntesz a bejelentésről.",
+          "fogalom": "Autokratikus döntés",
+          "kiertekeles": "Az autokratikus döntésnél a vezető egyedül dönt, mások minimális közreműködésével. A jegyzet szerint ez válsághelyzetben, időhiányban indokolt lehet, és most valóban nincs idő hosszú egyeztetésre. A kockázat az, hogy egyedül viszel egy olyan terhet, amelyről a vezérigazgatónak is tudnia kellene, és reggelre már csak kevés lehetőség marad.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": -2,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": -2
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "Még éjjel felhívod a patikalánc vezetőjét, négyszemközt elmondod, mi történt, és megkérdezed, hogyan kezeljétek közösen. Ezzel őt is nehéz helyzetbe hozod.",
+          "fogalom": "Mintzberg tárgyaló szerepe",
+          "kiertekeles": "Mintzberg tárgyaló szerepében a vezető a másik féllel közösen alakítja ki a megoldást. Az ügyfél így nem utólag, hanem időben tudja meg a hibát, és beleszólhat a kezelésébe. Csakhogy a kényes döntés egy részét rá terhelted, és a saját céged vezetése kimaradt a legfontosabb beszélgetésből.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 2,
+            "dontesi_minoseg": 1,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Aláírtok, és utána, a törvényes határidőn belül jelentitek az incidenst. Nem hazudsz, csak a sorrendet választod meg úgy, hogy háromszáz ember állása ne kerüljön veszélybe.",
+          "fogalom": "Gátló racionalizálás: „jó célt szolgál”",
+          "kiertekeles": "A gátló racionalizálások olyan érvek, amelyekkel egy kétes döntést magunk előtt elfogadhatóvá teszünk. A „jó célt szolgál” itt valódi célt véd: háromszáz ember állását. A hozzá vezető út mégis az, hogy az ügyfél egy számára fontos tény ismerete nélkül írja alá a szerződést — és ezt később nem lehet visszacsinálni.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -3,
+            "dontesi_minoseg": 0,
+            "felelossegvallalas": -2,
+            "erintettek_bevonasa": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "cim": "Hétfő reggel",
+      "szituacio_leirasa": "A három hónap véget ért. Hétfő reggel a csapat összegyűlik a csapatszobában. Voltak, akik hatvanórás heteket húztak le. A vezérigazgató kért egy diát arról, mit tanult a cég, a csapat pedig azt kérdezi tőled: mi lesz velünk ezután?",
+      "opciok": [
+        {
+          "jel": "A",
+          "opcio_leirasa": "Elmondod, hol hibáztál te, mit gondoltál rosszul az elején, és megkérdezed őket, ők mit csinálnának másképp. A diára is ez kerül.",
+          "fogalom": "Reflektív gondolkodás és a következtetési létra",
+          "kiertekeles": "A következtetési létra azt mutatja be, milyen gyorsan jutunk a látott tényekből feltevésekhez és ítéletekhez; a reflektív gondolkodás ezen a létrán való tudatos lemászás. Ha kimondod, melyik feltevésed volt téves, a csapat is mer majd ugyanígy gondolkodni. A vezérigazgató szemében viszont ez a dia kevésbé lesz fényes.",
+          "pontok": {
+            "kovetkezetesseg": -1,
+            "atlathatosag": 3,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 3,
+            "erintettek_bevonasa": 1
+          }
+        },
+        {
+          "jel": "B",
+          "opcio_leirasa": "Megköszönöd a munkájukat, és bejelented a következő nagy célt. Úgy gondolod, most a lendületre van szükség, nem a múlt boncolgatására.",
+          "fogalom": "Problémakerülő magatartás",
+          "kiertekeles": "A jegyzet háromféle vezetői stratégiát különít el: a problémakeresőt, a problémamegoldót és a problémakerülőt, aki a nehéz kérdéseket inkább figyelmen kívül hagyja. A lendület valóban fontos, és a köszönet is jár. Ha viszont a három hónap tanulságai kimaradnak, a következő válságban ugyanazokat a hibákat fogjátok elkövetni.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -1,
+            "dontesi_minoseg": -2,
+            "felelossegvallalas": -2,
+            "erintettek_bevonasa": -1
+          }
+        },
+        {
+          "jel": "C",
+          "opcio_leirasa": "A vezérigazgatónak szánt diára a sikerek a csapat érdemeként, a gondok a nehéz körülmények — a túlterhelés, a határidő — következményeként kerülnek. A csapat büszke lehet magára.",
+          "fogalom": "Énmegerősítő attribúció",
+          "kiertekeles": "Az énmegerősítő attribúció az a hajlamunk, hogy a sikereket magunknak, a kudarcokat a körülményeknek tulajdonítsuk; ez egy csapattal együtt is működik. A dia büszkeséget ad, és a körülmények valóban nehezek voltak. Így viszont senki nem néz szembe azzal, mit lehetett volna jobban csinálni, és a vezérigazgató sem kap valódi tanulságot.",
+          "pontok": {
+            "kovetkezetesseg": 1,
+            "atlathatosag": -2,
+            "dontesi_minoseg": -1,
+            "felelossegvallalas": -2,
+            "erintettek_bevonasa": 2
+          }
+        },
+        {
+          "jel": "D",
+          "opcio_leirasa": "Mindenki névtelenül leírja, mi ment rosszul, és ebből te állítod össze a diát. Így őszintébb válaszokat kapsz, de te döntöd el, mi kerül bele.",
+          "fogalom": "Mintzberg információgyűjtő szerepe",
+          "kiertekeles": "Mintzberg információgyűjtő szerepében a vezető a szervezet belső információáramlásának központja. A névtelenség miatt olyan dolgok is felszínre kerülnek, amelyeket szemtől szemben senki nem mondana ki. A szűrés viszont nálad marad, és a csapat nem látja, mi lett a véleményéből.",
+          "pontok": {
+            "kovetkezetesseg": 0,
+            "atlathatosag": -1,
+            "dontesi_minoseg": 2,
+            "felelossegvallalas": 1,
+            "erintettek_bevonasa": 2
+          }
+        }
+      ]
+    }
+  ]
+}
