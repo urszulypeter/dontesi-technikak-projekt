@@ -2873,6 +2873,10 @@ function heroButor(m){
 
 /* A nyitókép szereplői ugyanabból a készletből jönnek, mint a játékéi. */
 const HERO_ALAKOK = ["business_male_02", "business_male_01", "business_female_04"];
+/* akkor teljesül, amikor a nyitókép berendezése és alakjai a helyükön vannak
+   (vagy a betöltésük elbukott — a játék attól még mehet) */
+let heroKeszJelez;
+const HERO_KESZ = new Promise(r => { heroKeszJelez = r; });
 function heroEmberek(){
   const g = new T.Group();
   const tesz = (nev, poz, x, z, ry, oldal) => g.add(heroElhelyez(alakPeldany(nev, poz, oldal || 1), x, 0, z, ry));
@@ -3015,6 +3019,7 @@ async function heroInit(){
   await heroFelkeszit(berendezes);
   HERO.rend.shadowMap.needsUpdate = true;   /* az új tárgyaknak is legyen árnyéka */
   heroBeuszik(beuszo, 700);
+  heroKeszJelez();
 }
 
 /* A shaderfordítás és a textúrafeltöltés is főszálas munka: egyben közel
@@ -3827,9 +3832,13 @@ function modValaszt(kulcs){
   document.querySelectorAll(".mod-kartya").forEach(k=> k.setAttribute("aria-pressed", String(k.dataset.mod === kulcs)));
   $("mod-hiba").textContent = "";
   try{ localStorage.setItem("vb_mod", kulcs); }catch(e){}
-  /* a pálya szereplőit már most elkezdjük letölteni, amíg az űrlapot tölti ki */
-  alakokBetolt(palyaAlakjai(kulcs)).catch(h => console.error(h));
-  diszletBetolt(palyaTargyai(kulcs)).catch(h => console.error(h));
+  /* A pálya szereplőit már most elkezdjük letölteni, amíg az űrlapot tölti
+     ki — de csak a nyitókép után: az alakok egy sorban dolgozódnak fel, és a
+     nyitókép három alakja nem várhat a pálya tucatnyi alakja mögött. */
+  HERO_KESZ.then(() => {
+    alakokBetolt(palyaAlakjai(kulcs)).catch(h => console.error(h));
+    diszletBetolt(palyaTargyai(kulcs)).catch(h => console.error(h));
+  });
 }
 const emailErvenyes = e => /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(String(e).trim());
 
@@ -3894,7 +3903,7 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   vilagInit();
-  heroInit().catch(h => console.error("A nyitókép nem tudott betölteni:", h));
+  heroInit().catch(h => console.error("A nyitókép nem tudott betölteni:", h)).finally(() => heroKeszJelez());
   emailjsInit();
   setTimeout(()=> $("betolto").classList.add("tunik"), 500);
 
