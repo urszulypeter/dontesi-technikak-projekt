@@ -223,7 +223,7 @@ details table{margin-top:12px}
       </div>
       <div class="kartya">
         <span class="szem">03 kérdés</span>
-        <h2>Melyik rész adta a legtöbbet?</h2>
+        <h2>Mit csinálna másképp a következő valódi döntésénél?</h2>
         <p class="alcim">Egy válasz kérdésenként</p>
         <div id="d-k2"></div>
         <details><summary>Táblázatos nézet</summary><div id="t-k2"></div></details>
@@ -634,7 +634,7 @@ $("nevsor-masol").addEventListener("click", async ()=>{
 
 /* --- adatok betöltése és kirajzolása -------------------------------------- */
 const K1_SZOVEG = { A:"Igen, több dolgot másképp csinálnék", B:"Némileg elgondolkodtatott", C:"Nem változott" };
-const K2_SZOVEG = { A:"A döntési helyzetek", B:"A válasz utáni visszajelzések", C:"A végső kiértékelés" };
+const K2_SZOVEG = { A:"Előbb megkérdezi az érintetteket (bevonás)", B:"Nyíltan elmondja az okot és az árat (átláthatóság)", C:"Előbb tisztázza a problémát (döntési minőség)" };
 
 async function kimutatastTolt(){
   const tartalom = $("tartalom");

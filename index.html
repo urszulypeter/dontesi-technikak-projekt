@@ -3521,11 +3521,14 @@ const KERDOIV = [
     valaszok:{ A:"Igen, több dolgot másképp csinálnék",
                B:"Némileg elgondolkodtatott",
                C:"Nem változott" } },
+  /* Azt méri, mit vinne át a játékos a saját munkájába — a hatásmodell
+     „bevonás és átláthatóság" kimenetéhez ez az egyetlen belülről kérdezhető
+     jel. A három válasz három bizalmi dimenzióra mutat. */
   { id:"k2", tipus:"valasz",
-    kerdes:"Melyik rész adta a legtöbbet?",
-    valaszok:{ A:"A döntési helyzetek",
-               B:"A válasz utáni visszajelzések",
-               C:"A végső kiértékelés" } }
+    kerdes:"Mit csinálnál másképp a következő valódi döntésednél?",
+    valaszok:{ A:"Előbb megkérdezem azokat, akiket a döntés érint",
+               B:"Nyíltan elmondom a döntés okát — és az árát is",
+               C:"Előbb tisztázom, mi a valódi probléma, csak utána döntök" } }
 ];
 
 function kerdoivEpit(){
