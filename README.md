@@ -13,7 +13,7 @@ kiértékelést kap, amit e-mailben is elküldhet.
 
 - **Fotórealisztikus nyitókép.** A kezdőoldal háttere nem stilizált díszlet:
   fotografált HDRI-környezetfény, beszkennelt PBR-anyagok, fotogrammetriás
-  bútorok és három 3D-szkennelt alak, valódi napfénnyel, hosszú ablakárnyékokkal
+  bútorok és szkennelt arcú, valósághű alakok, valódi napfénnyel, hosszú ablakárnyékokkal
   és filmes utómunkával (AgX színkezelés, ragyogás, vignetta, filmszemcse,
   objektív-színbontás). A források és licencek: `assets/LICENC.md`.
 - **Három pálya**, mindegyik egy összefüggő, tíz részes történet, amelyben a
@@ -21,9 +21,9 @@ kiértékelést kap, amit e-mailben is elküldhet.
 - **3D jelenetek** Three.js-szel. Pályánként tíz díszlet, közöttük valódi
   kameramozgással; a kamera átér a helyszínre, a kép megáll, és feljön a döntés.
 - **A jelenetek ugyanazt a látványt kapják, mint a nyitókép**: ugyanaz a
-  fotografált HDRI-környezetfény, ugyanazok a beszkennelt PBR-felületek,
-  ugyanazok a fotogrammetriás bútorok és alakok, ugyanaz az AgX színkezelés és
-  filmes utómunka. Részletek lentebb: „Egy látvány, két felület".
+  fotografált HDRI-környezetfény, ugyanaz a bútorkészlet-forrás és
+  ugyanazok a valósághű alakok (Microsoft Rocketbox), ugyanaz az AgX
+  színkezelés és filmes utómunka. Részletek lentebb: „Egy látvány, két felület".
 - **Telltale-stílusú döntési réteg**: a jelenetre vetített kérdés és válaszok.
 - **Bizalomindex** felül középen. Válasz után megnő, kiírja a változást, majd
   visszahúzódik.
@@ -96,7 +96,12 @@ kilencven · Bakos bácsi · Húsz ház · A vizsgálat
     api/                  kiszolgálófüggvények: beküldés, belépés, összesítés
     assets/hdri/          környezetfény (.hdr) — a nyitóképé és a jeleneteké is
     assets/felulet/       padló- és falanyag PBR-térképei (.webp)
-    assets/modell/        modellek (.glb, meshopt-tömörítve)
+    assets/modell/        a nyitókép bútorai (.glb, meshopt-tömörítve)
+    assets/alak/          a szereplők: Microsoft Rocketbox alakok (.glb) + LICENSE (MIT)
+    assets/diszlet/       a jelenetek bútorai, tárgyai, égboltja, fűtextúrája (Poly Haven, CC0)
+    eszkozok/alakok/      az alakok előállítása: letöltés, textúra-átszínezés, GLB
+    eszkozok/excel_*.py   a kérdések Excelbe írása és visszatöltése
+    szerkesztes/          a szerkeszthető kérdés-Excel
     assets/LICENC.md      minden eszköz forrása, szerzője és licence; az alakok
                           elhelyezése és a hozzájuk vezető licenckeresés
     README.md             ez a leírás
@@ -112,97 +117,58 @@ importmap az `index.html` tetején van; a verzió egy helyen cserélhető.
 
 Minden eszköz szabadon felhasználható forrásból származik, és a repóban
 optimalizált formában van benne — így nem függ egy külső CDN elérhetőségétől.
-Összesen ~4,8 MB, de **nem egyszerre**: két ütemben tölt be (lásd lentebb), és
-a szöveg mindvégig olvasható. Ugyanez a készlet szolgálja ki a játék harminc
-jelenetét is, ezért a játék indításakor általában nincs mit letölteni.
+Nem töltődik be minden egyszerre: a nyitókép a saját bútorait és három alakot
+kér le; a játék pedig a pálya kiválasztásakor csak azokat az alakokat és
+tárgyakat, amelyeket annak a pályának a díszletei használnak (`palyaAlakjai()`,
+`palyaTargyai()` — a díszletek forrásából olvassák ki).
 
 | Mi | Honnan | Licenc |
 |---|---|---|
-| Környezetfény (Dresden Square HDRI, 768×384) | Poly Haven | CC0 |
-| Padló- és falanyag | Poly Haven | CC0 |
-| Fotelek, kanapé, asztal, növények, lámpa, sakk-készlet, váza, óra, mellszobor, konzol | Poly Haven | CC0 |
-| A két alak („Fitg013”, LGA-NA) | Sketchfab / Objaverse | **CC BY 4.0** |
+| Környezetfény (Dresden Square HDRI), padló- és falanyag | Poly Haven | CC0 |
+| A nyitókép bútorai (fotelek, kanapé, asztal, növények, lámpa, sakk, váza, óra, mellszobor, konzol) | Poly Haven | CC0 |
+| A jelenetek bútorai és tárgyai (íróasztal, székek, polc, könyvek, lámpa, rádió, reflektor, ládák, kannák, homokzsák stb.) | Poly Haven | CC0 |
+| Kültéri égbolt (Farmland Overcast panoráma), fűtextúra, fák renderképe | Poly Haven | CC0 |
+| Minden szereplő (19 alak: üzleti, civil, katonai, mérnök) | [Microsoft Rocketbox](https://github.com/microsoft/Microsoft-Rocketbox) | **MIT** |
 
-A CC-BY névattribúció a nyitóoldal láblécében és az `assets/LICENC.md`-ben is
-szerepel — ez a licenc feltétele, ne töröld.
+Az MIT licenc feltétele, hogy a szerzői jogi megjegyzés a fájlokkal maradjon:
+`assets/alak/LICENSE`. A forrásmegjelölés a lap láblécében is szerepel.
 
-Az eszközök feldolgozása `@gltf-transform`-mal és `sharp`-pal történt:
-textúrák WebP-be, geometria `EXT_meshopt_compression`-nel, a szkennelt alakok
-1 499 992 → 2 × 32 000, illetve 916 867 → 53 916 háromszögre egyszerűsítve.
-
-**Amit tudatosan nem használunk:** a Renderpeople és a Mixamo ingyenes
-karaktereit. Mindkettő licence tiltja, hogy a modellfájl önálló fájlként
-letölthető legyen — egy WebGL-oldalon pontosan az.
+Részletes lista, a módosítások és az elvetett források: `assets/LICENC.md`.
 
 ## Egy látvány, két felület
 
 A nyitókép és a harminc játékjelenet két külön WebGL-környezet, de egyetlen
-eszközkészletből és egyetlen képi receptből él. Az eszközök egyszer töltődnek
-le és egyszer értelmeződnek (`eszkozTer()`, `eszkozModellek()`); a GPU-ra
-mindkét renderelő külön tölti fel őket, mert két külön környezet.
+eszközkészletből és egyetlen képi receptből él.
 
-Amit a játékvilág a nyitóképtől átvett:
-
-| Mi | Előtte | Utána |
+| Mi | Korábban | Most |
 |---|---|---|
-| Környezetfény | 32×16 képpontos rajzolt színátmenet | ugyanaz a fotografált HDRI |
-| Padló, fal, mennyezet | egyszínű felületek | beszkennelt PBR-anyagok (Poly Haven) |
-| Ablak | a falra festett világító téglalap | valódi nyílás, béléttel, osztóbordával, túlexponált kilátással |
-| Növények, mennyezeti lámpák | dobozokból és hengerekből | fotogrammetriás modellek |
-| Álló üzleti és politikai alakok | kapszulákból épített figura | ugyanaz a három 3D-szkennelt ember |
-| Színkezelés | ACES | AgX, a nyitókép expozíciójához hangolva |
-| Utómunka | nincs | ragyogás, vignetta, filmszemcse, objektív-színbontás |
+| Szereplők | 52 dobozokból épített bábu + 3 álló szkenn | 19 szkennelt arcú Rocketbox-alak, állva, ülve, magyarázó kézzel |
+| Bútorok | dobozokból épített asztal, szék, polc, lámpa | Poly Haven modellek, a régi hívások változatlanok (`P.asztal()` stb.) |
+| Ablak | világító fehér lap | a nyitókép városa, „átnézős" (fénytörési) leképezéssel |
+| Kültér | egyszínű talaj, színátmenetes ég, gúla alakú gát | fűtextúra, fotografált alföldi égbolt, rézsűs gát, keresztlapos fák |
+| Katonai jármű, sátor | dobozok, gúla | felszerelés (ládák, kannák, áramfejlesztő), nyeregtetős ponyvasátor |
+| Fény | hideg, lapos szórt fény | beltérben meleg, kültéren borult égbolt |
 
-**Ami nem lett átvéve, és miért.** A 72 alakból 52 továbbra is épített figura:
-ülő, egyenruhás és női szerepekhez nincs szabad licencű, továbbadható
-ember-szkenn. A keresés végigjárt forrásai és az elvetés indoka —
-személyiségi jogtól a licencfeltételekig — az `assets/LICENC.md`-ben van,
-hogy ne kelljen még egyszer végigjárni.
+### Az alakok
 
-### Az épített alakok
+A Rocketbox-alakok T-pózban érkeznek. Betöltés után a csontokat a kívánt
+testtartásba forgatjuk (`pozba()`), aztán a testtartást **kisütjük**: a bőrözött
+hálóból közönséges, statikus háló lesz (`kisut()`). Futás közben így egyetlen
+csontot sem kell számolni, és ugyanaz a kisütött háló akárhány példányban
+megjelenhet. A csontokat nem szögekkel forgatjuk, hanem irányokkal („a felkar
+mutasson lefelé, kicsit előre"), mert a 3ds Max Biped csontváz helyi tengelyei
+csontonként mások.
 
-Ha szkenn nem kerülhet valahova, az épített alaknak kell megállnia a helyét.
-A korábbi változat **6,5 fejmagas** volt; a felnőtt emberi arány **7,5**. Ez az
-egy szám okozta a bábuhatást: nagy fej, keskeny váll. Az arányok most egy
-helyen, a `TEST` táblában állnak, külön férfi és női testalkattal.
-
-Amin még múlik a látvány:
-
-- **Folytonos végtagok.** Minden ízületen ült egy külön gömb, ettől kolbászra
-  fűzött gyöngysornak látszott a kar. A kapszula vége maga is félgömb: ha a
-  sugarak egyeznek és a szakaszok átfednek, az ízület magától folytonos. Gömb
-  csak ott maradt, ahol a hajlás éles — térd és váll.
-- **Bőr és szövet domborzattérképe.** Mindkettő megkapja a vakolat
-  normáltérképét, nagyon finom léptékben. A szövetnek szemcséje lesz, a bőrnek
-  pórusa; egyetlen tökéletesen sima felület az, ami műanyagnak látszik. A
-  térkép már be van töltve a falakhoz, tehát ez ingyen van.
-- **Öltözetrészletek.** Hajtóka, gallér, öv, mandzsetta, nyakkendőcsomó. Ezek
-  törik meg a kabát egyszínű foltját.
-- **Cipő a kapszula helyett.** A lábfej sziluettje messziről is elárulja az
-  alakot.
-- **Három hajforma**, plusz hosszabb haj a női szerepekhez. Egyetlen
-  félgömb-sapka mindenkin ugyanaz a sziluett volt, és a tömegjelenetekben ez
-  tette egyformává az alakokat.
-
-Két dolog, amit **kipróbáltunk és visszavontunk:** a szemöldökív külön
-gömbhéjként egyetlen sávvá olvadt az arcon — az alak szemellenzőt viselt. A
-szemgolyó fehérje pedig ekkora távolságból két világos pontnak látszik, és
-bábuszemet ad; helyette sötét szemgödör van, benne egy apró csillanás.
-
-A ráfizetés mindezért **+2,2% háromszög** (769 841 a korábbi 752 909 helyett a
-vállalati pályán) — az új részletek apró elemek, a költségük mérhető, de nem
-érzékelhető.
+A szerep → alak hozzárendelés a `SZEREP_ALAK` táblában van. A katonai alakok
+amerikai terepmintáját és zászlóját átszíneztük (`eszkozok/alakok/textura.py`).
 
 Két apró, de fontos fogás a felületeknél:
 
 - **A csempézés az UV-n áll be, nem a textúrán.** Így egyetlen anyagpéldány
-  szolgál ki minden szobaméretet; máskülönben harminc díszlet harmincszor annyi
-  anyagot és ugyanannyi shaderfordítást jelentene. Az anyagtár árnyalatonként
-  egyszer készíti el őket (`tarolt()`).
-- **A díszletek régi színei árnyalattá szelídültek** (`arnyalat()`). Ezek még
-  abból az időből valók, amikor a padló és a fal egyszínű volt; alapszínként a
-  beszkennelt gránitra szorozva sárba nyomták — a rajzolat eltűnt, és maradt
-  egy sötét folt.
+  szolgál ki minden szobaméretet. Az anyagtár árnyalatonként egyszer készíti el
+  őket (`tarolt()`).
+- **Az égbolt egyetlen, a kamerát követő kupola.** Díszletenként külön kupola nem
+  lehet: a szomszéd díszlet kupolájának belső fala átlátszana a mienken.
 
 ## A nyitókép teljesítménye
 
@@ -432,6 +398,20 @@ be őket, tehát a szöveg átírásához nem kell az `index.html`-hez nyúlni.
 - `pontok` egész számok −3 és +3 között; a játék háromszorozza őket.
 - A jelenetek helyszínnevei és díszletei az `index.html` `PALYA_META`, illetve
   `DISZLETEK` táblájában vannak, sorrendben a tíz szituációhoz igazítva.
+
+### Szerkesztés Excelben
+
+A kérdések szerkeszthető táblázatban is megvannak: `szerkesztes/kerdesek.xlsx`.
+Pályánként egy munkalap, soronként egy válasz; a pontoknál legördülő
+ellenőrzés és egy „Ellenőrzés" oszlop jelez, ha egy válaszból kimarad a plusz
+vagy a mínusz. A fájl az adatokból készül, és vissza is tölthető:
+
+```bash
+python3 eszkozok/excel_export.py
+python3 eszkozok/excel_import.py szerkesztes/kerdesek.xlsx
+```
+
+A visszatöltés előbb mindent ellenőriz, és csak hibátlan táblánál ír a JSON-ba.
 
 Módosítás után futtasd az ellenőrzőt:
 

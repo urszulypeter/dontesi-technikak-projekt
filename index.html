@@ -580,9 +580,8 @@ textarea.riport{
     <div class="lablec-jobb">
       <div>A történetek fiktívek. A kiértékelés fejlesztő célú, nem minősítés.</div>
       <div class="forras">
-        Nyitókép: HDRI és bútorok — <a href="https://polyhaven.com" rel="noopener" target="_blank">Poly Haven</a> (CC0) ·
-        alakok: „Fitg013” és „MM” — <a href="https://sketchfab.com/3d-models/59d4622960164eed88fe31ea284cc1ab" rel="noopener" target="_blank">LGA-NA</a>,
-        <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener" target="_blank">CC BY 4.0</a>, szerkesztve
+        3D: HDRI, anyagok és bútorok — <a href="https://polyhaven.com" rel="noopener" target="_blank">Poly Haven</a> (CC0) ·
+        alakok — <a href="https://github.com/microsoft/Microsoft-Rocketbox" rel="noopener" target="_blank">Microsoft Rocketbox</a> (MIT), szerkesztve
       </div>
     </div>
   </footer>
@@ -748,9 +747,8 @@ textarea.riport{
     <div class="lablec-jobb">
       <div>A történetek fiktívek. A kiértékelés fejlesztő célú, nem minősítés.</div>
       <div class="forras">
-        Nyitókép: HDRI és bútorok — <a href="https://polyhaven.com" rel="noopener" target="_blank">Poly Haven</a> (CC0) ·
-        alakok: „Fitg013” és „MM” — <a href="https://sketchfab.com/3d-models/59d4622960164eed88fe31ea284cc1ab" rel="noopener" target="_blank">LGA-NA</a>,
-        <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener" target="_blank">CC BY 4.0</a>, szerkesztve
+        3D: HDRI, anyagok és bútorok — <a href="https://polyhaven.com" rel="noopener" target="_blank">Poly Haven</a> (CC0) ·
+        alakok — <a href="https://github.com/microsoft/Microsoft-Rocketbox" rel="noopener" target="_blank">Microsoft Rocketbox</a> (MIT), szerkesztve
       </div>
     </div>
   </footer>
@@ -764,6 +762,7 @@ import * as T from "three";
 import { GLTFLoader }        from "three/addons/loaders/GLTFLoader.js";
 import { RGBELoader }        from "three/addons/loaders/RGBELoader.js";
 import { MeshoptDecoder }    from "three/addons/libs/meshopt_decoder.module.js";
+import { clone as klonCsontokkal } from "three/addons/utils/SkeletonUtils.js";
 import { EffectComposer }    from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass }        from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass }   from "three/addons/postprocessing/UnrealBloomPass.js";
@@ -934,350 +933,200 @@ function sikArnyek(x,z,r){
   return m;
 }
 
-/* --- öltözetpaletták szerepkör szerint --- */
-const RUHA = {
-  uzletSotet:{ kabat:0x232b33, nadrag:0x1c232a, ing:0xeceff3, nyakkendo:0x7d2b32, cipo:0x14181c },
-  uzletKek:  { kabat:0x2c3b52, nadrag:0x243044, ing:0xf2f5f8, nyakkendo:0xb08a3e, cipo:0x161a20 },
-  uzletNoi:  { kabat:0x3a3340, nadrag:0x322c38, ing:0xf4eee6, nyakkendo:null,    cipo:0x1a161e },
-  ingujj:    { kabat:0xd8dde3, nadrag:0x39414b, ing:0xd8dde3, nyakkendo:0x4a5a6b, cipo:0x21262c },
-  katona:    { kabat:0x4a5138, nadrag:0x434a33, ing:0x4a5138, nyakkendo:null,    cipo:0x2a2721, mellény:0x3b4230 },
-  katonaTiszt:{kabat:0x3f4733, nadrag:0x394030, ing:0x3f4733, nyakkendo:null,    cipo:0x262420, mellény:0x333a29 },
-  civil:     { kabat:0x6b4a3a, nadrag:0x3b4450, ing:0xd9cfc2, nyakkendo:null,    cipo:0x2b2723 },
-  civil2:    { kabat:0x4f6152, nadrag:0x3a3f45, ing:0xe4ded3, nyakkendo:null,    cipo:0x272b28 },
-  politikus: { kabat:0x1f2630, nadrag:0x1a2028, ing:0xf3f5f8, nyakkendo:0x3c5a6e, cipo:0x121519 },
-  politikus2:{ kabat:0x2b2f3a, nadrag:0x252932, ing:0xf0f0f4, nyakkendo:0x6d3140, cipo:0x14161b }
-};
-const BOR = [0xd8ab8a, 0xc59570, 0xa8734f, 0xe2c0a3, 0x8c5a3c];
-const HAJ = [0x3b2f22, 0x5a4231, 0x241d16, 0x7a6549, 0x9a8f80];
-
 /* ============================================================================
-   EMBERALAK
+   ALAKOK — Microsoft Rocketbox (MIT)
    ----------------------------------------------------------------------------
-   Ide szkennelt ember nem kerülhet: ülő és egyenruhás szerepekhez nincs szabad
-   licencű, továbbadható fotogrammetriás alak (lásd assets/LICENC.md). Ezért ez
-   az alak épített — de nem kell bábunak látszania.
+   Minden szereplő ugyanabból a készletből jön: a Microsoft Rocketbox
+   könyvtár 3D-szkennelt arcú, csontvázzal szerelt alakjaiból. A korábbi
+   változatban a 72 alakból 52 dobozokból épített bábu volt, mert ülő,
+   egyenruhás és női szerepekhez nem volt szabad licencű szkenn — itt mind
+   megvan, MIT licenccel. A forrás és a feldolgozás: assets/LICENC.md.
 
-   A korábbi változat 6,5 fejmagas volt; a felnőtt emberi arány 7,5. A fej
-   ettől volt nagy, a váll keskeny, és ez az arány árulta el messziről, hogy
-   nem ember. Az arányok most egy helyen, a TEST táblában állnak.
+   Az alakok alapállásban T-pózban állnak. Betöltés után a csontokat a
+   kívánt testtartásba forgatjuk (állás, ülés, magyarázó kéz), majd a
+   testtartást „kisütjük": a bőrözött hálóból közönséges, statikus háló
+   lesz. Így futás közben egyetlen csontot sem kell számolni, és ugyanaz a
+   kisütött háló akárhány példányban megjelenhet.
    ========================================================================== */
-const TEST = {
-  ferfi: { fejR:0.098, vallX:0.185, csipoR:0.150, mellR:0.181, valltav:0.520, magas:1.000 },
-  noi:   { fejR:0.094, vallX:0.162, csipoR:0.157, mellR:0.162, valltav:0.505, magas:0.955 }
+const ALAK_MAPPA = "assets/alak/";
+
+/* szerep → az ide illő alakok. Hogy egy jeleneten belül melyik, azt a
+   díszlet bőr- és hajindexe dönti el, így egy jelenetben ritkán áll kétszer
+   ugyanaz az arc. */
+const SZEREP_ALAK = {
+  uzletSotet: ["business_male_01", "business_male_03"],
+  uzletKek:   ["business_male_02", "business_male_03"],
+  uzletNoi:   ["business_female_01", "business_female_04", "business_female_03"],
+  ingujj:     ["business_male_06", "male_adult_08"],
+  politikus:  ["business_male_03", "business_male_02", "business_female_03"],
+  politikus2: ["business_male_01", "business_female_04", "male_adult_03"],
+  civil:      ["male_adult_05", "female_adult_09", "male_adult_14", "female_adult_02"],
+  civil2:     ["female_adult_14", "male_adult_03", "female_adult_02", "male_adult_14"],
+  katona:     ["military_male_02", "military_male_06", "military_female_01"],
+  katonaTiszt:["military_male_05", "military_male_02"],
+  mernok:     ["construction_male_02"]
 };
-const NOI_SZEREP = { uzletNoi:true };
+const ALAPSZEREP = "uzletSotet";
 
-function kapszula(r, h, mat, x, y, z){
-  const geo = T.CapsuleGeometry ? new T.CapsuleGeometry(r, h, 6, 12)
-                                : new T.CylinderGeometry(r, r, h + r*2, 12);
-  const m = new T.Mesh(geo, mat);
-  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
-  return m;
-}
+const ALAKTAR = { gltf:{}, igeret:{}, sutott:new Map() };
 
-/* Forgástest törzs: csípő, derék, mellkas, majd a váll felé szűkülő nyakvonal.
-   A derék behúzása adja a törzsnek az emberi vonalát — enélkül henger. */
-function torzsGeo(t, m){
-  const p = [
-    new T.Vector2(0.004,          0.000),
-    new T.Vector2(t.csipoR*0.96,  0.014*m),
-    new T.Vector2(t.csipoR,       0.080*m),
-    new T.Vector2(t.csipoR*0.88,  0.200*m),   /* derék */
-    new T.Vector2(t.mellR*0.94,   0.330*m),
-    new T.Vector2(t.mellR,        0.430*m),   /* mellkas */
-    new T.Vector2(t.mellR*0.92,   0.500*m),
-    new T.Vector2(t.mellR*0.58,   0.548*m),
-    new T.Vector2(0.004,          0.558*m)
-  ];
-  return new T.LatheGeometry(p, 24);
-}
-
-/* --- bőr és szövet ---------------------------------------------------------
-   Mindkettő megkapja a vakolat domborzattérképét, nagyon finom léptékben: a
-   szövetnek szemcséje lesz, a bőrnek pórusa. Egyetlen sima felület az, ami
-   műanyagnak látszik — és a térkép már úgyis be van töltve, tehát ingyen van. */
-function borAnyag(szin){
-  return tarolt("bor:"+szin, ()=> new T.MeshStandardMaterial({
-    color: szin, roughness: 0.54, metalness: 0, envMapIntensity: 0.85,
-    normalMap: heroTextura(V.eszkoz.felulet, ESZKOZ.fal.nor, T.LinearSRGBColorSpace, 7, 7),
-    normalScale: new T.Vector2(0.14, 0.14)
-  }));
-}
-function szovetAnyag(szin, ropp){
-  return tarolt("szovet:"+szin+":"+ropp, ()=> new T.MeshStandardMaterial({
-    color: szin, roughness: ropp, metalness: 0, envMapIntensity: 0.62,
-    normalMap: heroTextura(V.eszkoz.felulet, ESZKOZ.fal.nor, T.LinearSRGBColorSpace, 5, 5),
-    normalScale: new T.Vector2(0.50, 0.50)
-  }));
-}
-/* ============================================================================
-   BESZKENNELT ALAKOK
-   ----------------------------------------------------------------------------
-   Ugyanaz a három fotogrammetriás alak áll a jelenetekben, mint a nyitóképen.
-   Csak oda kerülhetnek, ahol az öltözetük is stimmel, és csak állva: a szkenn
-   egyetlen rögzített testtartás, nem lehet leültetni vagy egyenruhába adni.
-   Ülő és katonai szerepekhez nincs szabad licencű, továbbadható ember-szkenn
-   — a keresés eredménye és az elvetett források: assets/LICENC.md.
-   ========================================================================== */
-const SZKENN_SZEREP = {
-  uzletSotet: ["ferfi_fekete", "ferfi_sotetkek"],
-  uzletKek:   ["ferfi_sotetkek", "ferfi_fekete"],
-  politikus:  ["ferfi_sotetkek", "ferfi_fekete"],
-  politikus2: ["ferfi_fekete", "ferfi_sotetkek"],
-  ingujj:     ["vendeg"],
-  civil:      ["vendeg"],
-  civil2:     ["vendeg"]
-};
-/* A vendég alapállása −X felé néz, a két férfié +Z felé. Az épített alak is
-   +Z felé néz, ezért az `ry` mindenhol ugyanazt jelenti — a vendég kapja a
-   fél fordulatnyi eltolást. */
-const SZKENN_FORDULAT = { vendeg: Math.PI/2 };
-
-function szkennForras(nev){
-  const m = V.eszkoz && V.eszkoz.modellek;
-  if(!m) return null;
-  if(!V.szkennek){
-    V.szkennek = {};
-    m.emberek.scene.children.forEach(n => { V.szkennek[n.name] = n; });
-    m.vendeg.scene.children.forEach(n => { V.szkennek[n.name] = n; });
-  }
-  return V.szkennek[nev] || null;
-}
-
-function szkennAlak(o){
-  if(o.poz === "ul") return null;
-  const lista = SZKENN_SZEREP[o.ruha || "uzletSotet"];
-  if(!lista) return null;
-  /* ugyanabban a jelenetben ne ugyanaz az arc álljon kétszer: a bőr- és
-     hajindex jelenetenként amúgy is különbözik, ez választ közülük */
-  const nev = lista[((o.bor||0) + (o.haj||0)) % lista.length];
-  const forras = szkennForras(nev);
-  if(!forras) return null;
-  return heroElhelyez(forras.clone(true), o.x||0, 0, o.z||0,
-                      (o.ry||0) + (SZKENN_FORDULAT[nev] || 0), o.magas || 1);
-}
-
-function ember(o){
-  o = o || {};
-  const szkennelt = szkennAlak(o);
-  if(szkennelt) return szkennelt;
-  const r   = RUHA[o.ruha || "uzletSotet"];
-  const egyszeru = o.lod === "egyszeru";
-  const katonai = (o.ruha === "katona" || o.ruha === "katonaTiszt");
-  const t = TEST[NOI_SZEREP[o.ruha] ? "noi" : "ferfi"];
-
-  const bor    = borAnyag(BOR[(o.bor||0) % BOR.length]);
-  const haj    = szovetAnyag(HAJ[(o.haj||0) % HAJ.length], 0.74);
-  const kabat  = szovetAnyag(r.kabat, 0.80);
-  const nadrag = szovetAnyag(r.nadrag, 0.86);
-  const ing    = szovetAnyag(r.ing, 0.66);
-  const cipo   = anyag(r.cipo, 0.30, 0.06);
-
-  const g  = new T.Group();
-  const ul = o.poz === "ul";
-  const m  = (o.magas || 1.0) * t.magas;
-  const csipo = ul ? 0.505*m : 0.920*m;
-  const vallY = csipo + t.valltav*m;
-  const oldalt = (o.tukor ? -1 : 1);   /* enyhe aszimmetria, hogy ne tűnjön bábunak */
-  const combX = t.csipoR*0.62;
-
-  /* Cipő: hosszúkás, orra felé elkeskenyedő. Az álló kapszula golyónak
-     látszott — a lábfej sziluettje messziről is elárulja az alakot. */
-  const cipot = (x, z, ry) => {
-    const cs = new T.Group();
-    const talp = doboz(0.088, 0.055, 0.245, cipo, 0, 0.028, 0.020);
-    const orr  = gomb(0.044, cipo, 0, 0.030, 0.128); orr.scale.set(1, 0.62, 1.05);
-    const sarok= gomb(0.044, cipo, 0, 0.036, -0.078); sarok.scale.set(1, 0.90, 0.85);
-    cs.add(talp, orr, sarok);
-    cs.position.set(x, 0, z); if(ry) cs.rotation.y = ry;
-    return cs;
-  };
-
-  /* ---------- lábak ----------
-     A korábbi változat minden ízületre külön gömböt tett, ettől kolbászra
-     fűzött gyöngysornak látszott a végtag. A kapszula vége maga is félgömb:
-     ha a sugarak egyeznek és a szakaszok átfedik egymást, az ízület magától
-     folytonos. Gömb csak ott marad, ahol a hajlás éles. */
-  if(ul){
-    [-1,1].forEach(oldal=>{
-      const comb = kapszula(0.092, 0.24*m, nadrag, oldal*combX, csipo - 0.012, 0.175);
-      comb.rotation.x = Math.PI/2; g.add(comb);
-      g.add(gomb(0.088, nadrag, oldal*combX, csipo - 0.030, 0.325));   /* térd: éles hajlás */
-      g.add(kapszula(0.074, 0.26*m, nadrag, oldal*combX, csipo - 0.235, 0.365));
-      g.add(cipot(oldal*combX, 0.345, 0));
+/* Egy pálya melyik alakokat használja: a díszletek forrásából olvassuk ki a
+   szerepneveket. Így nem kell kézzel karbantartani egy második listát, ami
+   elcsúszhatna a díszletektől. */
+function palyaAlakjai(mod){
+  const kell = new Set(SZEREP_ALAK[ALAPSZEREP]);
+  (DISZLETEK[mod] || []).forEach(d => {
+    (d.epit.toString().match(/"(\w+)"/g) || []).forEach(s => {
+      const lista = SZEREP_ALAK[s.slice(1, -1)];
+      if(lista) lista.forEach(n => kell.add(n));
     });
-  } else {
-    [-1,1].forEach(oldal=>{
-      const elore = (oldal===oldalt) ? 0.048 : -0.030;   /* egyik láb kicsit előrébb */
-      const comb = kapszula(0.094, 0.24*m, nadrag, oldal*combX, csipo - 0.205*m, elore*0.4);
-      comb.rotation.x = -elore*0.30; g.add(comb);
-      g.add(kapszula(0.076, 0.26*m, nadrag, oldal*combX, csipo - 0.610*m, elore*0.7));
-      g.add(cipot(oldal*combX, elore + 0.030, oldal*0.06));
-    });
-  }
-
-  /* ---------- törzs ---------- */
-  const torzs = new T.Mesh(torzsGeo(t, m), kabat);
-  torzs.position.set(0, csipo, 0);
-  torzs.scale.set(1, 1, 0.70);
-  torzs.castShadow = true; torzs.receiveShadow = true;
-  g.add(torzs);
-
-  /* ing / blúz a kabát alatt, a nyaktól lefelé keskenyedő sávban */
-  const ingMesh = kapszula(0.050, 0.22*m, ing, 0, csipo + 0.375*m, 0.096);
-  ingMesh.scale.set(1.16, 1, 0.34); g.add(ingMesh);
-
-  if(r.nyakkendo){
-    const ny = kapszula(0.018, 0.17*m, szovetAnyag(r.nyakkendo, 0.58), 0, csipo + 0.345*m, 0.112);
-    ny.scale.set(1, 1, 0.5); g.add(ny);
-    /* nyakkendőcsomó: enélkül szalagnak látszik */
-    const csomo = gomb(0.026, szovetAnyag(r.nyakkendo, 0.58), 0, csipo + 0.455*m, 0.104);
-    csomo.scale.set(1, 0.85, 0.6); g.add(csomo);
-  }
-
-  /* Hajtóka és gallér. Ez a két ferde lap töri meg a kabát üres felületét —
-     enélkül a törzs egyetlen egyszínű folt. */
-  if(!egyszeru && r.kabat !== r.ing){
-    [-1,1].forEach(oldal=>{
-      const hajtoka = doboz(0.052, 0.20*m, 0.016, kabat, oldal*0.062, csipo + 0.385*m, 0.104);
-      hajtoka.rotation.z = oldal*0.20; hajtoka.rotation.y = -oldal*0.16; g.add(hajtoka);
-      const gallér = doboz(0.034, 0.085*m, 0.020, kabat, oldal*0.056, csipo + 0.487*m, 0.086);
-      gallér.rotation.z = oldal*0.34; g.add(gallér);
-    });
-  }
-  /* öv: a derék vonalát adja meg, és elválasztja a nadrágot a felsőtesttől */
-  if(!katonai){
-    const ov = new T.Mesh(new T.CylinderGeometry(t.csipoR*0.93, t.csipoR*0.93, 0.045, 20),
-                          anyag(r.cipo, 0.42, 0.10));
-    ov.position.set(0, csipo + 0.055*m, 0); ov.scale.set(1, 1, 0.72);
-    ov.castShadow = true; g.add(ov);
-  }
-  if(r.mellény){
-    const v = new T.Mesh(torzsGeo(t, m*0.92), szovetAnyag(r.mellény, 0.94));
-    v.position.set(0, csipo + 0.045*m, 0); v.scale.set(1.09, 0.86, 0.82);
-    v.castShadow = true; g.add(v);
-  }
-
-  /* ---------- karok ---------- */
-  [-1,1].forEach(oldal=>{
-    const vx = oldal*t.vallX, mutat = (o.kar === "mutat" && oldal === -oldalt);
-    /* váll: lapított gömb, ez adja a deltaizom vonalát */
-    const vall = gomb(0.072, kabat, vx*0.94, vallY - 0.012, 0);
-    vall.scale.set(1.05, 0.92, 0.95); g.add(vall);
-
-    const felkarSzog = mutat ? -1.10 : (ul ? -0.40 : 0.07);
-    const fk = new T.Group(); fk.position.set(vx, vallY - 0.015, 0);
-    fk.rotation.x = felkarSzog; fk.rotation.z = oldal*0.09;
-    fk.add(kapszula(0.056, 0.20*m, kabat, 0, -0.135*m, 0)); g.add(fk);
-
-    const konyokY = vallY - 0.015 - Math.cos(felkarSzog)*0.265*m;
-    const konyokZ = -Math.sin(felkarSzog)*0.265*m;
-    const alkarSzog = mutat ? -1.52 : (ul ? -1.02 : 0.11);
-    const ak = new T.Group(); ak.position.set(vx + oldal*0.020, konyokY, konyokZ);
-    ak.rotation.x = alkarSzog;
-    ak.add(kapszula(0.049, 0.19*m, kabat, 0, -0.120*m, 0));
-    /* mandzsetta: a kabátujj vége, alóla jön ki a kéz */
-    const mandzsetta = new T.Mesh(new T.CylinderGeometry(0.050, 0.048, 0.030, 14),
-                                  (r.kabat === r.ing) ? kabat : ing);
-    mandzsetta.position.set(0, -0.218*m, 0); mandzsetta.castShadow = true;
-    ak.add(mandzsetta);
-    g.add(ak);
-
-    const kezY = konyokY - Math.cos(alkarSzog)*0.255*m;
-    const kezZ = konyokZ - Math.sin(alkarSzog)*0.255*m;
-    const kez = kapszula(0.036, 0.055, bor, vx + oldal*0.024, kezY, kezZ);
-    kez.scale.set(0.92, 1, 0.62);
-    kez.rotation.x = alkarSzog; g.add(kez);
   });
+  return [...kell];
+}
 
-  /* ---------- nyak és fej ----------
-     A fej nem gömb: a koponya hátrafelé hosszabb, az arc alsó harmada
-     elkeskenyedik. Ez a két forma együtt adja a fejtartás sziluettjét. */
-  const nyak = kapszula(0.046, 0.055*m, bor, 0, vallY + 0.048*m, -0.004);
-  nyak.rotation.x = -0.06; g.add(nyak);
+/* A letöltés párhuzamos, az értelmezés egyesével, képkockánként — mint a
+   többi modellnél. Akárhányszor hívható: amit már betöltött, azt nem kéri le
+   újra. */
+function alakokBetolt(nevek){
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  return Promise.all(nevek.map(n => {
+    if(!ALAKTAR.igeret[n]){
+      ALAKTAR.igeret[n] = fetch(ALAK_MAPPA + n + ".glb")
+        .then(v => { if(!v.ok) throw new Error("Nem tölthető be az alak: " + n); return v.arrayBuffer(); })
+        .then(puffer => ALAK_SOR = ALAK_SOR.then(async () => {
+          ALAKTAR.gltf[n] = await loader.parseAsync(puffer, "");
+          await new Promise(r => requestAnimationFrame(r));
+        }));
+    }
+    return ALAKTAR.igeret[n];
+  }));
+}
+let ALAK_SOR = Promise.resolve();
 
-  const fejY = vallY + 0.080*m + t.fejR*1.06;
-  const koponya = gomb(t.fejR, bor, 0, fejY, -0.006);
-  koponya.scale.set(1, 1.16, 1.10); g.add(koponya);
-  /* arc alsó harmada: állkapocs, előrébb és keskenyebben */
-  const allkapocs = gomb(t.fejR*0.80, bor, 0, fejY - t.fejR*0.62, 0.020);
-  allkapocs.scale.set(0.92, 0.82, 1.02); g.add(allkapocs);
-  if(!egyszeru){
-    [-1,1].forEach(oldal=>{
-      const ful = gomb(0.026, bor, oldal*t.fejR*1.02, fejY - 0.006, -0.008);
-      ful.scale.set(0.40, 1.15, 0.90); g.add(ful);
-    });
+/* --- testtartás ------------------------------------------------------------
+   A Rocketbox csontvázának (3ds Max Biped) helyi tengelyei csontonként
+   mások, ezért nem szögeket adunk meg, hanem irányokat a világban: „a felkar
+   mutasson lefelé, kicsit előre". A csontot a legkisebb forgatással
+   fordítjuk abba az irányba — ez egyben a természetes forgatás is.
+   Az alak +Z felé néz, a bal keze a +X oldalon van.
+   -------------------------------------------------------------------------- */
+const _aV1 = new T.Vector3(), _aV2 = new T.Vector3();
+const _aQ1 = new T.Quaternion(), _aQ2 = new T.Quaternion(), _aQ3 = new T.Quaternion();
+function csontIranyba(cs, gyerek, cel){
+  if(!cs || !gyerek) return;
+  cs.updateWorldMatrix(true, true);
+  const most = gyerek.getWorldPosition(_aV2).sub(cs.getWorldPosition(_aV1)).normalize();
+  _aQ1.setFromUnitVectors(most, _aV1.copy(cel).normalize());
+  cs.getWorldQuaternion(_aQ2);
+  cs.parent.getWorldQuaternion(_aQ3);
+  cs.quaternion.copy(_aQ3.invert().multiply(_aQ1.multiply(_aQ2)));
+  cs.updateWorldMatrix(false, true);
+}
+const TARTAS = {
+  /* [felkar, alkar] iránya; az x-et a test oldala tükrözi */
+  all:   { kar:[[0.13,-1,0.02], [0.06,-1,0.22]] },
+  ul:    { kar:[[0.10,-0.9,0.42], [0.05,-0.30,1]] },
+  mutat: [[0.30,-0.45,0.85], [0.10,0.05,1]]
+};
+function pozba(gyoker, poz, oldal){
+  const c = n => gyoker.getObjectByName("Bip01_" + n.replace(/ /g, "_"));
+  const v = (x, y, z) => new T.Vector3(x, y, z);
+  const kar = (ol, felso, also) => {
+    const o = ol > 0 ? "L" : "R";
+    csontIranyba(c(o+" UpperArm"), c(o+" Forearm"), v(felso[0]*ol, felso[1], felso[2]));
+    csontIranyba(c(o+" Forearm"),  c(o+" Hand"),    v(also[0]*ol,  also[1],  also[2]));
+  };
+  [1, -1].forEach(ol => {
+    const o = ol > 0 ? "L" : "R";
+    if(poz === "ul"){
+      csontIranyba(c(o+" Thigh"), c(o+" Calf"), v(0.06*ol, -0.08, 1));
+      csontIranyba(c(o+" Calf"),  c(o+" Foot"), v(0.02*ol, -1, 0.12));
+    } else {
+      /* az egyik láb kicsit előrébb: a két egyenes láb bábuszerű */
+      csontIranyba(c(o+" Thigh"), c(o+" Calf"), v(0.035*ol, -1, ol === oldal ? 0.05 : -0.02));
+      csontIranyba(c(o+" Calf"),  c(o+" Foot"), v(0.01*ol, -1, -0.03));
+    }
+    const t = (poz === "ul" ? TARTAS.ul : TARTAS.all).kar;
+    kar(ol, t[0], t[1]);
+  });
+  if(poz === "mutat") kar(oldal, TARTAS.mutat[0], TARTAS.mutat[1]);
+}
+
+/* A bőrözött háló kisütése a beállított testtartásba. Ugyanaz a számítás,
+   mint a three bőrözési shaderében: csúcsonként a csontmátrixok súlyozott
+   összege, a normálisokra is. */
+function kisut(gyoker){
+  gyoker.updateMatrixWorld(true);
+  const halok = [];
+  const M = new T.Matrix4(), N = new T.Matrix3(), p = new T.Vector3(), n = new T.Vector3();
+  gyoker.traverse(o => {
+    if(!o.isSkinnedMesh) return;
+    const geo = o.geometry, pos = geo.attributes.position, nor = geo.attributes.normal;
+    const si = geo.attributes.skinIndex, sw = geo.attributes.skinWeight;
+    const B = o.skeleton.bones.map((b, i) =>
+      new T.Matrix4().multiplyMatrices(b.matrixWorld, o.skeleton.boneInverses[i]).multiply(o.bindMatrix));
+    const P = new Float32Array(pos.count*3), NN = new Float32Array(pos.count*3);
+    const m = M.elements;
+    for(let i=0;i<pos.count;i++){
+      m.fill(0);
+      for(let k=0;k<4;k++){
+        const w = sw.getComponent(i, k); if(!w) continue;
+        const e = B[si.getComponent(i, k)].elements;
+        for(let j=0;j<16;j++) m[j] += e[j]*w;
+      }
+      p.fromBufferAttribute(pos, i).applyMatrix4(M);
+      P[i*3] = p.x; P[i*3+1] = p.y; P[i*3+2] = p.z;
+      n.fromBufferAttribute(nor, i).applyMatrix3(N.setFromMatrix4(M)).normalize();
+      NN[i*3] = n.x; NN[i*3+1] = n.y; NN[i*3+2] = n.z;
+    }
+    const ki = new T.BufferGeometry();
+    ki.setIndex(geo.index);
+    ki.setAttribute("position", new T.BufferAttribute(P, 3));
+    ki.setAttribute("normal",   new T.BufferAttribute(NN, 3));
+    ki.setAttribute("uv", geo.attributes.uv);
+    halok.push({ geo:ki, anyag:o.material });
+  });
+  /* talp a padlón */
+  let alj = Infinity;
+  halok.forEach(h => { h.geo.computeBoundingBox(); alj = Math.min(alj, h.geo.boundingBox.min.y); });
+  halok.forEach(h => { h.geo.translate(0, -alj, 0); h.geo.computeBoundingSphere(); });
+  return halok;
+}
+
+function alakSutott(nev, poz, oldal){
+  const kulcs = nev + "|" + poz + "|" + oldal;
+  if(!ALAKTAR.sutott.has(kulcs)){
+    const gltf = ALAKTAR.gltf[nev];
+    if(!gltf) throw new Error("Az alak nincs betöltve: " + nev);
+    const peldany = klonCsontokkal(gltf.scene);
+    pozba(peldany, poz, oldal);
+    ALAKTAR.sutott.set(kulcs, kisut(peldany));
   }
+  return ALAKTAR.sutott.get(kulcs);
+}
 
-  /* ---------- haj vagy sisak ---------- */
-  if(!katonai){
-    hajat(g, haj, t, fejY, (o.haj||0) % 3, NOI_SZEREP[o.ruha]);
-  } else {
-    const sisak = new T.Mesh(new T.SphereGeometry(t.fejR*1.14, 20, 14, 0, Math.PI*2, 0, Math.PI*0.70),
-                             anyag(0x424832, 0.70, 0.14));
-    sisak.position.set(0, fejY + 0.012, -0.006); sisak.scale.set(1.08, 1.06, 1.14);
-    sisak.rotation.x = -0.16; sisak.castShadow = true; g.add(sisak);
-    const perem = new T.Mesh(new T.TorusGeometry(t.fejR*1.14, 0.013, 8, 22), anyag(0x3a4029, 0.74));
-    perem.position.set(0, fejY + 0.004, -0.006); perem.rotation.x = Math.PI/2 - 0.16;
-    perem.scale.set(1.08, 1.14, 1); g.add(perem);
-  }
-
-  /* ---------- arcvonások ----------
-     A szemgolyó fehérje ekkora távolságból két világos pontnak látszik, és
-     bábuszemet ad. Ezért a szemgödör sötét, és csak egy apró csillanás ül
-     benne — messziről ez olvasható arcnak, közelről sem zavaró. */
-  if(!egyszeru){
-    const szemgodor = anyag(0x3a2f28, 0.62);
-    const csillanas = anyag(0xd8d2c8, 0.30);
-    const zR = t.fejR;
-    [-1,1].forEach(oldal=>{
-      const sz = gomb(zR*0.20, szemgodor, oldal*zR*0.40, fejY + zR*0.10, zR*0.86);
-      sz.scale.set(1.15, 0.62, 0.5); g.add(sz);
-      g.add(gomb(zR*0.070, csillanas, oldal*zR*0.40, fejY + zR*0.11, zR*0.96));
-      /* A szemöldök két külön ív. Ha túl széles, a kettő egybeolvad egy
-         sávvá, és az alak szemellenzőt visel — ezért keskeny és beljebb ül. */
-      const szemoldok = doboz(zR*0.30, zR*0.07, zR*0.08, haj, oldal*zR*0.40, fejY + zR*0.34, zR*0.86);
-      szemoldok.rotation.z = -oldal*0.18; g.add(szemoldok);
-    });
-    const orr = new T.Mesh(new T.ConeGeometry(zR*0.19, zR*0.46, 8), bor);
-    orr.position.set(0, fejY - zR*0.14, zR*0.92); orr.rotation.x = Math.PI/2 + 0.48;
-    orr.castShadow = true; g.add(orr);
-    const szaj = doboz(zR*0.40, zR*0.085, zR*0.10, anyag(0x8d5a4c, 0.55), 0, fejY - zR*0.55, zR*0.80);
-    g.add(szaj);
-  }
-
-  g.position.set(o.x||0, 0, o.z||0);
-  g.rotation.y = (o.ry||0);
-  g.add(sikArnyek(0, ul?0.2:0.02, 0.40));
+/* Egy szereplő a díszletben. A régi paraméterek maradnak: ruha (szerep),
+   poz ("ul"), kar ("mutat"), tukor, bor/haj (melyik arc), magas, x/z/ry. */
+function alakPeldany(nev, poz, oldal){
+  const g = new T.Group();
+  alakSutott(nev, poz, oldal).forEach(h => {
+    const m = new T.Mesh(h.geo, h.anyag);
+    m.castShadow = true; m.receiveShadow = true;
+    g.add(m);
+  });
   return g;
 }
-
-/* Három hajforma. Egyetlen félgömb-sapka mindenkinek ugyanaz a sziluett volt,
-   és a tömegjelenetekben ez tette egyformává az alakokat. */
-function hajat(g, haj, t, fejY, valtozat, noi){
-  const R = t.fejR;
-  /* A sapka a fejtetőt és a homlok felső harmadát fedi. Ha hátrébb billen,
-     kopasznak látszik az alak elölnézetből — ezért alig van megdöntve. */
-  const sapka = new T.Mesh(
-    new T.SphereGeometry(R*1.07, 20, 14, 0, Math.PI*2, 0, Math.PI*(noi ? 0.68 : 0.60)), haj);
-  sapka.position.set(0, fejY + R*0.04, -0.006);
-  sapka.scale.set(1.06, 1.16, 1.12);
-  sapka.rotation.x = -0.10;
-  sapka.castShadow = true; g.add(sapka);
-
-  if(noi || valtozat === 2){
-    /* hosszabb haj: két oldalt lefutó tömeg, a fül vonala alá */
-    [-1,1].forEach(oldal=>{
-      const tincs = kapszula(R*0.34, R*0.90, haj, oldal*R*0.86, fejY - R*0.46, -R*0.18);
-      tincs.scale.set(0.72, 1, 0.86); g.add(tincs);
-    });
-    const hatul = gomb(R*0.70, haj, 0, fejY - R*0.30, -R*0.60);
-    hatul.scale.set(1.05, 1.10, 0.80); g.add(hatul);
-  } else if(valtozat === 1){
-    /* homlokba fésült tincs */
-    const tincs = doboz(R*1.20, R*0.30, R*0.24, haj, 0, fejY + R*0.66, R*0.52);
-    tincs.rotation.x = 0.30; g.add(tincs);
-  }
+function ember(o){
+  o = o || {};
+  const lista = SZEREP_ALAK[o.ruha] || SZEREP_ALAK[ALAPSZEREP];
+  const nev = lista[((o.bor||0) + (o.haj||0)) % lista.length];
+  const poz = o.poz === "ul" ? "ul" : (o.kar === "mutat" ? "mutat" : "all");
+  const g = alakPeldany(nev, poz, o.tukor ? -1 : 1);
+  if(poz !== "ul") g.add(sikArnyek(0, 0.02, 0.34));
+  g.position.set(o.x||0, 0, o.z||0);
+  g.rotation.y = o.ry||0;
+  if(o.magas) g.scale.setScalar(o.magas);
+  return g;
 }
 
 /* --- bútor- és tárgykészlet --- */
@@ -1347,7 +1196,7 @@ const P = {
     g.add(gomb(0.035, anyag(0x1a1e22,0.4),0.18,1.47,0.05));
     g.position.set(x,0,z); if(ry) g.rotation.y=ry; return g;
   },
-  jarmu(x,z,ry,szin){
+  jarmu_regi(x,z,ry,szin){
     const g=new T.Group(), m=anyag(szin||0x4c5340,0.8);
     g.add(doboz(2.0,0.9,4.4,m,0,0.85,0));
     g.add(doboz(1.8,0.7,1.6, anyag(0x3a4031,0.8),0,1.6,-0.9));
@@ -1363,7 +1212,7 @@ const P = {
       g.add(doboz(0.46,0.20,0.30, m, (i-((sor||6)-r-1)/2)*0.48 + r*0.12, 0.11+r*0.19, 0));
     g.position.set(x,0,z); if(ry) g.rotation.y=ry; return g;
   },
-  sator(x,z,ry){
+  sator_regi(x,z,ry){
     const g=new T.Group(), m=anyag(0x4a5138,0.95);
     const geo=new T.CylinderGeometry(0.01,2.6,2.4,4);
     const s=new T.Mesh(geo,m); s.position.y=1.2; s.rotation.y=Math.PI/4; s.castShadow=true; g.add(s);
@@ -1402,6 +1251,212 @@ const P = {
 };
 
 /* ============================================================================
+   DÍSZLETMODELLEK — Poly Haven (CC0)
+   ----------------------------------------------------------------------------
+   A bútorok és a tárgyak ugyanonnan jönnek, ahonnan a nyitókép berendezése:
+   fotogrammetriás és kézzel modellezett, fizikailag hiteles anyagú CC0
+   modellek. Korábban dobozokból épültek — a valódi alakok mellett ez lett
+   volna a kép leggyengébb pontja.
+
+   Pályánként csak az töltődik le, amit a díszletei ténylegesen használnak:
+   a díszletek forrásából olvassuk ki, mely tárgyakat hívják.
+   ========================================================================== */
+const DISZLET_MAPPA = "assets/diszlet/";
+const TARGY_MODELL = {
+  asztal:    ["metal_office_desk", "woodentable_01"],
+  szek:      ["dining_chair_02", "schoolchair_01"],
+  lampa:     ["desk_lamp_arm_01"],
+  polc:      ["steel_frame_shelves_03", "book_encyclopedia_set_01"],
+  konyvek:   ["book_encyclopedia_set_01"],
+  homokzsak: ["cement_bag"],
+  jarmu:     ["wooden_military_crate", "portable_generator", "metal_jerrycan_green"],
+  radio:     ["vintage_radio_transceiver"],
+  reflektor: ["portable_searchlight"],
+  aggregat:  ["portable_generator"],
+  lada:      ["wooden_military_crate"],
+  kanna:     ["metal_jerrycan_green"],
+  megafon:   ["megaphone_01"],
+  betonelem: ["concrete_road_barrier"],
+  pad:       ["painted_wooden_bench"],
+  utcalampa: ["street_lamp_01"],
+  csizma:    ["rubber_boots"],
+  kavekocsi: ["coffeecart_01"],
+  fiokos:    ["drawer_cabinet"],
+  vaszon:    ["projector_screen"],
+  kretatabla:["standing_chalkboard_01"],
+  iskolapad: ["schooldesk_01", "schoolchair_01"],
+  jegyzet:   ["office_notepads"],
+  mappa:     ["binder_notebook"],
+  muanyagszek:["plastic_monobloc_chair_01"]
+};
+const DTAR = { gltf:{}, igeret:{}, doboz:{} };
+let DTAR_SOR = Promise.resolve();
+
+function palyaTargyai(mod){
+  const kell = new Set();
+  (DISZLETEK[mod] || []).forEach(d => {
+    (d.epit.toString().match(/P\.(\w+)\(/g) || []).forEach(s => {
+      (TARGY_MODELL[s.slice(2, -1)] || []).forEach(n => kell.add(n));
+    });
+  });
+  return [...kell];
+}
+function diszletBetolt(nevek){
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  return Promise.all(nevek.map(n => {
+    if(!DTAR.igeret[n]){
+      DTAR.igeret[n] = fetch(DISZLET_MAPPA + n + ".glb")
+        .then(v => { if(!v.ok) throw new Error("Nem tölthető be a modell: " + n); return v.arrayBuffer(); })
+        .then(puffer => DTAR_SOR = DTAR_SOR.then(async () => {
+          const gltf = await loader.parseAsync(puffer, "");
+          heroArnyekol(gltf.scene);
+          DTAR.gltf[n] = gltf;
+          DTAR.doboz[n] = new T.Box3().setFromObject(gltf.scene);
+          await new Promise(r => requestAnimationFrame(r));
+        }));
+    }
+    return DTAR.igeret[n];
+  }));
+}
+
+/* Egy tárgy elhelyezése. A `meret` vagy egyetlen szám (egyenletes lépték),
+   vagy {w, h, d} célméret méterben — amit nem adunk meg, az a többi
+   tengely léptékét követi. A talp a padlón, a közép az (x, z) ponton. */
+function targy(nev, x, y, z, ry, meret){
+  const gltf = DTAR.gltf[nev];
+  if(!gltf) throw new Error("A modell nincs betöltve: " + nev);
+  const b = DTAR.doboz[nev], m = b.getSize(new T.Vector3()), k = b.getCenter(new T.Vector3());
+  let sx = 1, sy = 1, sz = 1;
+  if(typeof meret === "number"){ sx = sy = sz = meret; }
+  else if(meret){
+    const l = [meret.w ? meret.w/m.x : null, meret.h ? meret.h/m.y : null, meret.d ? meret.d/m.z : null];
+    const ism = l.filter(v => v !== null), atl = ism.reduce((s,v)=>s+v, 0) / ism.length;
+    [sx, sy, sz] = l.map(v => v === null ? atl : v);
+  }
+  const leptek = new T.Group();
+  leptek.scale.set(sx, sy, sz);
+  const belso = gltf.scene.clone(true);
+  belso.position.set(-k.x, -b.min.y, -k.z);
+  leptek.add(belso);
+  const keret = new T.Group();
+  keret.position.set(x, y, z);
+  if(ry) keret.rotation.y = ry;
+  keret.add(leptek);
+  return keret;
+}
+
+/* A díszletek eddigi hívásai változatlanok maradnak, csak a mögöttük álló
+   tárgy lett valódi. Az épülő pálya (V.epulo) dönti el, melyik asztal és
+   szék illik: irodában fém íróasztal és kárpitos szék, máshol fa asztal. */
+Object.assign(P, {
+  asztal(x,z,w,d,ry){
+    const iroda = V.epulo === "vallalati";
+    const nev = iroda ? "metal_office_desk" : "woodentable_01";
+    /* hosszú tárgyalóasztal: egymás mellé tolt asztalok, ahogy a valóságban */
+    const db = Math.max(1, Math.round(w / (iroda ? 1.9 : 1.8)));
+    const g = new T.Group();
+    for(let i=0;i<db;i++){
+      const dx = -w/2 + (i + 0.5) * (w/db);
+      g.add(targy(nev, dx, 0, 0, Math.PI, { w:w/db, d:d, h:0.76 }));
+    }
+    g.position.set(x,0,z); if(ry) g.rotation.y = ry; return g;
+  },
+  szek(x,z,ry,szin){
+    /* sorban álló székek (falugyűlés) és a terepen: egyszerű iskolai szék */
+    const nev = (szin || V.epulo === "katonai") ? "schoolchair_01" : "dining_chair_02";
+    return targy(nev, x, 0, z, ry || 0, { h: nev === "schoolchair_01" ? 0.86 : 0.95 });
+  },
+  lampa(x,z){
+    const g = targy("desk_lamp_arm_01", x, 0.78, z, -0.6, { h:0.62 });
+    const f = new T.PointLight(0xffd9a0, 6, 5, 2); f.position.set(0, 0.47, 0); g.add(f);
+    return g;
+  },
+  konyvek(x,y,z,db,ry){
+    return targy("book_encyclopedia_set_01", x, y, z, ry || 0, { h:0.24 });
+  },
+  polc(x,z,ry){
+    const g = new T.Group();
+    g.add(targy("steel_frame_shelves_03", 0, 0, 0, 0, 0.78));
+    g.add(targy("book_encyclopedia_set_01", -0.35, 0.82, 0, 0, 1));
+    g.add(targy("book_encyclopedia_set_01",  0.30, 1.36, 0, 0, 1));
+    g.position.set(x,0,z); if(ry) g.rotation.y = ry; return g;
+  },
+  /* homokzsák: a zsák modellje, de nyomtatott felirat nélkül, juta színben */
+  homokzsak(x,z,sor,ry){
+    const g = new T.Group(), n = sor || 6;
+    for(let r=0;r<3;r++) for(let i=0;i<n-r;i++){
+      const zs = targy("cement_bag", (i-(n-r-1)/2)*0.48 + r*0.12, r*0.17, 0, Math.PI/2 + ((i*7+r*3)%5-2)*0.04, { w:0.68, h:0.18, d:0.44 });
+      zs.traverse(o => { if(o.isMesh) o.material = homokzsakAnyag(o.material); });
+      g.add(zs);
+    }
+    g.position.set(x,0,z); if(ry) g.rotation.y = ry; return g;
+  },
+  radio(x,y,z,ry){      return targy("vintage_radio_transceiver", x,y,z, ry||0, 1); },
+  reflektor(x,y,z,ry){  return targy("portable_searchlight", x,y,z, ry||0, 1.6); },
+  aggregat(x,z,ry){     return targy("portable_generator", x,0,z, ry||0, 1); },
+  lada(x,y,z,ry){       return targy("wooden_military_crate", x,y,z, ry||0, 1); },
+  kanna(x,z,ry){        return targy("metal_jerrycan_green", x,0,z, ry||0, 1); },
+  megafon(x,y,z,ry){    return targy("megaphone_01", x,y,z, ry||0, 1); },
+  betonelem(x,z,ry){    return targy("concrete_road_barrier", x,0,z, ry||0, 1); },
+  pad(x,z,ry){          return targy("painted_wooden_bench", x,0,z, ry||0, 1.1); },
+  utcalampa(x,z,ry){    return targy("street_lamp_01", x,0,z, ry||0, 1); },
+  csizma(x,z,ry){       return targy("rubber_boots", x,0,z, ry||0, 1); },
+  kavekocsi(x,z,ry){    return targy("coffeecart_01", x,0,z, ry||0, 1); },
+  fiokos(x,z,ry){       return targy("drawer_cabinet", x,0,z, ry||0, 1); },
+  vaszon(x,z,ry){       return targy("projector_screen", x,0,z, ry||0, 1); },
+  kretatabla(x,z,ry){   return targy("standing_chalkboard_01", x,0,z, ry||0, 1); },
+  iskolapad(x,z,ry){
+    const g = new T.Group();
+    g.add(targy("schooldesk_01", 0,0,0, 0, 0.92), targy("schoolchair_01", 0,0,-0.55, 0, 0.82));
+    g.position.set(x,0,z); if(ry) g.rotation.y = ry; return g;
+  },
+  jegyzet(x,y,z,ry){    return targy("office_notepads", x,y,z, ry||0, 0.5); },
+  mappa(x,y,z,ry){      return targy("binder_notebook", x,y,z, ry||0, 1); },
+  muanyagszek(x,z,ry){  return targy("plastic_monobloc_chair_01", x,0,z, ry||0, 1); },
+  /* A jármű helyén felszerelés: ládák, kannák, áramfejlesztő. Szabad
+     licencű, valósághű katonai jármű nincs; a dobozokból épített terepjáró
+     viszont kilógott volna a képből. */
+  jarmu(x,z,ry){
+    const g = new T.Group();
+    g.add(targy("wooden_military_crate", 0, 0, 0, 0.05, 1));
+    g.add(targy("wooden_military_crate", 0.08, 0.46, 0.02, -0.04, 1));
+    g.add(targy("wooden_military_crate", 1.45, 0, 0.1, 0.12, 1));
+    g.add(targy("portable_generator", -1.35, 0, 0.3, 0.4, 1));
+    [[-0.5,0.75],[-0.15,0.8],[0.9,0.7]].forEach(([kx,kz],i)=> g.add(targy("metal_jerrycan_green", kx, 0, kz, i*0.5, 1)));
+    g.position.set(x,0,z); if(ry) g.rotation.y = ry; return g;
+  },
+  /* nyeregtető-sátor ponyvából: háromszög keresztmetszet, kihúzva */
+  sator(x,z,ry){
+    const g = new T.Group();
+    const ponyva = tarolt("ponyva", ()=> new T.MeshStandardMaterial({
+      color:0x55603f, roughness:0.95, metalness:0, side:T.DoubleSide,
+      normalMap: heroTextura(V.eszkoz.felulet, ESZKOZ.fal.nor, T.LinearSRGBColorSpace, 3, 3),
+      normalScale: new T.Vector2(0.8, 0.8) }));
+    const alak = new T.Shape();
+    alak.moveTo(-1.7, 0); alak.lineTo(0, 2.3); alak.lineTo(1.7, 0); alak.lineTo(1.62, 0); alak.lineTo(0, 2.2); alak.lineTo(-1.62, 0); alak.closePath();
+    const geo = new T.ExtrudeGeometry(alak, { depth:4.2, bevelEnabled:false });
+    geo.translate(0, 0, -2.1);
+    const m = new T.Mesh(geo, ponyva); m.castShadow = true; m.receiveShadow = true; g.add(m);
+    /* hátfal és a bejárat sötét nyílása */
+    const hat = new T.Mesh(new T.ShapeGeometry((()=>{ const t=new T.Shape(); t.moveTo(-1.7,0); t.lineTo(0,2.3); t.lineTo(1.7,0); t.closePath(); return t; })()), ponyva);
+    hat.position.z = -2.1; g.add(hat);
+    const nyilas = new T.Mesh(new T.ShapeGeometry((()=>{ const t=new T.Shape(); t.moveTo(-0.7,0); t.lineTo(0,1.6); t.lineTo(0.7,0); t.closePath(); return t; })()),
+      tarolt("satornyilas", ()=> new T.MeshBasicMaterial({ color:0x0c0e0a })));
+    nyilas.position.z = 2.11; g.add(nyilas);
+    const elo = new T.Mesh(new T.ShapeGeometry((()=>{ const t=new T.Shape(); t.moveTo(-1.7,0); t.lineTo(0,2.3); t.lineTo(1.7,0); t.lineTo(0.7,0); t.lineTo(0,1.6); t.lineTo(-0.7,0); t.closePath(); return t; })()), ponyva);
+    elo.position.z = 2.1; g.add(elo);
+    g.position.set(x,0,z); if(ry) g.rotation.y = ry; return g;
+  }
+});
+function homokzsakAnyag(eredeti){
+  return tarolt("homokzsak", () => {
+    const m = eredeti.clone();
+    m.map = null; m.color = new T.Color(0x6f6247); m.roughness = 0.97; m.metalness = 0;
+    return m;
+  });
+}
+
+/* ============================================================================
    FELÜLETEK — ugyanaz a beszkennelt anyag, mint a nyitóképen
    ----------------------------------------------------------------------------
    A textúrákat nem jelenetenként készítjük el, hanem árnyalatonként egyszer:
@@ -1433,7 +1488,7 @@ function arnyalat(szin, ero){
 function padloAnyag(szin){
   return tarolt("padlo:"+szin, ()=> new T.MeshStandardMaterial({
     map: heroTextura(V.eszkoz.felulet, ESZKOZ.padlo.diff, T.SRGBColorSpace, 1, 1),
-    color: arnyalat(szin, 0.58), roughness: 0.30, metalness: 0, envMapIntensity: 0.7
+    color: arnyalat(szin, 0.30), roughness: 0.30, metalness: 0, envMapIntensity: 0.7
   }));
 }
 function falfeluletAnyag(szin){
@@ -1496,11 +1551,27 @@ function belsoTer(o){
        túlexponált — a ragyogás és az AgX görbe együtt pontosan ezt adja,
        ezért itt a fényerő szándékosan jár jóval 1 fölött. */
     const aSzin = o.ablakSzin || 0x9dc0da, aEro = (o.ablakEro || 0.42) * 6.5;
-    const uvegM = tarolt("uveg:" + aSzin + ":" + aEro, ()=> new T.MeshStandardMaterial({
-      color:0x000000, emissive:aSzin, emissiveIntensity:aEro, roughness:1
-    }));
+    /* Nappal az ablakon ugyanaz a fotografált város látszik, ami a nyitókép
+       üvegfalán: a HDRI-t „átnézős" (fénytörési) leképezéssel tesszük az
+       ablakra, így a kilátás a nézőponttal együtt mozdul, mint egy valódi
+       ablakban. Éjszaka (sötét ablakszín) marad a sötétkék derengés. */
+    const ejjel = new T.Color(aSzin).getHSL({}).l < 0.3;
+    const uvegM = ejjel
+      ? tarolt("uveg:" + aSzin + ":" + aEro, ()=> new T.MeshStandardMaterial({
+          color:0x000000, emissive:aSzin, emissiveIntensity:aEro, roughness:1 }))
+      : tarolt("kilatas:" + aEro, ()=> {
+          const t = V.eszkoz.hdr.clone();
+          t.mapping = T.EquirectangularRefractionMapping;
+          t.needsUpdate = true;
+          return new T.MeshBasicMaterial({
+            envMap:t, refractionRatio:0.99, envMapRotation:new T.Euler(0, 1.62, 0),
+            color:new T.Color().setScalar(0.62 * aEro / 2.73)
+          });
+        });
     const keretM = tarolt("ablakkeret", ()=> new T.MeshStandardMaterial({ color:0x2b2d2c, roughness:0.44, metalness:0.68 }));
-    const beletM = tarolt("belet", ()=> new T.MeshStandardMaterial({ color:0xd8d3c7, roughness:0.8 }));
+    /* a bélet a fal vastagsága: ugyanaz az anyag, mint a falé, különben
+       képkeretként ül ki a falból */
+    const beletM = falM;
     lyukak.forEach(l => {
       const u = new T.Mesh(new T.PlaneGeometry(l.w, l.h), uvegM);
       u.position.set(l.x, l.y, -d/2 - 0.02); g.add(u);
@@ -1560,61 +1631,98 @@ function belsoTer(o){
   }
   return g;
 }
-/* Az égbolt nem egyenletes: a zenit sötétebb és hidegebb, a horizont világos és
-   párás. Egyetlen szín ezt nem tudja, és a lapos ég az, ami a külső jeleneteket
-   díszletnek mutatja. A színátmenet egy keskeny textúrán ül. */
-function egTextura(zenit, horizont){
-  return tarolt("eg:"+zenit+":"+horizont, ()=>{
-    const c = document.createElement("canvas"); c.width = 4; c.height = 128;
-    const cx = c.getContext("2d");
-    const gr = cx.createLinearGradient(0,0,0,128);
-    const hex = v => "#" + v.toString(16).padStart(6,"0");
-    gr.addColorStop(0.00, hex(zenit));
-    gr.addColorStop(0.62, hex(horizont));
-    gr.addColorStop(1.00, hex(horizont));
-    cx.fillStyle = gr; cx.fillRect(0,0,4,128);
-    const t = new T.CanvasTexture(c);
-    t.colorSpace = T.SRGBColorSpace;
+const FA_ARANY = { fa_1: 695/1024, fa_2: 1024/684 };
+function fa(nev, x, z, magas, ry){
+  const m = tarolt("fa:" + nev, ()=> {
+    const t = new T.TextureLoader().load(DISZLET_MAPPA + nev + ".webp");
+    t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4;
+    return new T.MeshStandardMaterial({ map:t, alphaTest:0.45, side:T.DoubleSide, roughness:0.9, metalness:0 });
+  });
+  const w = magas * FA_ARANY[nev];
+  const g = new T.Group();
+  for(let k=0;k<2;k++){
+    const lap = new T.Mesh(new T.PlaneGeometry(w, magas), m);
+    lap.position.y = magas/2; lap.rotation.y = k * Math.PI/2;
+    lap.castShadow = true; g.add(lap);
+  }
+  g.position.set(x, 0, z); g.rotation.y = ry || 0;
+  return g;
+}
+/* Kültéri felületek: fű és talaj (Poly Haven, CC0), csempézve. */
+function kulsoTextura(nev, szinter, ism){
+  return tarolt("ktex:" + nev + ":" + ism, ()=> {
+    const t = new T.TextureLoader().load(DISZLET_MAPPA + nev + ".webp");
+    t.colorSpace = szinter ? T.SRGBColorSpace : T.NoColorSpace;
+    t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(ism, ism); t.anisotropy = 8;
     return t;
   });
+}
+function fuAnyag(ism, szin){
+  return tarolt("fu:" + ism + ":" + (szin || 0), ()=> new T.MeshStandardMaterial({
+    map: kulsoTextura("fu_diff", true, ism), normalMap: kulsoTextura("fu_nor", false, ism),
+    normalScale: new T.Vector2(1.2, 1.2), color: szin || 0xffffff, roughness: 0.96, metalness: 0,
+    envMapIntensity: 0.45
+  }));
+}
+/* Gát: valódi rézsűs keresztmetszet (alul széles, felül keskeny korona),
+   füvesítve. A `res` a gát közepén hagyott rés — szakadás vagy két szakasz. */
+function gat(z, res, hossz){
+  const g = new T.Group(), L = hossz || 44;
+  const alak = new T.Shape();
+  alak.moveTo(-5.6, 0); alak.lineTo(-1.6, 2.6); alak.lineTo(1.6, 2.6); alak.lineTo(5.6, 0); alak.closePath();
+  const darab = (x0, x1) => {
+    const geo = new T.ExtrudeGeometry(alak, { depth: x1 - x0, bevelEnabled: false });
+    geo.rotateY(Math.PI/2);   /* a keresztmetszet a z–y síkban, a gát az X tengely mentén fut */
+    const uv = geo.attributes.uv; for(let i=0;i<uv.count;i++) uv.setXY(i, uv.getX(i)/3, uv.getY(i)/3);
+    const m = new T.Mesh(geo, fuAnyag(1, 0xa8b484));
+    m.position.set(x0, 0, z); m.castShadow = true; m.receiveShadow = true;
+    return m;
+  };
+  if(res){ g.add(darab(-L/2, -res/2)); g.add(darab(res/2, L/2)); }
+  else g.add(darab(-L/2, L/2));
+  return g;
+}
+/* Égbolt: fotografált alföldi panoráma (Poly Haven, CC0) egyetlen kupolán,
+   ami a kamerát követi, és mindent maga elé enged — mint egy játék égboltja.
+   Díszletenként külön kupola nem lehet: a szomszéd díszlet kupolájának
+   belső fala átlátszana a mienken. Csak a kültéri díszleteknél látszik. */
+function egboltBiztosit(){
+  if(V.egbolt) return;
+  const t = new T.TextureLoader().load(DISZLET_MAPPA + "eg_alfold.webp");
+  t.colorSpace = T.SRGBColorSpace;
+  const m = new T.MeshBasicMaterial({ map:t, side:T.BackSide, fog:false, depthWrite:false, depthTest:false,
+                                      color:new T.Color().setScalar(0.92) });
+  V.egbolt = new T.Mesh(new T.SphereGeometry(60, 48, 24), m);
+  V.egbolt.renderOrder = -10;
+  V.egbolt.frustumCulled = false;
+  V.egbolt.visible = false;
+  V.szinter.add(V.egbolt);
 }
 function kulsoTer(o){
   o = o || {};
   const g = new T.Group();
   g.userData.kulso = true;
-  /* A talaj a vakolat domborzattérképét kapja, színtérképet nem: a padló
-     gránitja szabályos fugahálót rajzolna a mezőre. A plasztikát így a
-     szemcse adja, súrló napfényben éppen elég. */
-  const foldAnyag = tarolt("talaj:"+(o.talaj || 0x5a5748), ()=> new T.MeshStandardMaterial({
-    color: o.talaj || 0x5a5748, roughness: 0.99, metalness: 0,
-    normalMap: heroTextura(V.eszkoz.felulet, ESZKOZ.fal.nor, T.LinearSRGBColorSpace, 1, 1),
-    normalScale: new T.Vector2(1.1, 1.1), envMapIntensity: 0.5
-  }));
-  const fold = new T.Mesh(uvSkala(new T.PlaneGeometry(46,40), 46/1.8, 40/1.8), foldAnyag);
-  fold.rotation.x = -Math.PI/2; fold.receiveShadow = true; g.add(fold);
-  /* égbolt és távoli tájsáv */
-  const egM = tarolt("egA:"+(o.eg||0x5b7fa0), ()=> new T.MeshStandardMaterial({
-    color:0x000000, emissive:0xffffff, emissiveIntensity:1.5, roughness:1,
-    emissiveMap: egTextura(o.eg || 0x5b7fa0, o.horizont || 0xb9c8d2)
-  }));
-  const eg = new T.Mesh(new T.PlaneGeometry(76,40), egM);
-  eg.position.set(0,15,-24); g.add(eg);
-  const tav = new T.Mesh(new T.PlaneGeometry(76,7), fenylo(o.tavol || 0x3d5468, 0.9));
-  tav.position.set(0,2.4,-22); g.add(tav);
+  /* Talaj: valódi fűtextúra. Pontosan a díszletek távolságáig széles, hogy a
+     szomszéd díszlet talajával ne fedjék egymást (két egybeeső sík
+     villogna), mélységben pedig a horizontig ér, ahol a pára elnyeli. */
+  const fold = new T.Mesh(new T.PlaneGeometry(SET_TAV, 100), fuAnyag(1, 0x9fae7c));
+  const uvF = fold.geometry.attributes.uv;
+  for(let i=0;i<uvF.count;i++) uvF.setXY(i, uvF.getX(i)*SET_TAV/2.2, uvF.getY(i)*100/2.2);
+  fold.rotation.x = -Math.PI/2; fold.position.z = -20; fold.receiveShadow = true; g.add(fold);
+  egboltBiztosit();
   if(o.viz){
-    const viz = new T.Mesh(new T.PlaneGeometry(46,o.vizM||16), new T.MeshStandardMaterial({color:o.vizSzin||0x2c4a52, roughness:0.18, metalness:0.55}));
+    const viz = new T.Mesh(new T.PlaneGeometry(44, o.vizM||16), tarolt("viz:" + (o.vizSzin||0x2c4a52), ()=>
+      new T.MeshStandardMaterial({ color:o.vizSzin||0x2c4a52, roughness:0.06, metalness:0.0, envMapIntensity:1.6 })));
     viz.rotation.x = -Math.PI/2; viz.position.set(0,0.05,o.vizZ||-9); g.add(viz);
   }
-  if(o.toltes){
-    const t = new T.Mesh(new T.CylinderGeometry(0.01,2.6,3.2,4), anyag(o.toltesSzin||0x584f3d,1));
-    t.rotation.z = Math.PI/2; t.rotation.y = Math.PI/4;
-    t.position.set(o.toltesX||0, 1.0, o.toltesZ||-3); t.scale.set(1,4.2,1); t.castShadow=true; g.add(t);
-  }
+  if(o.toltes) g.add(gat(o.toltesZ || -3, o.gatRes || 0));
+  /* Fák: a Poly Haven két fájának renderképe, keresztbe tett lapokon. A
+     háromdimenziós modelljük fánként kétmillió háromszög — a háttérben ez a
+     megoldás ugyanúgy néz ki, és a töredékébe kerül. */
   if(o.fak){
     for(let i=0;i<(o.fak||8);i++){
       const x=-20+i*5.2+((i*7)%3), z=-15-((i*5)%4);
-      g.add(henger(0.16,0.2,1.6, anyag(0x4a3b2d,0.95), x,0.8,z,8));
-      const k=gomb(1.1, anyag(0x33512f,0.95), x,2.3,z); k.scale.set(1,0.82,1); g.add(k);
+      g.add(fa(i % 2 ? "fa_2" : "fa_1", x, z, 5.2 + ((i*3)%4)*0.55, i*0.7));
     }
   }
   return g;
@@ -1635,7 +1743,7 @@ vallalati:[
       g.add(P.asztal(0,0.4,2.4,1.1,0), P.monitor(-0.5,0.77,0.3,0.1), P.papirkupac(0.55,0.78,0.25,7));
       g.add(P.bogre(0.28,0.78,0.62), P.polc(-5.2,-3.4,0.5), P.konyvek(-1.0,0.78,0.5,4,0.3));
       g.add(P.szek(-0.2,-1.25,0), P.szek(2.9,0.9,-0.5,0x3c434c), P.noveny(4.6,-2.4));
-      g.add(P.tabla(-4.6,2.0,-5.8,0,2.2,1.3));
+      g.add(P.vaszon(-4.4,-4.6,0.35));
       g.add(ember({x:-0.2,z:-1.2,ry:0.05,ruha:"uzletSotet",poz:"ul",bor:0,haj:0,tukor:0}));
       g.add(ember({x:2.5,z:0.5,ry:-0.55,ruha:"uzletNoi",bor:3,haj:1,kar:"mutat"}));
     }, kamera:{p:[1.9,2.0,4.6], c:[0.0,1.3,-1.0]} },
@@ -1644,7 +1752,7 @@ vallalati:[
     epit(g){
       g.add(belsoTer({w:16,d:13,ablak:"magas", padlo:0x6f5f4c, fal:0xcac4b6, szonyeg:[7.5,5.4,0,-0.2], szonyegSzin:0x54463f}));
       g.add(P.asztal(0,0,4.6,1.6,0,0x7a5a3d));
-      g.add(P.tabla(0,1.9,-6.3,0,3.4,1.8));
+      g.add(P.vaszon(-3.2,-4.6,0.25));
       for(let i=0;i<3;i++){ g.add(P.szek(-1.5+i*1.5,1.25,Math.PI)); g.add(P.szek(-1.5+i*1.5,-1.25,0)); }
       g.add(ember({x:-1.5,z:-1.3,ry:0,ruha:"uzletKek",poz:"ul",bor:1,haj:2,tukor:0}));
       g.add(ember({x:0,z:-1.3,ry:0.06,ruha:"ingujj",poz:"ul",bor:3,haj:0,tukor:0}));
@@ -1720,7 +1828,7 @@ vallalati:[
       g.add(ember({x:-1.25,z:-1.3,ry:0.18,ruha:"uzletKek",poz:"ul",bor:2,haj:1,tukor:1}));
       g.add(ember({x:1.25,z:-1.3,ry:-0.18,ruha:"uzletNoi",poz:"ul",bor:0,haj:3,tukor:1}));
       g.add(ember({x:0,z:-1.3,ry:0,ruha:"uzletSotet",poz:"ul",bor:1,haj:0,tukor:0}));
-      g.add(P.tabla(0,1.9,-5.3,0,2.6,1.5));
+      g.add(P.vaszon(-2.6,-3.9,0.25));
     }, kamera:{p:[1.6,2.1,5.4], c:[0,1.3,-0.8]} },
 
   { /* 9 · Az éjszakai ügyelet — etikai próba */
@@ -1737,14 +1845,13 @@ vallalati:[
   { /* 10 · A csapatszoba — reflexió */
     epit(g){
       g.add(belsoTer({w:14,d:12,ablak:"sav", padlo:0x6b5a48, fal:0xc7c1b3, szonyeg:[6.4,5.0,0,0]}));
-      g.add(P.tabla(0,1.85,-5.8,0,3.6,1.9));
-      for(let i=0;i<5;i++){
-        const a = -1.0 + i*0.5;
-        g.add(P.szek(Math.cos(a)*2.4, Math.sin(a)*2.4 + 0.6, -a + Math.PI/2));
-      }
-      g.add(ember({x:-2.1,z:-0.9,ry:0.35,ruha:"uzletNoi",poz:"ul",bor:3,haj:3,tukor:1}));
-      g.add(ember({x:0.1,z:-1.5,ry:0,ruha:"ingujj",poz:"ul",bor:1,haj:0,tukor:0}));
-      g.add(ember({x:2.2,z:-0.9,ry:-0.35,ruha:"uzletKek",poz:"ul",bor:2,haj:2,tukor:0}));
+      g.add(P.vaszon(-3.4,-4.2,0.3));
+      /* félkörben ülnek, mindenki a középen álló vezető felé fordul */
+      [[-2.1,-0.9,0.55,"uzletNoi",3],[0.1,-1.5,0,"ingujj",1],[2.2,-0.9,-0.55,"uzletKek",2]].forEach(([x,z,ry,ruha,b],i)=>{
+        g.add(P.szek(x, z-0.05, ry));
+        g.add(ember({x:x,z:z,ry:ry,ruha:ruha,poz:"ul",bor:b,haj:i,tukor:i%2}));
+      });
+      g.add(P.szek(-3.4,0.4,1.0), P.szek(3.5,0.4,-1.0));
       g.add(ember({x:-0.2,z:1.5,ry:0.1,ruha:"uzletSotet",bor:0,haj:0,kar:"mutat"}));
     }, kamera:{p:[2.4,2.3,6.2], c:[0,1.3,-0.9]} }
 ],
@@ -1776,7 +1883,7 @@ katonai:[
       g.add(gomb(0.1, fenylo(0xff6b52,2.2), 4.6,3.65,-1.2));
       g.add(ember({x:-0.5,z:2.3,ry:2.9,ruha:"katonaTiszt",bor:0,haj:0,kar:"mutat"}));
       g.add(ember({x:1.7,z:2.2,ry:-2.6,ruha:"katona",bor:3,haj:1,tukor:1}));
-      g.add(ember({x:2.6,z:0.4,ry:-1.6,ruha:"katona",bor:1,haj:2,tukor:0}));
+      g.add(ember({x:2.6,z:0.4,ry:-1.6,ruha:"mernok",bor:0,haj:0,tukor:0}));   /* Varga, a vízügyi mérnök */
       g.add(P.jarmu(-8.5,4.0,0.5));
     }, kamera:{p:[3.0,2.2,6.4], c:[0.4,1.35,1.6]} },
 
@@ -1785,8 +1892,7 @@ katonai:[
       g.add(kulsoTer({talaj:0x504c3d, eg:0x293a4c}));
       g.add(P.sator(0,-3.0,0));
       g.add(P.asztal(0,0.4,2.4,1.1,0,0x50493a));
-      g.add(doboz(0.8,0.5,0.4, anyag(0x3b4132,0.7), -0.7,1.0,0.2));
-      for(let i=0;i<4;i++) g.add(doboz(0.06,0.06,0.02, fenylo(i%2?0x7fe0a8:0xffc773,2.4), -0.95+i*0.16,1.16,0.41));
+      g.add(P.radio(-0.7,0.78,0.2,0.15));
       g.add(P.monitor(0.7,0.77,0.1,-0.2,0.7));
       g.add(P.lampa(1.7,-0.4));
       g.add(ember({x:0,z:-1.0,ry:0.06,ruha:"katonaTiszt",poz:"ul",bor:0,haj:0,tukor:0}));
@@ -1795,9 +1901,7 @@ katonai:[
 
   { /* 4 · A két gátszakasz — kritériumok */
     epit(g){
-      g.add(kulsoTer({talaj:0x574f3d, eg:0x4d6d8c, viz:true, vizZ:-13, vizM:14, toltes:true, toltesX:-7.5, toltesZ:-6.5}));
-      const t2 = new T.Mesh(new T.CylinderGeometry(0.01,2.2,2.8,4), anyag(0x5a5140,1));
-      t2.rotation.z=Math.PI/2; t2.rotation.y=Math.PI/4; t2.position.set(8.0,0.9,-6.5); t2.scale.set(1,3.6,1); t2.castShadow=true; g.add(t2);
+      g.add(kulsoTer({talaj:0x574f3d, viz:true, vizZ:-15, vizM:14, toltes:true, toltesZ:-7.5, gatRes:3.2}));
       g.add(P.homokzsak(-5.6,-2.4,7,0.1), P.homokzsak(6.0,-2.4,7,-0.1));
       g.add(P.jarmu(-6.2,2.6,0.35,0x585f45));
       g.add(ember({x:-2.6,z:0.6,ry:0.55,ruha:"katona",bor:1,haj:0,tukor:0}));
@@ -1824,8 +1928,7 @@ katonai:[
       g.add(kulsoTer({talaj:0x565243, eg:0x2e4257, fak:5}));
       g.add(P.sator(-4.2,-2.2,0.25));
       g.add(P.asztal(0.2,1.0,2.8,1.2,0,0x554d3c));
-      g.add(doboz(1.0,0.55,0.45, anyag(0x3b4132,0.7), -0.5,1.03,1.0));
-      for(let i=0;i<5;i++) g.add(doboz(0.07,0.07,0.02, fenylo(0x7fe0a8,2.2), -0.85+i*0.18,1.2,1.23));
+      g.add(P.radio(-0.5,0.78,1.0,0.1), P.reflektor(0.6,0.78,1.2,-0.4));
       g.add(henger(0.05,0.05,4.2, anyag(0x50543f,0.8), 3.8,2.1,-0.4,8));
       g.add(ember({x:-0.4,z:-0.2,ry:0.1,ruha:"katonaTiszt",poz:"ul",bor:0,haj:0,tukor:0}));
       g.add(ember({x:2.0,z:1.6,ry:-0.7,ruha:"civil",bor:3,haj:3,tukor:1}));
@@ -1851,12 +1954,12 @@ katonai:[
 
   { /* 8 · A régi töltés — kockázat */
     epit(g){
-      g.add(kulsoTer({talaj:0x565040, eg:0x35485c, viz:true, vizZ:-12, vizM:12, toltes:true, toltesX:0, toltesZ:-7.5, toltesSzin:0x5f5642}));
+      g.add(kulsoTer({talaj:0x565040, viz:true, vizZ:-15, vizM:12, toltes:true, toltesZ:-7.5}));
       g.add(P.homokzsak(-2.4,1.2,8,0), P.homokzsak(3.0,1.4,6,0.05));
       const rep = doboz(0.12,1.6,0.1, anyag(0x2a2620,1), -0.6,1.6,-1.9); rep.rotation.z=0.25; g.add(rep);
       g.add(P.jarmu(-7.4,2.4,0.3,0x565d43));
       g.add(ember({x:-1.4,z:2.6,ry:0.3,ruha:"katonaTiszt",bor:0,haj:0,tukor:0}));
-      g.add(ember({x:0.8,z:2.8,ry:-0.3,ruha:"civil2",bor:1,haj:3,kar:"mutat"}));
+      g.add(ember({x:0.8,z:2.8,ry:-0.3,ruha:"civil",bor:0,haj:0,kar:"mutat"}));   /* Bakos bácsi, a nyugdíjas gátőr */
     }, kamera:{p:[2.6,2.5,8.4], c:[-0.3,1.5,-1.2]} },
 
   { /* 9 · Az állomány előtt — ok-okozati feltárás */
@@ -1870,10 +1973,9 @@ katonai:[
 
   { /* 10 · A gátszakadás után — reflexió */
     epit(g){
-      g.add(kulsoTer({talaj:0x4e4a3c, eg:0x1f2c3a, viz:true, vizZ:-6, vizM:20, vizSzin:0x25404a,
-                      toltes:true, toltesX:-8.0, toltesZ:-7.0}));
-      const t2 = new T.Mesh(new T.CylinderGeometry(0.01,2.2,2.8,4), anyag(0x554c3b,1));
-      t2.rotation.z=Math.PI/2; t2.rotation.y=Math.PI/4; t2.position.set(8.0,0.9,-7.0); t2.scale.set(1,3.4,1); g.add(t2);
+      /* a gát közepén a szakadás, előtte elöntött terület */
+      g.add(kulsoTer({talaj:0x4e4a3c, viz:true, vizZ:-9, vizM:12, vizSzin:0x3a4a44,
+                      toltes:true, toltesZ:-8.0, gatRes:7}));
       g.add(P.homokzsak(-4.6,0.4,6,0.1));
       g.add(P.jarmu(-8.2,3.2,0.25,0x4b5239));
       g.add(P.lampa(2.6,2.6));
@@ -2035,8 +2137,10 @@ politikai:[
    viszi ki a csúcsfényeket, mint az ACES, ezért ugyanahhoz a képhez nagyobb
    fényerő tartozik — ezek az értékek nem „felhúzott” fények, hanem ugyanaz a
    kép egy másik színgörbén. */
-const FENY_BELSO = { ambi:1.05, nap:7.2,  pont:15 };
-const FENY_KULSO = { ambi:2.10, nap:11.0, pont:0  };
+/* Beltérben a szórt fény meleg (a padlóról és a falakról visszaverődő
+   lámpafény), kültéren hideg égbolt — ugyanaz a hangulat, mint a nyitóképen. */
+const FENY_BELSO = { ambi:0.55, nap:9.0,  pont:17, eg:0xf2e4cc, fold:0x8a7356 };
+const FENY_KULSO = { ambi:1.25, nap:7.5,  pont:0,  eg:0xc4d0d8, fold:0x7d7258 };
 
 const V = { rend:null, szinter:null, kamera:null, komp:null, film:null, nap:null,
             vilagitas:null, kontur:null, csoportok:[],
@@ -2060,7 +2164,7 @@ function vilagInit(){
 
   V.szinter = new T.Scene();
   V.szinter.background = new T.Color(0x0a1410);
-  V.szinter.fog = new T.Fog(0x0d1a15, 30, 92);
+  V.szinter.fog = new T.Fog(0x0d1a15, 24, 78);
   V.szinter.environmentIntensity = 0.58;
 
   V.kamera = new T.PerspectiveCamera(42, 16/9, 0.1, 220);
@@ -2189,6 +2293,7 @@ async function vilagEpit(mod){
   V.vizek = [];
   V.info = []; V.csoportok = [];
   const lista = DISZLETEK[mod];
+  V.epulo = mod;
   for(let i=0;i<lista.length;i++){
     const g = new T.Group();
     g.userData.diszlet = true;
@@ -2198,7 +2303,7 @@ async function vilagEpit(mod){
     V.csoportok[i] = g;
     const kulso = g.children.some(c=> c.userData && c.userData.kulso);
     V.info[i] = kulso
-      ? { kulso:true,  feny:FENY_KULSO, kod:new T.Color(0x44607a) }
+      ? { kulso:true,  feny:FENY_KULSO, kod:new T.Color(0x9ea59f) }   /* a panoráma párás horizontjának színe */
       : { kulso:false, feny:FENY_BELSO, kod:new T.Color(0x0d1a15) };
     g.traverse(function(o){
       if(o.isMesh && o.material && o.material.metalness > 0.4 && o.geometry && o.geometry.type === "PlaneGeometry") V.vizek.push(o);
@@ -2227,6 +2332,7 @@ function kameraUtazas(i, azonnal){
   V.celVeg.set(cx, cy, cz);
   const inf = V.info[i];
   if(inf){ V.fenyCel = inf.feny; V.kodCel = inf.kod; }
+  if(V.egbolt) V.egbolt.visible = !!kulso;
   /* csak az aktuális és a szomszédos díszletek renderelődnek */
   V.csoportok.forEach((g,k)=>{ if(g) g.visible = Math.abs(k-i) <= 1; });
   if(azonnal){
@@ -2250,6 +2356,7 @@ function kamerabaAllit(){
   }
 }
 
+const _egSzin = new T.Color(), _foldSzin = new T.Color();
 function renderelj(){
   requestAnimationFrame(renderelj);
   if(!V.rend) return;
@@ -2267,11 +2374,14 @@ function renderelj(){
   V.kamera.position.set(V.poz.x + Math.sin(t*0.32)*leg, V.poz.y + Math.sin(t*0.24)*leg*0.7, V.poz.z + Math.cos(t*0.28)*leg);
   V.kamera.lookAt(V.cel);
   if(V.mozgasT < 1) kamerabaAllit();
+  if(V.egbolt && V.egbolt.visible) V.egbolt.position.copy(V.kamera.position);
   V.vizek.forEach(v=>{ v.position.y = 0.05 + Math.sin(t*0.9 + v.position.x*0.2)*0.012; });
   /* fény és ködszín lágy átvezetése a díszletek között */
   const k = Math.min(1, dt*2.2);
   if(V.ambi){
     V.ambi.intensity   += (V.fenyCel.ambi - V.ambi.intensity)*k;
+    V.ambi.color.lerp(_egSzin.set(V.fenyCel.eg), k);
+    V.ambi.groundColor.lerp(_foldSzin.set(V.fenyCel.fold), k);
     V.nap.intensity    += (V.fenyCel.nap  - V.nap.intensity)*k;
     V.vilagitas.intensity += (V.fenyCel.pont - V.vilagitas.intensity)*k;
     V.szinter.fog.color.lerp(V.kodCel, k);
@@ -2290,7 +2400,7 @@ function renderelj(){
        az ablakon kilátszó teret és a felületek irányfüggő megvilágítását is;
      · a padló és a fal valódi, beszkennelt PBR anyag (Poly Haven, CC0);
      · a bútorok, növények, tárgyak fotogrammetriás modellek (Poly Haven, CC0);
-     · a két alak 3D-szkennelt ember (Objaverse / Sketchfab, CC-BY).
+     · a szereplők a Microsoft Rocketbox szkennelt arcú alakjai (MIT).
 
    A pontos forráslista és a névattribúció: assets/LICENC.md.
    ========================================================================== */
@@ -2301,8 +2411,6 @@ const ESZKOZ = {
   padlo:   { diff:"assets/felulet/padlo_diff.webp" },
   fal:     { diff:"assets/felulet/fal_diff.webp",   nor:"assets/felulet/fal_nor.webp",   arm:"assets/felulet/fal_arm.webp" },
   modell: {
-    emberek:  "assets/modell/emberek.glb",
-    vendeg:   "assets/modell/vendeg.glb",
     fotel:    "assets/modell/modern_arm_chair_01.glb",
     kanape:   "assets/modell/sofa_02.glb",
     asztal:   "assets/modell/modern_coffee_table_01.glb",
@@ -2763,24 +2871,16 @@ function heroButor(m){
   return g;
 }
 
-/* A szkennelt alakok alapállásban +Z felé néznek, kivéve a vendéget, aki
-   −X felé — ezért kap fél fordulatnyi eltolást. */
-function heroEmberek(modellek){
+/* A nyitókép szereplői ugyanabból a készletből jönnek, mint a játékéi. */
+const HERO_ALAKOK = ["business_male_02", "business_male_01", "business_female_04"];
+function heroEmberek(){
   const g = new T.Group();
-  const forras = {};
-  modellek.emberek.scene.children.forEach(n=>{ forras[n.name] = n; });
-  modellek.vendeg.scene.children.forEach(n=>{ forras[n.name] = n; });
-
-  const tesz = (nev, x, z, ry)=>{
-    const n = forras[nev];
-    if(!n) throw new Error("Hiányzó alak a modellben: " + nev);
-    g.add(heroElhelyez(n.clone(true), x, 0, z, ry));
-  };
+  const tesz = (nev, poz, x, z, ry, oldal) => g.add(heroElhelyez(alakPeldany(nev, poz, oldal || 1), x, 0, z, ry));
   /* ketten állnak beszélgetve, félig egymás felé fordulva, a fényben */
-  tesz("ferfi_sotetkek", -2.55, -4.35,  1.20);
-  tesz("ferfi_fekete",   -1.35, -5.15, -1.90);
+  tesz("business_male_02", "mutat", -2.55, -4.35,  1.20, -1);
+  tesz("business_male_01", "all",   -1.35, -5.15, -1.90);
   /* és egy várakozó vendég hátrébb, aki felnéz a térbe */
-  tesz("vendeg",          0.98,  -9.73, 0.46 + Math.PI/2);
+  tesz("business_female_04", "all",  0.98, -9.73,  0.46);
   return g;
 }
 
@@ -2903,11 +3003,11 @@ async function heroInit(){
   /* ---- második ütem: a berendezés és az alakok ----------------------------
      Ezek töltése csak most indul, hogy a sávszélességért ne versenyezzenek az
      első ütemmel. Ugyanezt a készletet kapja később a játékvilág is. */
-  const modellek = await eszkozModellek();
+  const [modellek] = await Promise.all([eszkozModellek(), alakokBetolt(HERO_ALAKOK)]);
 
   const berendezes = new T.Group();
   berendezes.add(heroButor(modellek));
-  berendezes.add(heroEmberek(modellek));
+  berendezes.add(heroEmberek());
   /* Az átlátszóvá tétel a fordítás ELŐTT történik, különben a beúszás első
      képkockáján kellene új shadervátozatokat fordítani — épp ott akadna meg. */
   const beuszo = heroAtlatszova(berendezes);
@@ -3727,6 +3827,9 @@ function modValaszt(kulcs){
   document.querySelectorAll(".mod-kartya").forEach(k=> k.setAttribute("aria-pressed", String(k.dataset.mod === kulcs)));
   $("mod-hiba").textContent = "";
   try{ localStorage.setItem("vb_mod", kulcs); }catch(e){}
+  /* a pálya szereplőit már most elkezdjük letölteni, amíg az űrlapot tölti ki */
+  alakokBetolt(palyaAlakjai(kulcs)).catch(h => console.error(h));
+  diszletBetolt(palyaTargyai(kulcs)).catch(h => console.error(h));
 }
 const emailErvenyes = e => /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(String(e).trim());
 
@@ -3764,7 +3867,7 @@ async function jatekotIndit(){
      nyitóoldalon már elkezdődött a betöltésük. Itt legfeljebb a maradékot
      várjuk meg — a betöltőjelző addig áll. */
   esemenyt("inditas");
-  await vilagEszkozok();
+  await Promise.all([vilagEszkozok(), alakokBetolt(palyaAlakjai(allapot.mod)), diszletBetolt(palyaTargyai(allapot.mod))]);
   await vilagEpit(allapot.mod);
   kameraUtazas(0, true);
   /* kicsit hátrébbről indul a kamera, hogy legyen ránézés */

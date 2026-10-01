@@ -3,7 +3,7 @@
 A nyitókép (`heroInit()`) és a játék harminc jelenete (`vilagEpit()`) **ugyanabból
 az eszközkészletből** épül: azonos környezetfény, azonos beszkennelt felületek,
 azonos modellek. Ez a fájl sorolja fel mindet, forrással és licenccel együtt.
-A CC-BY licencű elemeknél a névattribúció kötelező — az alábbi lista teljesíti ezt.
+Ma már nincs CC BY licencű elem: a Poly Haven-anyag CC0, az alakok MIT licencűek (a licencszöveg az `alak/LICENSE` fájlban).
 
 ## Környezetfény (HDRI)
 
@@ -36,64 +36,78 @@ Ez adja a tér irányfüggő megvilágítását és az ablakon kilátszó valód
 | `modell/marble_bust_01.glb` | Marble Bust 01 | Rico Cilliers | [Poly Haven](https://polyhaven.com/a/marble_bust_01) | CC0 |
 | `modell/ClassicConsole_01.glb` | Classic Console 01 | Kirill Sannikov | [Poly Haven](https://polyhaven.com/a/ClassicConsole_01) | CC0 |
 
-## Alakok
+## Díszletmodellek (a játékjelenetek)
 
-| Fájl | Eredeti | Szerző | Forrás | Licenc |
-|---|---|---|---|---|
-| `modell/emberek.glb` | „Fitg013" — két fotogrammetriával szkennelt alak | **LGA-NA** | [Sketchfab](https://sketchfab.com/3d-models/59d4622960164eed88fe31ea284cc1ab) · [Objaverse](https://huggingface.co/datasets/allenai/objaverse) | **CC BY 4.0** |
-| `modell/vendeg.glb` | „MM" — fotogrammetriával szkennelt alak | **LGA-NA** | [Sketchfab](https://sketchfab.com/3d-models/ce39df9e32084c348e741605d4d28cb0) · [Objaverse](https://huggingface.co/datasets/allenai/objaverse) | **CC BY 4.0** |
+Pályánként csak az töltődik le, amit a díszletei használnak. Mind Poly Haven, CC0.
 
-> **Kötelező attribúció:** „Fitg013" és „MM" by **LGA-NA**,
-> [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), forrás: Sketchfab.
-> A modellek módosítva lettek: a „Fitg013" két alakja külön objektumra bontva és
-> 1 499 992 → 2 × 32 000 háromszögre egyszerűsítve, az „MM" 916 867 → 53 916
-> háromszögre; a textúrák WebP-be átkódolva.
->
-> Ez a hivatkozás jelenik meg a nyitóoldal láblécében is, hogy a licenc a
-> futó alkalmazásban is teljesüljön.
-
-## Hol tartanak az alakok, és miért ott
-
-A három szkennelt alak a nyitóképen **és** a játékjelenetekben is szerepel, de
-csak ott, ahol az öltözetük illik a szerephez, és csak állva:
-
-| Szerep | Mi kerül oda |
+| Fájl (`diszlet/`) | Eredeti |
 |---|---|
-| álló, üzleti vagy politikai (14 hely) | `ferfi_sotetkek`, `ferfi_fekete` |
-| álló, civil vagy ingujjas (6 hely) | `vendeg` |
-| ülő (29 hely) | épített alak |
-| egyenruhás (19 hely) | épített alak |
-| női (6 hely) | épített alak |
+| `metal_office_desk.glb` | [Metal Office Desk](https://polyhaven.com/a/metal_office_desk) |
+| `woodentable_01.glb` | [Wooden Table 01](https://polyhaven.com/a/WoodenTable_01) |
+| `dining_chair_02.glb` | [Dining Chair 02](https://polyhaven.com/a/dining_chair_02) |
+| `schoolchair_01.glb`, `schooldesk_01.glb` | [School Chair 01](https://polyhaven.com/a/SchoolChair_01), [School Desk 01](https://polyhaven.com/a/SchoolDesk_01) |
+| `plastic_monobloc_chair_01.glb` | [Plastic Monobloc Chair 01](https://polyhaven.com/a/plastic_monobloc_chair_01) |
+| `desk_lamp_arm_01.glb` | [Desk Lamp Arm 01](https://polyhaven.com/a/desk_lamp_arm_01) |
+| `steel_frame_shelves_03.glb` | [Steel Frame Shelves 03](https://polyhaven.com/a/steel_frame_shelves_03) |
+| `book_encyclopedia_set_01.glb` | [Book Encyclopedia Set 01](https://polyhaven.com/a/book_encyclopedia_set_01) |
+| `binder_notebook.glb`, `office_notepads.glb` | [Binder Notebook](https://polyhaven.com/a/binder_notebook), [Office Notepads](https://polyhaven.com/a/office_notepads) |
+| `drawer_cabinet.glb`, `coffeecart_01.glb` | [Drawer Cabinet](https://polyhaven.com/a/drawer_cabinet), [Coffee Cart 01](https://polyhaven.com/a/CoffeeCart_01) |
+| `projector_screen.glb`, `standing_chalkboard_01.glb` | [Projector Screen](https://polyhaven.com/a/projector_screen), [Standing Chalkboard 01](https://polyhaven.com/a/standing_chalkboard_01) |
+| `cement_bag.glb` | [Cement Bag](https://polyhaven.com/a/cement_bag) — homokzsáknak, felirat nélkül, juta színben |
+| `vintage_radio_transceiver.glb` | [Vintage Radio Transceiver](https://polyhaven.com/a/vintage_radio_transceiver) |
+| `portable_searchlight.glb`, `portable_generator.glb` | [Portable Searchlight](https://polyhaven.com/a/portable_searchlight), [Portable Generator](https://polyhaven.com/a/portable_generator) |
+| `wooden_military_crate.glb`, `metal_jerrycan_green.glb` | [Wooden Military Crate](https://polyhaven.com/a/wooden_military_crate), [Metal Jerrycan Green](https://polyhaven.com/a/metal_jerrycan_green) |
+| `megaphone_01.glb`, `rubber_boots.glb` | [Megaphone 01](https://polyhaven.com/a/Megaphone_01), [Rubber Boots](https://polyhaven.com/a/rubber_boots) |
+| `concrete_road_barrier.glb`, `painted_wooden_bench.glb`, `street_lamp_01.glb` | [Concrete Road Barrier](https://polyhaven.com/a/concrete_road_barrier), [Painted Wooden Bench](https://polyhaven.com/a/painted_wooden_bench), [Street Lamp 01](https://polyhaven.com/a/street_lamp_01) |
+| `fa_1.webp`, `fa_2.webp` | a [Tree Small 02](https://polyhaven.com/a/tree_small_02) és az [Island Tree 02](https://polyhaven.com/a/island_tree_02) renderképe — a 3D modelljük fánként ~2 millió háromszög, a háttérben keresztbe tett lapokon ugyanúgy hat |
+| `eg_alfold.webp` | [Farmland Overcast](https://polyhaven.com/a/farmland_overcast) panoráma, tónusleképezett, 3072 × 1536 |
+| `fu_diff.webp`, `fu_nor.webp` | [Grass Ground](https://polyhaven.com/a/grass_ground) |
 
-A szkenn egyetlen rögzített testtartás: nem lehet leültetni, egyenruhába adni
-vagy nemet váltani rajta. A hiányzó 52 helyre **kerestünk** további alakot,
-és nem találtunk használhatót:
+## Alakok — Microsoft Rocketbox (MIT)
 
-| Forrás | Miért nem |
+Minden szereplő — a nyitóképen és mind a harminc jelenetben — a
+[Microsoft Rocketbox](https://github.com/microsoft/Microsoft-Rocketbox) könyvtárból
+jön: szkennelt arcú, csontvázzal szerelt, valósághű alakok. Licenc: **MIT**,
+Copyright (c) 2020 Microsoft. A licenc szövege: `alak/LICENSE` — a feltétele, hogy a
+szerzői jogi megjegyzés a fájlokkal együtt maradjon.
+
+| Fájl (`alak/`) | Szerep a játékban |
 |---|---|
-| [Poly Haven](https://polyhaven.com) | nincs benne ember |
-| **LGA-NA** további 24 szkennje | névvel azonosítható valódi közszereplők (lásd lent) |
-| Renderbot, Renderpeople, Human Alloy, 3DScanStore | zárt licenc, regisztráció, határozott idejű felhasználás, továbbterjesztés tiltva |
-| Sketchfab CC0 „emberek" | alapmesh-ek és anyagkészletek, nem fotószkennek |
-| fotóreális egyenruhás szkennek | kizárólag fizetős (deep3dstudio, ViARsys, Moony_State) |
-| ülő pózú, ingyenes, továbbadható szkenn | nem találtunk ilyet |
+| `business_male_01/02/03.glb`, `business_male_06.glb` | öltönyös vezetők, politikusok, ingujjas irodista |
+| `business_female_01/03/04.glb` | üzleti és politikai női szerepek |
+| `male_adult_03/05/08/14.glb`, `female_adult_02/09/14.glb` | falusiak, polgármester, gátőr, ügyintéző |
+| `military_male_02/05/06.glb`, `military_female_01.glb` | katonák és tiszt |
+| `construction_male_02.glb` | vízügyi mérnök |
 
-Ha egyszer mégis lesz rá keret, egy megvásárolt szkenncsomag megoldja — de a
-repót akkor priváttá kell tenni, mert a `.glb` egy WebGL-oldalon letölthető
-fájl, és a fizetős licencek pontosan ezt tiltják.
+**Mit változtattunk rajtuk:** a textúrák 1024/512 képpontos WebP-be kerültek, a
+geometria meshopt-tömörítést kapott. A katonai alakok amerikai ACU-mintáját
+luminancia alapján zöld-barna-homok színekre színeztük át, a zászló- és
+alakulatjelvényeket a környező mintával fedtük le — egy magyar árvízi ezrednél
+amerikai zászló nem lehet a karon. A testtartást (állás, ülés, magyarázó kéz) a
+játék állítja be a csontokon, betöltés után.
+
+A feldolgozás szkriptjei: `eszkozok/alakok/` (letöltés, textúra, GLB).
+
+**Miért ez a könyvtár:** a korábbi változat 72 alakjából 52 dobozokból épített
+bábu volt, mert ülő, egyenruhás és női szerepekhez nem találtunk szabad licencű,
+továbbadható ember-szkennt (lásd lent). A Rocketbox mindhármat lefedi, ülésbe
+állítható, és az MIT licenc kifejezetten engedi a továbbadást — egy WebGL-oldalon a
+`.glb` letölthető fájl, ezt a licencnek meg kell engednie.
 
 ## Amit nem használunk és miért
 
-- **Renderpeople / Human Alloy / Renderbot ingyenes minták** — a licencük tiltja,
+- **Renderpeople / Human Alloy / Renderbot / 3DScanStore** — zárt licenc; tiltja,
   hogy a modellfájlok külön letölthetők legyenek, márpedig egy WebGL-oldalon azok.
 - **Mixamo-karakterek** — az Adobe feltételei a különálló eszközként való
-  továbbterjesztést nem engedik; egy publikus repóban a `.glb` pontosan ez.
-- **Valódi közszereplőket ábrázoló szkennek** — a személyiségi jog miatt, és
-  mert a játék korrupt vagy hibázó vezetőket is ábrázol: felismerhető élő
-  személyt ilyen szerepbe tenni akkor sem helyes, ha a licenc engedné. Ez zárja
-  ki az „MM" és a „Fitg013" szerzőjének többi szkennjét is, amelyek nevesített
-  személyek (`FITG004 Mortimer Singer`, `Jean Shafiroff`, `Fern Mallis` és
-  társaik) — a két használt alak épp azért maradt benn, mert névtelen.
+  továbbterjesztést nem engedik.
+- **Valódi közszereplőket ábrázoló szkennek** — a személyiségi jog miatt, és mert a
+  játék hibázó vezetőket is ábrázol: felismerhető élő személyt ilyen szerepbe tenni
+  akkor sem helyes, ha a licenc engedné.
+- **Az előző változat két CC BY szkennje** („Fitg013", „MM" — LGA-NA) — kikerült:
+  rögzített állótartásúak voltak, és a Rocketbox alakok mellett kilógtak volna a
+  képből. Egységes készlet kell.
+- **Katonai jármű** — szabad licencű, valósághű modell nincs; a jármű helyén
+  felszerelés (ládák, kannák, áramfejlesztő) áll.
 
 ## Feldolgozás
 
