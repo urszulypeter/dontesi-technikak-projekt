@@ -26,7 +26,7 @@
           "fogalom": "Jól és rosszul strukturált döntés",
           "kiertekeles": "Simon megkülönböztetése szerint egy jól strukturált döntésnél csak az a kérdés, hogyan oldjuk meg a problémát; a rosszul strukturáltnál még az sem világos, mi maga a probléma. Az iskolabezárás tipikusan ilyen: nem egyértelmű, hogy költségvetési, oktatási vagy közösségi kérdésről van-e szó. Ha jól strukturáltként kezeled, gyorsan haladsz, de a valódi vitát csak elodázod.",
           "pontok": {
-            "kovetkezetesseg": 2,
+            "kovetkezetesseg": 1,
             "atlathatosag": -1,
             "dontesi_minoseg": -2,
             "felelossegvallalas": 0,
@@ -52,7 +52,7 @@
           "fogalom": "Mintzberg információgyűjtő szerepe",
           "kiertekeles": "Mintzberg tíz vezetői szerepe közül ez az információgyűjtő szerep: a vezető maga megy oda, ahol első kézből tájékozódhat. A terepen olyasmit is látsz, amit a táblázat nem mutat meg. Az ára, hogy a bizottság közben nélküled kezd vitatkozni, és a tagok semmit sem látnak abból, amit te tapasztalsz.",
           "pontok": {
-            "kovetkezetesseg": -1,
+            "kovetkezetesseg": 0,
             "atlathatosag": -1,
             "dontesi_minoseg": 2,
             "felelossegvallalas": 2,
@@ -98,7 +98,7 @@
           "fogalom": "Mintzberg képviselő szerepe",
           "kiertekeles": "Mintzberg szerint a vezetőnek képviselő szerepe is van: már a jelenléte is üzenet, mert a tisztségének szimbolikus súlya van. A szakértő pontosabban beszél a számokról, a teremben mégis az marad meg, hogy te nem jöttél el. A távolmaradással megúszol egy kellemetlen estét, de elszalasztod az esélyt, hogy személyesen építs bizalmat.",
           "pontok": {
-            "kovetkezetesseg": 1,
+            "kovetkezetesseg": 0,
             "atlathatosag": 1,
             "dontesi_minoseg": 1,
             "felelossegvallalas": -3,
@@ -111,7 +111,7 @@
           "fogalom": "Mintzberg kapcsolattartó szerepe",
           "kiertekeles": "Mintzberg kapcsolattartó szerepében a vezető a szervezeten kívüliekkel épít kapcsolatot, és közben információt is gyűjt. Ha meghallgatod őket, de nem ígérsz semmit, megőrzöd a mozgásteredet és a hitelességedet. Sokan viszont azzal mennek haza, hogy kiálltál eléjük, de nem mondtál semmit.",
           "pontok": {
-            "kovetkezetesseg": 1,
+            "kovetkezetesseg": 2,
             "atlathatosag": -1,
             "dontesi_minoseg": 1,
             "felelossegvallalas": 1,
@@ -131,7 +131,7 @@
           "fogalom": "Moralitás detektor: napfény teszt",
           "kiertekeles": "A napfény teszt egyetlen kérdés: jól érezném-e magam, ha ez a döntés minden részletével együtt holnap nyilvánosságra kerülne? Egy pályázat nélküli, ingyenesnek látszó üzlet nehezen állná ki ezt a próbát. A nyílt pályázat tisztább megoldás, de a gyerekek addig bizonytalanságban maradnak, és a megtakarítás is kisebb lesz.",
           "pontok": {
-            "kovetkezetesseg": 2,
+            "kovetkezetesseg": 3,
             "atlathatosag": 2,
             "dontesi_minoseg": 0,
             "felelossegvallalas": 1,
@@ -144,7 +144,7 @@
           "fogalom": "Gátló racionalizálás: „jó célt szolgál”",
           "kiertekeles": "A jegyzet gátló racionalizálásnak nevezi azokat az érveket, amelyekkel egy kétes döntést a saját szemünkben elfogadhatóvá teszünk. A „jó célt szolgál” az egyik leggyakoribb ilyen érv: az eredmény valóban értékes, de az odavezető út — egy cégnek tett, pályázat nélküli szívesség — etikai csapdát rejt. Rövid távon mindenki jól jár, egészen addig, amíg ki nem derül, mi volt az ára.",
           "pontok": {
-            "kovetkezetesseg": -1,
+            "kovetkezetesseg": -2,
             "atlathatosag": -3,
             "dontesi_minoseg": 1,
             "felelossegvallalas": -2,
@@ -170,7 +170,7 @@
           "fogalom": "Halo-effektus",
           "kiertekeles": "A halo-effektus azt jelenti, hogy egyetlen kiemelkedő tulajdonság alapján alkotunk általános véleményt valakiről. A cég pontos járatai miatt az ajánlatát is megbízhatónak láttad, pedig a kettőnek nincs köze egymáshoz: a buszok pontossága semmit sem mond arról, tisztességes-e egy pályázat nélküli üzlet. A titkos alku jobb feltételeket hozhat, de ha kiderül, az egész bizottságot magával rántja.",
           "pontok": {
-            "kovetkezetesseg": 1,
+            "kovetkezetesseg": -1,
             "atlathatosag": -3,
             "dontesi_minoseg": -1,
             "felelossegvallalas": -1,
@@ -181,16 +181,16 @@
     },
     {
       "id": 4,
-      "cim": "Személyeskedő támadás a bizottságban",
-      "szituacio_leirasa": "A bizottsági vitában felszólal Kardos Ilona, az ellenzék képviselője, aki húsz évig tanított egy falusi iskolában. Hangosan, személyeskedve támad: szerinte csak azért akarsz iskolákat bezárni, mert sosem éltél vidéken. A helyetted, aki egyben a párttársad is, odasúgja, hogy ne foglalkozz vele, csak a kameráknak játszik. Az egész terem rád figyel.",
+      "cim": "Kardos Ilona felszólalása",
+      "szituacio_leirasa": "A bizottsági vitában felszólal Kardos Ilona, az ellenzék képviselője, aki húsz évig tanított egy falusi iskolában. Hangosan, személyeskedve támad: szerinte csak azért akarsz iskolákat bezárni, mert sosem éltél vidéken. A helyettesed, aki egyben a párttársad is, odasúgja, hogy ne foglalkozz vele, csak a kameráknak játszik. Az egész terem rád figyel.",
       "opciok": [
         {
           "jel": "A",
-          "opcio_leirasa": "Szünetet rendelsz el, és négyszemközt próbálsz megegyezni Kardos Ilonával: ha az ő két iskolája ügyét külön megvizsgáljátok, ő cserébe visszafogottabb lesz a nyilvános vitában.",
+          "opcio_leirasa": "Szünetet rendelsz el, és négyszemközt próbálsz megegyezni Kardos Ilonával: ha a választókerületében lévő két iskola ügyét külön megvizsgáljátok, ő cserébe visszafogottabb lesz a nyilvános vitában.",
           "fogalom": "Mintzberg tárgyaló szerepe",
           "kiertekeles": "Mintzberg tárgyaló szerepében a vezető alkuval szerez támogatást vagy nyugalmat. A négyszemközti megállapodás lecsillapíthatja a vitát, és a két iskola ügye is előrébb juthat. A nyilvánosság viszont kimarad belőle: a bizottság többi tagja és a sajtó csak annyit lát, hogy a vita hirtelen elcsendesedett.",
           "pontok": {
-            "kovetkezetesseg": 0,
+            "kovetkezetesseg": -1,
             "atlathatosag": -2,
             "dontesi_minoseg": 1,
             "felelossegvallalas": 1,
@@ -203,7 +203,7 @@
           "fogalom": "Alapvető attribúciós hiba",
           "kiertekeles": "Az alapvető attribúciós hiba az a hajlamunk, hogy mások viselkedését a jellemükkel vagy a szándékaikkal magyarázzuk, a körülmények hatását pedig alábecsüljük. Ha Kardos Ilona felszólalását puszta politikai színjátéknak látod, elsikkad, hogy húsz év falusi tapasztalatából beszél. A vita rendezett marad, a mögötte meghúzódó valódi aggodalom viszont válasz nélkül.",
           "pontok": {
-            "kovetkezetesseg": 2,
+            "kovetkezetesseg": 1,
             "atlathatosag": -1,
             "dontesi_minoseg": -2,
             "felelossegvallalas": 0,
@@ -216,7 +216,7 @@
           "fogalom": "Pártfogó és vizsgálódó magatartás",
           "kiertekeles": "A jegyzet kétféle vitamagatartást állít szembe: a pártfogó a saját álláspontját védi, és a másikét igyekszik elhallgattatni, a vizsgálódó pedig a vitapartnerrel közösen teszi próbára az érveket. Te az utóbbit választottad: a támadás mögötti tapasztalatból olyan kérdést csináltál, amelyet meg lehet vizsgálni. A vita tartalmasabb lesz, de időbe telik, és a párttársaid gyengeségnek láthatják.",
           "pontok": {
-            "kovetkezetesseg": -1,
+            "kovetkezetesseg": 0,
             "atlathatosag": 2,
             "dontesi_minoseg": 2,
             "felelossegvallalas": 1,
@@ -229,7 +229,7 @@
           "fogalom": "Autokratikus döntés",
           "kiertekeles": "A jegyzet csoportos döntési modelljei közül az autokratikus döntésnél a vezető egyedül dönt, a tagok alig vesznek részt benne. Ez gyors, és időhiányban indokolt is lehet, de ha a tagok nem értenek egyet, alig fognak elköteleződni a végrehajtás mellett. A bizottság időben szavazhat — csak éppen kevesebbet tud arról, amiről szavaz.",
           "pontok": {
-            "kovetkezetesseg": 2,
+            "kovetkezetesseg": 1,
             "atlathatosag": -2,
             "dontesi_minoseg": -2,
             "felelossegvallalas": -1,
@@ -241,7 +241,7 @@
     {
       "id": 5,
       "cim": "Három bezárási változat",
-      "szituacio_leirasa": "A bizottság asztalán három változat fekszik. Az első mind a negyven iskolát bezárná: ezzel lehetne a legtöbbet spórolni. A második húszat zárna be, a többiben összevont osztályok indulnának. A harmadik minden iskolát megtartana, de akkor máshonnan kellene elvenni a pénzt, valószínűleg az egészségügytől. A frakció még ezen a héten döntést vár.",
+      "szituacio_leirasa": "A bizottság asztalán három változat fekszik. Az első mind a negyven iskolát bezárná: ezzel lehetne a legtöbbet spórolni, de a gyerekeknek így kellene a legtöbbet utazniuk. A második húszat zárna be, a többiben összevont osztályok indulnának. A harmadik minden iskolát megtartana, de akkor máshonnan kellene elvenni a pénzt, valószínűleg az egészségügytől. A frakció még ezen a héten döntést vár.",
       "opciok": [
         {
           "jel": "A",
@@ -249,7 +249,7 @@
           "fogalom": "A döntés elhárítása",
           "kiertekeles": "A jegyzet a döntéshozói magatartások között említi a döntés elhárítását: a vezető másra hárítja a döntést, és a formális megoldást választja. Ez megkímél a párton belüli konfliktustól, és a frakció is elégedett. Bizottsági elnökként azonban éppen azt a felelősséget adod ki a kezedből, amiért ott ülsz.",
           "pontok": {
-            "kovetkezetesseg": 2,
+            "kovetkezetesseg": 0,
             "atlathatosag": 0,
             "dontesi_minoseg": -1,
             "felelossegvallalas": -3,
@@ -262,7 +262,7 @@
           "fogalom": "Korlátozott racionalitás, kielégítő döntés",
           "kiertekeles": "Simon szerint a valóságban korlátozott racionalitással döntünk: nem mérlegelünk minden szempontot, hanem az első olyan megoldást választjuk, amely eléri az elvárt szintet. Itt a megtakarítási cél volt az elvárt szint, és az első változat ezt teljesíti. A döntés gyors és védhető, a többi szempont — az utazás, a közösségek sorsa — viszont kimaradt a mérlegelésből.",
           "pontok": {
-            "kovetkezetesseg": 2,
+            "kovetkezetesseg": 1,
             "atlathatosag": 1,
             "dontesi_minoseg": -2,
             "felelossegvallalas": 1,
@@ -275,7 +275,7 @@
           "fogalom": "PrOACT: következmények és átváltások",
           "kiertekeles": "A PrOACT-modell utolsó két lépése, hogy minden változatnál feltérképezzük a következményeket, és nyíltan mérlegeljük, mit adunk fel és mit kapunk cserébe. Egy konkrét család mindennapjain keresztül ez a mérlegelés kézzelfoghatóvá válik. A vita emberibb lesz, de nehezebben számszerűsíthető, és a számokat váró frakciót kevésbé győzi meg.",
           "pontok": {
-            "kovetkezetesseg": -1,
+            "kovetkezetesseg": 0,
             "atlathatosag": 2,
             "dontesi_minoseg": 1,
             "felelossegvallalas": 1,
@@ -300,7 +300,7 @@
     {
       "id": 6,
       "cim": "Iskolabezárás a választás előtt",
-      "szituacio_leirasa": "A következő fórumra menet az egyik tanácsadód kimondja, amit mindenki gondol: a megtakarítás csak öt év múlva jelentkezne, a parlamenti választás viszont jövő tavasszal lesz, és az érintett körzetek közül hat billegő. Ha most zártok be iskolákat, ezekben elveszíthetitek a választást. A frakció is ezt figyeli.",
+      "szituacio_leirasa": "Vidéki úton autóztok a következő fórumra, amikor az egyik tanácsadód kimondja, amit mindenki gondol: a megtakarítás csak öt év múlva jelentkezne, a parlamenti választás viszont jövő tavasszal lesz, és az érintett körzetek közül hat billegő. Ha most zártok be iskolákat, ezekben elveszíthetitek a választást. A frakció is ezt figyeli.",
       "opciok": [
         {
           "jel": "A",
@@ -332,9 +332,9 @@
           "jel": "C",
           "opcio_leirasa": "Most megszavaztatod a törvényt, de a bezárások csak a választás után kezdődnek. Így a döntés megszületik, a fájdalmas rész viszont később jön.",
           "fogalom": "A döntés halogatása",
-          "kiertekeles": "A jegyzet a döntéshozói magatartások között írja le a döntés halogatását: a problémákat sürgős és nem sürgős csoportokba soroljuk, és kivárjuk, amíg a helyzet kikényszeríti a lépést. Formálisan döntöttél, a nehéz rész viszont a választás utánra tolódik. Ez politikailag okos húzás, de a falvak két évig bizonytalanságban élnek, és sokan átlátnak a szitán.",
+          "kiertekeles": "A jegyzet a döntéshozói magatartások között írja le a döntés halogatását: a problémákat sürgős és nem sürgős csoportokba soroljuk, és kivárjuk, amíg a helyzet kikényszeríti a lépést. Formálisan döntöttél, a nehéz rész viszont a választás utánra tolódik. Ez politikailag okos húzás, de a falvak a választásig bizonytalanságban élnek, és sokan átlátnak a szitán.",
           "pontok": {
-            "kovetkezetesseg": 1,
+            "kovetkezetesseg": -1,
             "atlathatosag": -2,
             "dontesi_minoseg": 1,
             "felelossegvallalas": -1,
@@ -391,9 +391,9 @@
           "jel": "C",
           "opcio_leirasa": "Egy héttel elhalasztod a szavazást, és addig meghallgatod az összes érintett falu polgármesterét, hogy lásd, kinek mennyi múlik a döntésen, és kinek mekkora a beleszólása.",
           "fogalom": "Érintett-térkép és érintetterőtér",
-          "kiertekeles": "Az érintett-térkép számba veszi, kikre hat a döntés, az érintetterőtér pedig megmutatja, kinek mennyi múlik rajta, és mekkora a befolyása. Szalai nagy befolyású érintett, a tizenkét másik falu viszont kiszolgáltatott helyzetben van: őket is nagyon érinti a döntés, de alig van beleszólásuk. A meghallgatás kiegyensúlyozza a képet, de a csúszás a frakció türelmét és a menetrendet is próbára teszi.",
+          "kiertekeles": "Az érintett-térkép számba veszi, kikre hat a döntés, az érintetterőtér pedig megmutatja, kinek mennyi múlik rajta, és mekkora a befolyása. Szalai nagy befolyású érintett, a többi falu viszont kiszolgáltatott helyzetben van: őket is nagyon érinti a döntés, de alig van beleszólásuk. A meghallgatás kiegyensúlyozza a képet, de a csúszás a frakció türelmét és a menetrendet is próbára teszi.",
           "pontok": {
-            "kovetkezetesseg": -2,
+            "kovetkezetesseg": -1,
             "atlathatosag": 1,
             "dontesi_minoseg": 2,
             "felelossegvallalas": 0,
@@ -439,7 +439,7 @@
           "fogalom": "Problémakerülő magatartás",
           "kiertekeles": "A jegyzet háromféle vezetői stratégiát különít el: a problémakeresőt, a problémamegoldót és a problémakerülőt, aki nem vesz tudomást a valós problémákról. A hallgatás valóban nem ad újabb muníciót a vitához, és néha a hullám tényleg magától elül. A tüntetők viszont azt szűrik le, hogy a döntéshozó nem áll ki eléjük, és ez többe kerül a bizalomban, mint egy rossz nyilatkozat.",
           "pontok": {
-            "kovetkezetesseg": 1,
+            "kovetkezetesseg": 0,
             "atlathatosag": -3,
             "dontesi_minoseg": 0,
             "felelossegvallalas": -2,
@@ -476,16 +476,16 @@
     },
     {
       "id": 9,
-      "cim": "A kedvezőtlen tanulmány",
+      "cim": "A belső tanulmány",
       "szituacio_leirasa": "A parlamenti zárószavazás reggelén egy minisztériumi munkatárs átad neked egy belső tanulmányt. Eszerint a megtakarítás negyven százalékkal kisebb lesz a tervezettnél, mert a buszok és a városi iskolák bővítése többe kerül. A tanulmány még nem végleges, és rajtad kívül csak néhányan látták. Két óra múlva kezdődik a vita, és te nyitod meg.",
       "opciok": [
         {
           "jel": "A",
-          "opcio_leirasa": "Megszavazzátok a törvényt, de beteszel egy záradékot: két év múlva független felülvizsgálatot tartanak, és ha a megtakarítás elmarad, a további bezárásokat felfüggesztik.",
+          "opcio_leirasa": "A tanulmányt nem hozod szóba. Megszavazzátok a törvényt, de beteszel egy záradékot: két év múlva független felülvizsgálatot tartanak, és ha a megtakarítás elmarad, a további bezárásokat felfüggesztik.",
           "fogalom": "Snowden–Boone: komplex helyzet",
           "kiertekeles": "Snowden és Boone szerint komplex helyzetben nincs előre ismert helyes válasz: az okok és a hatások csak menet közben derülnek ki, ezért a jó vezető kísérletezik, figyel, és kész korrigálni. A záradékkal ezt a tanulási lehetőséget építetted be a törvénybe. Bölcs megoldás, de félmegoldásnak is tűnhet: a tanulmányt nem hoztad nyilvánosságra, és a bezárások egy része akkor is megtörténik, ha a számok rosszak.",
           "pontok": {
-            "kovetkezetesseg": 1,
+            "kovetkezetesseg": 0,
             "atlathatosag": -1,
             "dontesi_minoseg": 2,
             "felelossegvallalas": 1,
@@ -498,7 +498,7 @@
           "fogalom": "Szelektív hárítás",
           "kiertekeles": "Szelektív hárításról akkor beszélünk, amikor a kellemetlen, a kialakult képbe nem illő információt nem engedjük be. Az érvelésed nem alaptalan: a tanulmány valóban nem végleges. Ha azonban a számok később beigazolódnak, nem az lesz a kérdés, mit tudtál, hanem az, hogy miért hallgattál.",
           "pontok": {
-            "kovetkezetesseg": 1,
+            "kovetkezetesseg": -1,
             "atlathatosag": -3,
             "dontesi_minoseg": -2,
             "felelossegvallalas": -2,
@@ -511,7 +511,7 @@
           "fogalom": "Ezredes-hatás",
           "kiertekeles": "Az ezredes-hatás az a hajlamunk, hogy a magas beosztású emberektől érkező információt hitelesebbnek tartjuk. Ha a miniszter hallgat, az ő hallgatását fogadod el végső szónak, pedig a tanulmány ugyanabból a minisztériumból származik. Ez formálisan védhető, de a döntés felelősségét másra hárítod.",
           "pontok": {
-            "kovetkezetesseg": 1,
+            "kovetkezetesseg": 0,
             "atlathatosag": 1,
             "dontesi_minoseg": -1,
             "felelossegvallalas": -3,
@@ -544,7 +544,7 @@
           "fogalom": "Énmegerősítő attribúció",
           "kiertekeles": "Az énmegerősítő attribúció az a hajlamunk, hogy a sikereinket magunknak, a kudarcainkat pedig a körülményeknek tulajdonítjuk. Nem hazudsz: a körülmények valóban szorítottak. Ha viszont csak ezt látod, éppen azt hagyod ki, amiből tanulni lehetne: a saját döntéseidet.",
           "pontok": {
-            "kovetkezetesseg": 2,
+            "kovetkezetesseg": 0,
             "atlathatosag": -1,
             "dontesi_minoseg": -1,
             "felelossegvallalas": -3,
@@ -557,7 +557,7 @@
           "fogalom": "Hamisan pozitív hiba",
           "kiertekeles": "James March hamisan pozitív hibának nevezi, amikor a döntéshozó szentül hisz egy olyan kontrollban, amely a valóságban nincs a kezében. Az a meggyőződés, hogy az idő majd magától igazol, ilyen hit: a számok értelmezése nem rajtad fog múlni. A hallgatás megkímél egy nehéz beszélgetéstől, de nyitva hagyja a kérdést, és mások fognak válaszolni helyetted.",
           "pontok": {
-            "kovetkezetesseg": 1,
+            "kovetkezetesseg": 0,
             "atlathatosag": -3,
             "dontesi_minoseg": -1,
             "felelossegvallalas": -2,
@@ -583,7 +583,7 @@
           "fogalom": "Reflektív gondolkodás és a következtetési létra",
           "kiertekeles": "A következtetési létra azt írja le, hogyan jutunk el villámgyorsan a látott tényektől a feltevésekig és az ítéletekig; a reflektív gondolkodás azt jelenti, hogy tudatosan visszamászunk ezen a létrán. Ha végiggondolod, melyik feltevésed vezetett félre, legközelebb jobban fogsz dönteni. A nyilvános beismerés hiteles, de politikailag sebezhetővé tesz.",
           "pontok": {
-            "kovetkezetesseg": -1,
+            "kovetkezetesseg": 1,
             "atlathatosag": 3,
             "dontesi_minoseg": 2,
             "felelossegvallalas": 3,
