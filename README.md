@@ -351,19 +351,22 @@ Ezután: http://127.0.0.1:8765/index.html
 
 ## E-mail beállítása
 
-Az `index.html` tetején négy konstans van. Az elsők hármat az
-[EmailJS](https://www.emailjs.com) fiókodból kell kitölteni:
+Az eredményt az [EmailJS](https://www.emailjs.com) küldi ki, a projekt
+Gmail-fiókjáról, szerveroldali kód nélkül. Az ingyenes csomag havi 200 levelet
+enged. Az `index.html` tetején lévő konstansok be vannak állítva:
 
 ```js
-const EMAILJS_PUBLIC_KEY   = "IDE_JON_A_PUBLIC_KEY";
-const EMAILJS_SERVICE_ID   = "IDE_JON_A_SERVICE_ID";
-const EMAILJS_TEMPLATE_ID  = "IDE_JON_A_TEMPLATE_ID";
+const EMAILJS_PUBLIC_KEY   = "nsAaCyKe3rVO7HwrA";   // nyilvános azonosító, nem titok
+const EMAILJS_SERVICE_ID   = "service_vask49k";     // Gmail
+const EMAILJS_TEMPLATE_ID  = "template_9e3i1ye";    // „Vezetői Bizalom eredmény"
 const EREDMENY_MASOLAT_CIM = "";   // ide megy másolat minden eredményről
 ```
 
-A sablonban ezek a változók használhatók: `{{to_email}}`, `{{player_name}}`,
-`{{report}}`, `{{score}}`, `{{level}}`, `{{mode}}`. Kitöltetlen kulcsokkal a
-küldés gomb nem hibázik, hanem felajánlja a levelezőprogramos tartalékot.
+A sablon változói: `{{to_email}}`, `{{reply_to}}`, `{{player_name}}`,
+`{{mode}}`, `{{score}}`, `{{level}}`, `{{report}}`. A sablonban be van
+kapcsolva a „Do not save private data": az EmailJS a küldési előzményekben nem
+tárolja a játékos nevét és kiértékelését. Ha a küldés nem sikerül, a gomb
+felajánlja a levelezőprogramos tartalékot.
 
 ## Kérdések szerkesztése
 

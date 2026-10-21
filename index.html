@@ -770,25 +770,24 @@ import { ShaderPass }        from "three/addons/postprocessing/ShaderPass.js";
 import { OutputPass }        from "three/addons/postprocessing/OutputPass.js";
 
 /* ============================================================================
-   1) BEÁLLÍTÁSOK — EZEKET KELL KITÖLTENED
+   1) BEÁLLÍTÁSOK — EMAILJS
    ----------------------------------------------------------------------------
-   EmailJS beállítás (kb. 5 perc, ingyenes csomaggal is működik):
-     1. Regisztrálj: https://www.emailjs.com → Account → API Keys → Public Key.
-     2. Email Services → Add New Service (pl. Gmail) → a kapott Service ID.
-     3. Email Templates → Create New Template, ezekkel a változókkal:
-             To Email:  {{to_email}}
-             Subject :  Vezetoi Bizalom eredmeny - {{player_name}}
-             Content :  {{report}}
-        (Opcionálisan: {{score}}, {{level}}, {{mode}}, {{reply_to}}.)
-     4. Írd be a három értéket alább. Szerveroldali kódra nincs szükség.
+   Az eredményt az EmailJS küldi ki, a projekt Gmail-fiókjáról (ingyenes
+   csomag: havi 200 levél). A három érték nyilvános azonosító, nem titok: az
+   EmailJS böngészős kliense épp így, a lapba írva használja őket.
+
+   A sablon („Vezetői Bizalom eredmény") változói:
+     {{to_email}} {{reply_to}} {{player_name}} {{mode}} {{score}} {{level}} {{report}}
+   A sablonban be van kapcsolva a „Do not save private data": az EmailJS a
+   küldési előzményekben nem tárolja a játékos nevét és kiértékelését.
 
    EREDMENY_MASOLAT_CIM: ha ide beírsz egy címet (pl. az oktató e-mail-címét),
    minden eredményről másolat is megy oda. Üresen hagyva nem küld másolatot.
    ========================================================================== */
 
-const EMAILJS_PUBLIC_KEY   = "IDE_JON_A_PUBLIC_KEY";
-const EMAILJS_SERVICE_ID   = "IDE_JON_A_SERVICE_ID";
-const EMAILJS_TEMPLATE_ID  = "IDE_JON_A_TEMPLATE_ID";
+const EMAILJS_PUBLIC_KEY   = "nsAaCyKe3rVO7HwrA";
+const EMAILJS_SERVICE_ID   = "service_vask49k";
+const EMAILJS_TEMPLATE_ID  = "template_9e3i1ye";
 const EREDMENY_MASOLAT_CIM = "";
 
 /* A kameramozgás hossza két jelenet között (ms) és a kérdés megjelenéséig eltelt idő. */
