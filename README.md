@@ -259,8 +259,8 @@ tartania, nem a jó szándéknak.
 Ezért mondja az induló űrlap, hogy a név a résztvevők listájára is felkerül —
 ha ez a szöveg eltűnik, az ígéret hamis lesz.
 
-A kimutatásban a névsor ábécérendben áll, aki többször játszott, `×2` jelet kap.
-A „Névsor másolása" gomb a vágólapra teszi a listát a bemutatóhoz.
+A kimutatás a neveket nem mutatja és az API sem adja ki: csak azt, hány
+különböző név és hány végigjátszás van.
 
 ### Hatásmodell (ToC) a kimutatásban
 
@@ -297,7 +297,7 @@ nem adat.
     /api/resztvevo        a név a résztvevők listájára (nyilvános, ellenőrzött)
     /api/esemeny          indítás, végigjátszás, kiküldött értékelés (nyilvános, ellenőrzött)
     /api/belepes          admin be- és kiléptetés
-    /api/stat             összesített adatok, névsor és ToC-indikátorok (csak belépve)
+    /api/stat             összesített adatok és ToC-indikátorok (csak belépve)
 
 A kimutatás jelszava egyetlen környezeti változó, a jegy pedig HttpOnly sütiben
 utazik, aláírva — a kiszolgálónak nem kell munkamenetet tárolnia. Az összesítés

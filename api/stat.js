@@ -39,15 +39,10 @@ export default async function handler(req, res){
                 count(*)::int AS db
            FROM visszajelzes GROUP BY nap ORDER BY nap`,
 
-      /* A résztvevők névsora. Azonos néven többször is végig lehet játszani,
-         ezért névre csoportosítunk: a listán egyszer szerepel, a `db` mondja
-         meg, hányszor játszott. A rendezés kisbetűsítve történik, különben az
-         ékezetes nevek a lista végére csúsznának. */
-      db`SELECT nev, count(*)::int AS db, min(nap)::text AS elso
-           FROM resztvevo
-          GROUP BY nev
-          ORDER BY lower(nev)
-          LIMIT 1000`,
+      /* A résztvevők száma. A neveket nem adjuk ki: a kimutatás csak
+         összesített adatot mutat. Azonos néven többször is végig lehet
+         játszani, ezért a különböző nevek és a végigjátszások külön számolódnak. */
+      db`SELECT count(DISTINCT nev)::int AS nevek, count(*)::int AS db FROM resztvevo`,
 
       /* ToC output-indikátorok: ebből jön a részvételi és befejezési arány */
       db`SELECT tipus, count(*)::int AS db FROM esemeny GROUP BY tipus`,
@@ -74,7 +69,8 @@ export default async function handler(req, res){
       atlag:     ossz[0].atlag,
       atlagPont: ossz[0].atlag_pont,
       /* hányan játszottak végig — ez független a kérdőív kitöltésétől */
-      jatszottak: resztvevok.reduce((s, r) => s + r.db, 0),
+      jatszottak: resztvevok[0].db,
+      resztvevoSzam: resztvevok[0].nevek,
       /* ToC output-indikátorok. A befejezési arány csak akkor értelmes, ha
          volt indítás — nulla osztóval null megy vissza, és a felület kiírja,
          hogy még nincs mit mutatni. */
@@ -85,7 +81,7 @@ export default async function handler(req, res){
         befejezesiArany: inditasok ? befejezesek / inditasok : null,
         dimenziok: dimenziok[0]
       },
-      ertekelesek, k1, k2, palyak, napok, resztvevok
+      ertekelesek, k1, k2, palyak, napok
     });
   }catch(h){
     console.error("A kimutatás lekérése nem sikerült:", h);
